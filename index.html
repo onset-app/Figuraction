@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FigurAction</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="apple-touch-icon" href="icon-512.png">
+    <meta name="theme-color" content="#f04">
+</head>
+
+<body>
+
+
+<!-- Vidéo d'intro -->
+<div id="intro-screen">
+    <video id="intro-video" autoplay muted playsinline webkit-playsinline>
+        <source src="intro.mp4" type="video/mp4">
+    </video>
+    <button id="skip-intro" onclick="skipIntro()">Passer</button>
+</div>
+
+<!-- Connexion -->
+<div id="login-screen" style="display:none;">
+    <div class="login-box">
+        <h1 class="title">FigurAction</h1>
+
+        <input type="text" id="login-nom" placeholder="Nom">
+        <input type="text" id="login-prenom" placeholder="Prénom">
+        <input type="email" id="login-email" placeholder="Email">
+        <input type="password" id="login-password" placeholder="Mot de passe">
+
+        <select id="login-type">
+            <option value="figurant">Figurant</option>
+            <option value="production">Production</option>
+            <option value="admin">Admin</option>
+        </select>
+
+        <button class="blue-btn" onclick="creerCompte()">Créer un compte</button>
+        <button class="blue-btn" onclick="seConnecter()">Se connecter</button>
+        <button class="blue-btn" onclick="motDePasseOublie()">Mot de passe oublié</button>
+        <button class="blue-btn" onclick="connexionTest()">Connexion test</button>
+        <button class="blue-btn" onclick="connexionProTest()">Connexion PRO (Test)</button>
+    </div>
+</div>
+
+<!-- Menu principal -->
+<div id="main-screen" style="display:none;">
+    <nav>
+        <ul>
+            <li onclick="afficherCasting()">Casting</li>
+            <li onclick="afficherCovoiturage()">Co-voiturage</li>
+            <li onclick="afficherInfos()">Infos</li>
+            <li onclick="afficherContact()">Contact</li>
+            <li id="projet-menu" style="display:none;" onclick="afficherProjets()">Projets</li>
+            <li id="admin-menu" style="display:none;" onclick="afficherAdmin()">Admin</li>
+            <li id="contrat-menu" style="display:none;" onclick="afficherContrat()">Contrat</li>
+            <li id="candidatures-menu" style="display:none;" onclick="afficherCandidatures()">Mes candidatures</li>
+            <li id="profil-menu" onclick="afficherProfil()">Profil</li>
+            <li id="candidats-menu" style="display:none;" onclick="afficherCandidats()">Candidats</li>
+            <li id="logout-btn" onclick="deconnecter()">🔌</li> 
+        </ul>
+    </nav>
+
+    <div id="content"></div>
+</div>
+
+<!-- Supabase -->
+ 
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script>
+const client = supabase.createClient(
+    "https://TON_PROJET_REF.supabase.co",
+    "TA_ANON_KEY_PUBLIC"
+);
+</script>
+
+<script src="app.js"></script>
+
+<!-- Service Worker -->
+<script>
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("service-worker.js");
+}
+</script>
+
+</body>
+</html>
