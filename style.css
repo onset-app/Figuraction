@@ -1,0 +1,558 @@
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: #111;
+  color: #fff;
+  margin: 0;
+  padding: 0;
+}
+
+/* Vidéo intro */
+#intro-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  z-index: 9999;
+}
+
+#intro-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#skip-intro {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 10px 20px;
+  background-color: rgba(0,0,0,0.6);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+/* Connexion */
+.login-box {
+  background-color: rgba(0,0,0,0.8);
+  border: 2px solid #00f;
+  border-radius: 15px;
+  padding: 30px;
+  max-width: 400px;
+  margin: 50px auto;
+  text-align: center;
+}
+
+.title {
+  font-size: 3rem;
+  margin-bottom: 20px;
+  color: #fff;
+  text-shadow: 2px 2px 10px rgba(0,0,0,0.7);
+}
+
+input, select, button {
+  display: block;
+  margin: 10px auto;
+  padding: 10px;
+  width: 80%;
+  max-width: 300px;
+  border-radius: 5px;
+  border: none;
+}
+
+.blue-btn {
+  background-color: #007bff;
+  color: #fff;
+  cursor: pointer;
+}
+
+.blue-btn:hover {
+  background-color: #0056b3;
+}
+
+/* --- MENU LATÉRAL GAUCHE --- */
+nav {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 220px;
+  background-color: #222;
+  padding-top: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  z-index: 100;
+}
+
+nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+nav li {
+  padding: 15px 20px;
+  width: calc(100% - 40px);
+  cursor: pointer;
+  font-weight: bold;
+  box-sizing: border-box;
+}
+
+
+
+nav li:hover {
+  background-color: #444;
+}
+
+/* Contenu principal à droite du menu */
+#content {
+  margin-left: 220px;
+  padding: 20px;
+}
+
+/* Images et médias dans le contenu */
+#content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+  border: 2px solid #fff;
+}
+#content img {
+  display: block !important;
+  margin: 20px auto;
+  max-width: 90%;
+  height: auto;
+  border-radius: 10px;
+  border: 2px solid #fff;
+  visibility: visible;
+}
+.covoit-buttons {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.covoit-buttons button {
+  margin: 10px;
+  padding: 10px 20px;
+  font-size: 1rem;
+}
+
+.trajet-list {
+  list-style: none;
+  padding: 0;
+}
+
+.trajet-list li {
+  background-color: rgba(0,0,0,0.7);
+  border: 1px solid #00f;
+  border-radius: 10px;
+  margin: 10px 0;
+  padding: 10px;
+}
+
+.trajet-list li.complet {
+  opacity: 0.5;
+  background-color: #333;
+}
+
+
+/* ===== ORGANIGRAMME CINÉMA COMPLET ===== */
+.org-chart {
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
+  overflow-x: auto;
+  padding-bottom: 30px;
+
+  /* Décalage vers la droite */
+  transform: translateX(-250px);
+}
+
+/* Liste globale de l’organigramme */
+.org-chart ul {
+  padding-top: 20px;
+  position: relative;
+  list-style: none;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 0;
+}
+
+/* Chaque élément de l’organigramme */
+.org-chart li {
+  text-align: center;
+  position: relative;
+  padding: 15px 5px 0 5px;
+  white-space: nowrap;
+  font-size: 12px; /* taille du texte plus petite */
+  line-height: 1.3;
+}
+
+/* Boîtes / liens dans l’organigramme */
+.org-chart li a {
+  display: inline-block;
+  padding: 5px 10px;
+  background-color: #f0f0f0;
+  border-radius: 5px;
+  text-decoration: none;
+  color: #333;
+  font-size: 12px; /* cohérent avec li */
+  transition: background-color 0.3s;
+}
+
+/* Hover effect pour boîtes */
+.org-chart li a:hover {
+  background-color: #d9d9d9;
+}
+
+/* Classe spéciale pour réduire la taille de certains mots */
+.small-text {
+  font-size: 10px; /* mots plus petits */
+}
+
+/* Ajustement responsive pour mobile */
+@media screen and (max-width: 768px) {
+  .org-chart li {
+    font-size: 10px; /* texte encore plus petit sur petit écran */
+    padding: 10px 3px 0 3px;
+  }
+  .org-chart li a {
+    font-size: 10px;
+    padding: 4px 6px;
+  }
+
+  /* Décalage moins important sur mobile */
+  .org-chart {
+    transform: translateX(-100px);
+  }
+
+  .small-text {
+    font-size: 8px; /* ajuste encore plus sur mobile */
+  }
+}
+
+/* Boîtes */
+.org-box {
+  display: inline-block;
+  background: #111;
+  color: #fff;
+  border: 2px solid #007bff;
+  border-radius: 10px;
+  padding: 10px 15px;
+  font-weight: bold;
+  transition: all 0.3s;
+  box-shadow: 0 0 10px rgba(0,123,255,0.4);
+}
+
+.org-box:hover {
+  background-color: #007bff;
+  color: #fff;
+  transform: scale(1.05);
+}
+
+.casting-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  padding: 10px;
+}
+
+.casting-card {
+  background-color: rgba(0,0,0,0.8);
+  border: 2px solid #007bff;
+  border-radius: 15px;
+  padding: 15px;
+  text-align: center;
+  box-shadow: 0 0 10px rgba(0,0,255,0.3);
+}
+
+.casting-card img {
+  width: 100%;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+
+
+/* LISTE CASTINGS — STYLE SCROLLABLE TYPE RÉSEAUX SOCIAUX */
+#casting-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: calc(100vh - 160px); /* Adapté à l'écran */
+    overflow-y: auto; /* Scroll vertical */
+    padding-right: 10px; /* marge pour éviter que ça touche le bord */
+}
+
+/* CARTE CASTING — VERSION PLUS PETITE */
+.casting-card {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    background: white;
+    padding: 12px;
+    border-radius: 12px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    font-size: 14px; /* plus petit */
+}
+
+.casting-card img {
+    width: 90px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 6px;
+    margin-right: 10px;
+}
+
+
+.casting-card h3 {
+    font-size: 16px;
+    margin: 5px 0;
+}
+
+.casting-card p {
+    margin: 2px 0;
+    font-size: 13px;
+}
+
+.casting-card .blue-btn {
+    margin-top: 8px;
+    padding: 6px 10px;
+    font-size: 14px;
+}
+
+
+
+
+/* ✅ Correction affichage mobile */
+@media (max-width: 768px) {
+  body {
+    font-size: 16px;
+    padding: 0;
+    margin: 0;
+    overflow-x: hidden; /* évite les décalages horizontaux */
+  }
+
+  .login-box {
+    width: 90%;
+    margin: 20px auto;
+  }
+
+  nav ul {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  #content img {
+    width: 100%; /* force les images (comme l’organigramme) à s’adapter à la largeur de l’écran */
+    height: auto;
+  }
+
+  video {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+}
+
+.projet-card {
+  background-color: rgba(0,0,0,0.7);
+  border: 1px solid #007bff;
+  border-radius: 10px;
+  padding: 15px;
+  margin-top: 15px;
+}
+
+#logout-btn {
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.4rem;
+  cursor: pointer;
+  z-index: 10;
+  transition: color 0.3s ease;
+  padding: 5px;
+}
+
+#logout-btn:hover {
+  color: #007bff;
+}
+
+
+#content label {
+  display:block;
+  margin-top:10px;
+  font-weight:bold;
+}
+
+#content input, #content select {
+  width: 90%;
+  padding: 10px;
+  margin: 5px 0 15px 0;
+  border-radius: 5px;
+  border:none;
+}
+
+
+/* Empêche le site de dépasser sur mobile */
+* {
+  box-sizing: border-box;
+}
+
+body, html {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Redimensionner les images */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Empêcher un élément de casser la mise en page */
+#content {
+  width: 100%;
+  overflow-x: hidden;
+  padding-right: 10px;
+}
+
+/* --- FIX COMPLET AFFICHAGE MOBILE --- */
+@media (max-width: 768px) {
+
+  /* Menu réduit mais toujours lisible */
+  nav {
+    position: fixed;
+    width: 150px; /* plus compact */
+    height: 100vh;
+    left: 0;
+    top: 0;
+    overflow-y: auto;
+  }
+
+  /* Le contenu doit se décaler proprement */
+  #content {
+    margin-left: 150px !important;
+    width: calc(100% - 150px);
+    overflow-x: hidden;
+    padding: 15px;
+  }
+
+  /* Empêche tout débordement */
+  body, html {
+    overflow-x: hidden !important;
+    width: 100% !important;
+  }
+}
+
+.info-list {
+  list-style: none;
+  padding: 0;
+}
+
+.info-list li {
+  padding: 15px;
+  border: 1px solid #007bff;
+  border-radius: 10px;
+  margin: 10px 0;
+  cursor: pointer;
+  background-color: rgba(0,0,0,0.6);
+  transition: 0.3s;
+}
+
+.info-list li:hover {
+  background-color: #007bff;
+}
+
+#logout-menu {
+    color: #ff3b3b;
+    font-weight: bold;
+}
+#logout-menu:hover {
+    opacity: 0.7;
+}
+
+
+
+
+
+.candidature-item {
+    width: 100%;
+    background: #222;
+    padding: 15px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    font-size: 16px;
+    border: 1px solid #444;
+}
+
+.candidature-icon {
+    font-size: 22px;
+}
+
+/* Couleurs selon le statut */
+.candidature-icon.confirme {
+    color: #2ecc71; /* vert */
+}
+
+.candidature-icon.refuse {
+    color: #e74c3c; /* rouge */
+}
+
+.candidature-icon.attente {
+    color: #f1c40f; /* jaune/blanc */
+}
+
+
+.list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.list-item {
+    padding: 12px;
+    background: #222;
+    border-radius: 8px;
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+    border: 1px solid #444;
+}
+
+.list-item:hover {
+    background: #333;
+}
+
+.profil-card {
+    padding: 15px;
+    background: #222;
+    border-radius: 10px;
+    line-height: 1.6;
+    border: 1px solid #444;
+}
+
+
+
