@@ -4,8 +4,8 @@
 // ----------------------
 function getFormValues() {
   return {
-    nom: document.getElementById("login-nom").value.trim(),
-    prenom: document.getElementById("login-prenom").value.trim(),
+    lastName: document.getElementById("login-nom").value.trim(),
+    firstName: document.getElementById("login-prenom").value.trim(),
     email: document.getElementById("login-email").value.trim(),
     password: document.getElementById("login-password").value.trim(),
     type: document.getElementById("login-type").value
@@ -24,11 +24,11 @@ document.getElementById('login-screen').style.display = 'block';
 
 
 // --- Authentification ---
-async function creerCompte() {
+async function createAccount() {
 const email = document.getElementById('login-email').value;
 const password = document.getElementById('login-password').value;
-const nom = document.getElementById('login-nom').value;
-const prenom = document.getElementById('login-prenom').value;
+const lastName = document.getElementById('login-nom').value;
+const firstName = document.getElementById('login-prenom').value;
 const type = document.getElementById('login-type').value;
 
 
@@ -36,16 +36,16 @@ const { user, error } = await supabase.auth.signUp({ email, password });
 if (error) return alert(error.message);
 
 
-await supabase.from('profiles').insert([{ id: user.id, email, type, nom, prenom }]);
+await supabase.from('profiles').insert([{ id: user.id, email, type, nom: lastName, prenom: firstName }]);
 alert('Compte créé ! Vérifie ton email pour confirmer.');
 }
 
 
-async function creerCompte() {
+async function createAccount() {
 const email = document.getElementById('login-email').value;
 const password = document.getElementById('login-password').value;
-const nom = document.getElementById('login-nom').value;
-const prenom = document.getElementById('login-prenom').value;
+const lastName = document.getElementById('login-nom').value;
+const firstName = document.getElementById('login-prenom').value;
 const type = document.getElementById('login-type').value;
 
 
@@ -53,12 +53,12 @@ const { user, error } = await supabase.auth.signUp({ email, password });
 if (error) return alert(error.message);
 
 
-await supabase.from('profiles').insert([{ id: user.id, email, type, nom, prenom }]);
+await supabase.from('profiles').insert([{ id: user.id, email, type, nom: lastName, prenom: firstName }]);
 alert('Compte créé ! Vérifie ton email pour confirmer.');
 }
 
 
-async function seConnecter() {
+async function signIn() {
   const email = document.getElementById('login-email').value;
   const password = document.getElementById('login-password').value;
   const type = document.getElementById('login-type').value;
@@ -73,13 +73,13 @@ async function seConnecter() {
   if (error) {
     alert("Erreur de connexion : " + error.message);
   } else {
-    afficherMainScreen(type);
+    showMainScreen(type);
   }
 }
 
 
 // --- Mot de passe oublié ---
-async function motDePasseOublie() {
+async function forgotPassword() {
 const email = prompt("Entrez votre email pour réinitialiser le mot de passe :");
 if (!email) return;
 const { error } = await supabase.auth.api.resetPasswordForEmail(email);
@@ -89,7 +89,7 @@ else alert('Email de réinitialisation envoyé !');
 
 
 // --- Menu principal ---
-function afficherCasting() {
+function showCasting() {
   document.getElementById('content').innerHTML = `
     <h2>🎬 Castings en Belgique</h2>
     <div id="casting-list" class="casting-grid">
@@ -99,7 +99,7 @@ function afficherCasting() {
         <p><strong>Lieu :</strong> Bruxelles</p>
         <p><strong>Âge :</strong> 18-60 ans</p>
         <p><strong>Rôle :</strong> Passants, clients café</p>
-        <button class="blue-btn" onclick="afficherFormulairePostulation('Public pour émission RTL TVI')">Postuler</button>
+        <button class="blue-btn" onclick="showApplicationForm('Public pour émission RTL TVI')">Postuler</button>
  </div>
 
 
@@ -115,7 +115,7 @@ function afficherCasting() {
 
       <div class="casting-card">
         <img src="casting3.jpg" alt="Casting 3">
-        <h3>Long métrage – “La Frontière”</h3>
+        <h3>Long métrage – "La Frontière"</h3>
         <p><strong>Lieu :</strong> Namur</p>
         <p><strong>Âge :</strong> 25-50 ans</p>
         <p><strong>Rôle :</strong> Ouvriers / figurants de gare</p>
@@ -125,7 +125,7 @@ function afficherCasting() {
 
       <div class="casting-card">
         <img src="casting4.jpg" alt="Casting 4">
-        <h3>Campagne pub “Visit Brussels”</h3>
+        <h3>Campagne pub "Visit Brussels"</h3>
         <p><strong>Lieu :</strong> Bruxelles</p>
         <p><strong>Âge :</strong> 18-40 ans</p>
         <p><strong>Rôle :</strong> Jeunes touristes / couples</p>
@@ -146,19 +146,19 @@ function afficherCasting() {
 }
 
 
-function afficherCovoiturage() {
+function showRideshare() {
   document.getElementById('content').innerHTML = `
     <h2>Covoiturage</h2>
     <div id="covoit-buttons">
-      <button class="blue-btn" onclick="afficherFormulaireCovoit()">Conducteur</button>
-      <button class="blue-btn" onclick="afficherListeCovoit()">Covoiturage</button>
+      <button class="blue-btn" onclick="showRideshareForm()">Conducteur</button>
+      <button class="blue-btn" onclick="showRideshareList()">Covoiturage</button>
     </div>
     <div id="covoit-section"></div>
   `;
 }
 
 
-function afficherFormulaireCovoit() {
+function showRideshareForm() {
   document.getElementById('covoit-section').innerHTML = `
     <h3>Proposer un covoiturage</h3>
     <form id="form-covoiturage">
@@ -177,65 +177,62 @@ function afficherFormulaireCovoit() {
   `;
 
 
-  // Empêcher le rechargement de la page
   const form = document.getElementById('form-covoiturage');
   form.addEventListener('submit', (event) => {
     event.preventDefault();
 
 
-    const projet = document.getElementById('projet').value;
-    const conducteur = document.getElementById('conducteur').value;
-    const trajet = document.getElementById('trajet').value;
+    const project = document.getElementById('projet').value;
+    const driver = document.getElementById('conducteur').value;
+    const route = document.getElementById('trajet').value;
     const date = document.getElementById('date').value;
-    const heure = document.getElementById('heure').value;
-    const places = document.getElementById('places').value;
+    const time = document.getElementById('heure').value;
+    const seats = document.getElementById('places').value;
     const contact = document.getElementById('contact').value;
 
 
-    // Sauvegarde temporaire
-    const covoits = JSON.parse(localStorage.getItem('covoits') || '[]');
-    covoits.push({ projet, conducteur, trajet, date, heure, places, contact });
-    localStorage.setItem('covoits', JSON.stringify(covoits));
+    const rideshares = JSON.parse(localStorage.getItem('rideshares') || '[]');
+    rideshares.push({ project, driver, route, date, time, seats, contact });
+    localStorage.setItem('rideshares', JSON.stringify(rideshares));
 
 
     alert("Covoiturage publié !");
-    afficherListeCovoit();
+    showRideshareList();
   });
 }
 
 
-function afficherListeCovoit() {
-  const covoits = JSON.parse(localStorage.getItem('covoits') || '[]');
-  if (covoits.length === 0) {
+function showRideshareList() {
+  const rideshares = JSON.parse(localStorage.getItem('rideshares') || '[]');
+  if (rideshares.length === 0) {
     document.getElementById('covoit-section').innerHTML = "<p>Aucun covoiturage publié pour le moment.</p>";
     return;
   }
 
 
   let html = "<h3>Liste des covoiturages disponibles</h3>";
-  covoits.forEach((c, idx) => {
-    // construire le contact : si type contient '@' on considère email sinon téléphone
+  rideshares.forEach((c, idx) => {
     const contact = c.contact || '';
     const isEmail = contact.includes('@');
     const contactAction = isEmail
-      ? `window.location.href = 'mailto:${contact}?subject=Proposition%20covoiturage%20pour%20${encodeURIComponent(c.projet)}'`
+      ? `window.location.href = 'mailto:${contact}?subject=Proposition%20covoiturage%20pour%20${encodeURIComponent(c.project)}'`
       : `window.location.href = 'tel:${contact}'`;
 
 
     html += `
-      <div class="covoit-card ${c.complet ? 'complet' : ''}">
+      <div class="covoit-card ${c.full ? 'complet' : ''}">
         <div class="covoit-row">
           <div class="covoit-left">
-            <strong>${escapeHtml(c.projet)}</strong><br>
-            Conducteur : ${escapeHtml(c.conducteur)}<br>
-            Départ : ${escapeHtml(c.trajet)}<br>
-            Date : ${escapeHtml(c.date)} à ${escapeHtml(c.heure)}<br>
-            Places : ${escapeHtml(String(c.places))}<br>
+            <strong>${escapeHtml(c.project)}</strong><br>
+            Conducteur : ${escapeHtml(c.driver)}<br>
+            Départ : ${escapeHtml(c.route)}<br>
+            Date : ${escapeHtml(c.date)} à ${escapeHtml(c.time)}<br>
+            Places : ${escapeHtml(String(c.seats))}<br>
           </div>
           <div class="covoit-actions">
-            <button class="blue-btn" ${c.complet ? 'disabled' : `onclick="${contactAction}"`}>Contacter</button>
-            ${c.complet ? '' : `<button class="blue-btn" onclick="marquerComplet(${idx})">Marquer complet</button>`}
-            <button class="blue-btn outline" onclick="supprimerTrajet(${idx})">Supprimer</button>
+            <button class="blue-btn" ${c.full ? 'disabled' : `onclick="${contactAction}"`}>Contacter</button>
+            ${c.full ? '' : `<button class="blue-btn" onclick="markComplete(${idx})">Marquer complet</button>`}
+            <button class="blue-btn outline" onclick="deleteRide(${idx})">Supprimer</button>
           </div>
         </div>
       </div>
@@ -250,7 +247,7 @@ function afficherListeCovoit() {
 
 
 // --- FORMULAIRE CONDUCTEUR ---
-function afficherFormulaireCovoiturage() {
+function showRideshareFormPage() {
 document.getElementById('content').innerHTML = `
   <h2>Proposer un covoiturage</h2>
   <form id="form-covoiturage">
@@ -267,69 +264,68 @@ document.getElementById('content').innerHTML = `
     <button type="submit" class="blue-btn">Publier</button>
   </form>
 `;
- 
+
 }
 
 
-function publierCovoit() {
-  const projet = document.getElementById('projet').value.trim();
-  const conducteur = document.getElementById('conducteur').value.trim();
-  const trajet = document.getElementById('trajet').value.trim();
+function publishRide() {
+  const project = document.getElementById('projet').value.trim();
+  const driver = document.getElementById('conducteur').value.trim();
+  const route = document.getElementById('trajet').value.trim();
   const date = document.getElementById('date').value;
-  const heure = document.getElementById('heure').value;
-  const places = document.getElementById('places').value;
+  const time = document.getElementById('heure').value;
+  const seats = document.getElementById('places').value;
   const contact = document.getElementById('contact').value.trim();
 
 
-  if (!projet || !conducteur || !trajet || !date || !heure || !places || !contact) {
+  if (!project || !driver || !route || !date || !time || !seats || !contact) {
     alert("Merci de remplir tous les champs !");
     return;
   }
 
 
-  // ✅ Enregistrement local
-  const covoits = JSON.parse(localStorage.getItem('covoits') || '[]');
-  covoits.push({
-    projet,
-    conducteur,
-    trajet,
+  const rideshares = JSON.parse(localStorage.getItem('rideshares') || '[]');
+  rideshares.push({
+    project,
+    driver,
+    route,
     date,
-    heure,
-    places,
+    time,
+    seats,
     contact,
-    complet: false
+    full: false
   });
-  localStorage.setItem('covoits', JSON.stringify(covoits));
+  localStorage.setItem('rideshares', JSON.stringify(rideshares));
 
 
   alert("Covoiturage publié !");
-  afficherListeCovoit();
+  showRideshareList();
 }
 
 
 // --- LISTE DES TRAJETS ---
-let trajets = [];
+let rides = [];
 
 
-function afficherListeCovoiturage() {
-  if (trajets.length === 0) {
+function showRideList() {
+  if (rides.length === 0) {
     document.getElementById('covoiturage-content').innerHTML = `<p>Aucun trajet pour le moment.</p>`;
     return;
   }
 
 
   let html = '<h3>Trajets disponibles</h3>';
-  trajets.forEach((t, i) => {
+  rides.forEach((t, i) => {
     html += `
       <div class="trajet">
-        <p><strong>Conducteur :</strong> ${t.nom}</p>
-        <p><strong>Trajet :</strong> ${t.trajet}</p>
+        <p><strong>Conducteur :</strong> ${t.driverName}</p>
+        <p><strong>Trajet :</strong> ${t.route}</p>
         <p><strong>Date :</strong> ${t.date}</p>
-        <p><strong>Heure :</strong> ${t.heure}</p>
-        <p><strong>Places :</strong> ${t.places}</p>
+        <p><strong>Heure :</strong> ${t.time}</p>
+        <p><strong>Places :</strong> ${t.seats}</p>
         <p><strong>Contact :</strong> ${t.contact}</p>
-        <button class="blue-btn" onclick="marquerComplet(${i})">Complet</button>
-        <button class="blue-btn" onclick="supprimerTrajet(${i})">Supprimer</button>
+        <button class="blue-btn" onclick="markComplete(${i})">Complet</button>
+        <button class="blue-btn" onclick="deleteRide(${i})">Supprimer</button>
       </div>
       <hr>
     `;
@@ -341,42 +337,42 @@ function afficherListeCovoiturage() {
 
 
 // --- PUBLIER UN TRAJET ---
-function publierCovoiturage(event) {
+function publishRideshare(event) {
   event.preventDefault();
 
 
-  const nouveauTrajet = {
-    nom: document.getElementById('nomConducteur').value,
-    trajet: document.getElementById('trajet').value,
+  const newRide = {
+    driverName: document.getElementById('nomConducteur').value,
+    route: document.getElementById('trajet').value,
     date: document.getElementById('dateTrajet').value,
-    heure: document.getElementById('heureTrajet').value,
-    places: document.getElementById('places').value,
+    time: document.getElementById('heureTrajet').value,
+    seats: document.getElementById('places').value,
     contact: document.getElementById('contact').value,
-    complet: false
+    full: false
   };
 
 
-  trajets.push(nouveauTrajet);
-  afficherListeCovoiturage();
+  rides.push(newRide);
+  showRideList();
 }
 
 
 // --- MARQUER COMPLET ---
-function marquerComplet(index) {
-  trajets[index].complet = true;
-  trajets[index].places = "Complet";
-  afficherListeCovoiturage();
+function markComplete(index) {
+  rides[index].full = true;
+  rides[index].seats = "Complet";
+  showRideList();
 }
 
 
 // --- SUPPRIMER UN TRAJET ---
-function supprimerTrajet(index) {
-  trajets.splice(index, 1);
-  afficherListeCovoiturage();
+function deleteRide(index) {
+  rides.splice(index, 1);
+  showRideList();
 }
 
 
-function afficherInfos() {
+function showInfo() {
     document.getElementById('content').innerHTML = `
         <h2>Informations</h2>
 <p>FigurAction aide les productions à organiser plus facilement leurs castings et tournages,
@@ -384,77 +380,77 @@ function afficherInfos() {
     Voici un aperçu de la hiérarchie typique sur un plateau de tournage.</p>
 
         <ul class="info-list">
-            <li onclick="afficherMentionsLegales()">📄 Mentions légales</li>
-            <li onclick="afficherConditions()">📘 Conditions d'utilisation</li>
-            <li onclick="afficherConfidentialite()">🔒 Politique de confidentialité</li>
-            <li onclick="afficherOrganigramme()">🎬 Organigramme cinéma</li>
-            <li onclick="afficherpartenaire()">🤝 Partenaire</li>
+            <li onclick="showLegalNotice()">📄 Mentions légales</li>
+            <li onclick="showTerms()">📘 Conditions d'utilisation</li>
+            <li onclick="showPrivacyPolicy()">🔒 Politique de confidentialité</li>
+            <li onclick="showOrgChart()">🎬 Organigramme cinéma</li>
+            <li onclick="showPartners()">🤝 Partenaire</li>
         </ul>
     `;
 }
 
-function afficherContact() {
+function showContact() {
 document.getElementById('content').innerHTML = '<h2>Contact</h2><p>Email : figuraction.casting@gmail.com</p>';
 }
 
 
-function afficherAdmin() {
+function showAdmin() {
 document.getElementById('content').innerHTML = '<h2>Admin</h2><p>Liste de toutes les candidatures et projets ici.</p>';
 }
 
 
 
-let profil = {
-  nom: "Utilisateur",
-  prenom: "Démonstration",
+let userProfile = {
+  lastName: "Utilisateur",
+  firstName: "Démonstration",
   email: "demo@figuraction.com",
-  ville: "Non précisé",
+  city: "Non précisé",
   age: "Non précisé",
-  niveau: "Débutant"
+  level: "Débutant"
 };
 
 
-function afficherProfil() {
+function showProfile() {
   document.getElementById('content').innerHTML = `
     <h2>Mon Profil</h2>
 
 
-    <p><strong>Nom :</strong> ${profil.nom}</p>
-    <p><strong>Prénom :</strong> ${profil.prenom}</p>
-    <p><strong>Email :</strong> ${profil.email}</p>
-    <p><strong>Ville :</strong> ${profil.ville}</p>
-    <p><strong>Âge :</strong> ${profil.age}</p>
-    <p><strong>Niveau :</strong> ${profil.niveau}</p>
+    <p><strong>Nom :</strong> ${userProfile.lastName}</p>
+    <p><strong>Prénom :</strong> ${userProfile.firstName}</p>
+    <p><strong>Email :</strong> ${userProfile.email}</p>
+    <p><strong>Ville :</strong> ${userProfile.city}</p>
+    <p><strong>Âge :</strong> ${userProfile.age}</p>
+    <p><strong>Niveau :</strong> ${userProfile.level}</p>
 
 
-    <button class="blue-btn" onclick="modifierProfil()">Modifier mon profil</button>
+    <button class="blue-btn" onclick="editProfile()">Modifier mon profil</button>
   `;
 }
 
 
-function modifierProfil() {
+function editProfile() {
   document.getElementById('content').innerHTML = `
     <h2>Modifier mon profil</h2>
 
 
     <label>Nom</label>
-    <input id="edit-nom" value="${profil.nom}">
+    <input id="edit-nom" value="${userProfile.lastName}">
 
 
     <label>Prénom</label>
-    <input id="edit-prenom" value="${profil.prenom}">
+    <input id="edit-prenom" value="${userProfile.firstName}">
 
 
     <label>Email</label>
-    <input id="edit-email" type="email" value="${profil.email}">
+    <input id="edit-email" type="email" value="${userProfile.email}">
 
 
     <label>Ville</label>
-    <input id="edit-ville" value="${profil.ville}">
+    <input id="edit-ville" value="${userProfile.city}">
 
 
     <label>Âge</label>
-    <input id="edit-age" type="number" value="${profil.age}">
+    <input id="edit-age" type="number" value="${userProfile.age}">
 
 
     <label>Niveau</label>
@@ -465,85 +461,69 @@ function modifierProfil() {
     </select>
 
 
-    <button class="blue-btn" onclick="sauverProfil()">Enregistrer</button>
+    <button class="blue-btn" onclick="saveProfile()">Enregistrer</button>
   `;
 
 
-  // Sélectionne la valeur actuelle du niveau
-  document.getElementById("edit-niveau").value = profil.niveau;
+  document.getElementById("edit-niveau").value = userProfile.level;
 }
 
 
-function sauverProfil() {
-  profil.nom = document.getElementById('edit-nom').value;
-  profil.prenom = document.getElementById('edit-prenom').value;
-  profil.email = document.getElementById('edit-email').value;
-  profil.ville = document.getElementById('edit-ville').value;
-  profil.age = document.getElementById('edit-age').value;
-  profil.niveau = document.getElementById('edit-niveau').value;
+function saveProfile() {
+  userProfile.lastName = document.getElementById('edit-nom').value;
+  userProfile.firstName = document.getElementById('edit-prenom').value;
+  userProfile.email = document.getElementById('edit-email').value;
+  userProfile.city = document.getElementById('edit-ville').value;
+  userProfile.age = document.getElementById('edit-age').value;
+  userProfile.level = document.getElementById('edit-niveau').value;
 
 
-  // Retour au profil mis à jour
-  afficherProfil();
+  showProfile();
 }
 
 
-function connexionTest() {
+function testLogin() {
 
-  // cacher l’écran de connexion
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('logout-btn').style.display = 'block';
   document.getElementById("candidats-menu").style.display = "none";
 
- // Affiche CASTING pour le test figurant
-    document.querySelector("li[onclick='afficherCasting()']").style.display = "block";
+  document.querySelector("li[onclick='showCasting()']").style.display = "block";
 
 
-  // afficher le contenu principal
   document.getElementById('main-screen').style.display = 'block';
 
 
-  // simuler un compte producteur
   document.getElementById('projet-menu').style.display = 'block';
 
 
-  // ouvrir directement la page projets
-  afficherProjets();
+  showProjects();
 
-      // Cacher l’onglet projets pour le mode test figurant
     document.getElementById("projet-menu").style.display = "none";
 
-        // Montrer CONTRAT que dans connexion test
     document.getElementById("contrat-menu").style.display = "block";
     document.getElementById("candidatures-menu").style.display = "block";
 
-    afficherCasting();
+    showCasting();
 
 }
 
-function connexionProTest() {
-    // Cacher écran de connexion
+function testProLogin() {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('logout-btn').style.display = 'block';
 
-    // Afficher écran principal
     document.getElementById('main-screen').style.display = 'block';
     document.getElementById("candidats-menu").style.display = "block";
 
-    // Masquer l'onglet CASTING
-    const castMenu = document.querySelector("nav ul li[onclick='afficherCasting()']");
+    const castMenu = document.querySelector("nav ul li[onclick='showCasting()']");
     if (castMenu) castMenu.style.display = 'none';
 
-    // Afficher menu PROJET
     document.getElementById('projet-menu').style.display = 'block';
 
-    // Charger la page projets directement
-
-    // Ne pas montrer CONTRAT dans connexionProTest
     document.getElementById("contrat-menu").style.display = "none";
     document.getElementById("candidatures-menu").style.display = "none";
 
-    afficherProjets();
+    showProjects();
 }
 
 
@@ -553,29 +533,28 @@ function escapeHtml(str){ if(!str) return ''; return String(str).replace(/[&<>"'
 }
 
 
-function marquerComplet(index) {
-  const covoits = JSON.parse(localStorage.getItem('covoits') || '[]');
-  if (!covoits[index]) return;
-  covoits[index].complet = true;
-  // optionnel : mettre places à 0 ou "Complet"
-  covoits[index].places = 0;
-  localStorage.setItem('covoits', JSON.stringify(covoits));
-  afficherListeCovoit();
+function markComplete(index) {
+  const rideshares = JSON.parse(localStorage.getItem('rideshares') || '[]');
+  if (!rideshares[index]) return;
+  rideshares[index].full = true;
+  rideshares[index].seats = 0;
+  localStorage.setItem('rideshares', JSON.stringify(rideshares));
+  showRideshareList();
 }
 
 
-function supprimerTrajet(index) {
-  const covoits = JSON.parse(localStorage.getItem('covoits') || '[]');
-  covoits.splice(index, 1);
-  localStorage.setItem('covoits', JSON.stringify(covoits));
-  afficherListeCovoit();
+function deleteRide(index) {
+  const rideshares = JSON.parse(localStorage.getItem('rideshares') || '[]');
+  rideshares.splice(index, 1);
+  localStorage.setItem('rideshares', JSON.stringify(rideshares));
+  showRideshareList();
 }
 
 
-function afficherFormulaireProjet() {
+function showProjectForm() {
   document.getElementById('content').innerHTML = `
     <h2>Ajouter un projet</h2>
-    <form id="form-projet" onsubmit="soumettreProjet(event)">
+    <form id="form-projet" onsubmit="submitProject(event)">
       <label>Titre du projet :</label>
       <input type="text" id="projet-titre" placeholder="Ex: Tournage pub Coca-Cola" required>
 
@@ -607,12 +586,12 @@ function afficherFormulaireProjet() {
 }
 
 
-function soumettreProjet(event) {
+function submitProject(event) {
   event.preventDefault();
 
 
-  const projet = {
-    titre: document.getElementById('projet-titre').value,
+  const project = {
+    title: document.getElementById('projet-titre').value,
     description: document.getElementById('projet-description').value,
     date: document.getElementById('projet-date').value,
     zone: document.getElementById('projet-zone').value,
@@ -620,28 +599,23 @@ function soumettreProjet(event) {
   };
 
 
-  // Pour l’instant : simulation d’enregistrement local
-  alert(`Projet ajouté : ${projet.titre}\n(${projet.zone})`);
+  alert(`Projet ajouté : ${project.title}\n(${project.zone})`);
 
-
-  // Ensuite, tu pourras remplacer ça par un envoi vers Supabase
 }
 
 
-function afficherMainScreen(type) {
+function showMainScreen(type) {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('main-screen').style.display = 'block';
 
 
-  // Masquer tous les menus spéciaux d’abord
   document.getElementById('admin-menu').style.display = 'none';
-  const projetMenu = document.getElementById('projet-menu');
-  if (projetMenu) projetMenu.style.display = 'none';
+  const projectMenu = document.getElementById('projet-menu');
+  if (projectMenu) projectMenu.style.display = 'none';
 
 
-  // Afficher selon le type
-  if (type === "production" && projetMenu) {
-    projetMenu.style.display = 'block';
+  if (type === "production" && projectMenu) {
+    projectMenu.style.display = 'block';
   } else if (type === "admin") {
     document.getElementById('admin-menu').style.display = 'block';
   }
@@ -651,7 +625,7 @@ function afficherMainScreen(type) {
 }
 
 
-function afficherProjets() {
+function showProjects() {
   document.getElementById('content').innerHTML = `
     <h2>Mes Projets (démo producteur)</h2>
     <form id="form-projet">
@@ -660,7 +634,7 @@ function afficherProjets() {
       <input type="text" id="lieu" placeholder="Lieu du tournage">
       <input type="date" id="date" placeholder="Date de tournage">
       <input type="text" id="type" placeholder="Type de rôle recherché">
-      <button class="blue-btn" type="button" onclick="ajouterProjet()">Ajouter le projet</button>
+      <button class="blue-btn" type="button" onclick="addProject()">Ajouter le projet</button>
     </form>
 
 
@@ -669,47 +643,43 @@ function afficherProjets() {
 }
 
 
-function ajouterProjet() {
-  const titre = document.getElementById('titre').value;
+function addProject() {
+  const title = document.getElementById('titre').value;
   const description = document.getElementById('description').value;
-  const lieu = document.getElementById('lieu').value;
+  const location = document.getElementById('lieu').value;
   const date = document.getElementById('date').value;
   const type = document.getElementById('type').value;
 
 
-  if (!titre) {
+  if (!title) {
     alert("Merci de remplir au moins le titre !");
     return;
   }
 
 
-  const projetHTML = `
+  const projectHTML = `
     <div class="projet-card">
-      <h3>${titre}</h3>
+      <h3>${title}</h3>
       <p><strong>Description :</strong> ${description}</p>
-      <p><strong>Lieu :</strong> ${lieu}</p>
+      <p><strong>Lieu :</strong> ${location}</p>
       <p><strong>Date :</strong> ${date}</p>
       <p><strong>Rôle recherché :</strong> ${type}</p>
     </div>
   `;
 
 
-  document.getElementById('liste-projets').innerHTML += projetHTML;
+  document.getElementById('liste-projets').innerHTML += projectHTML;
   document.getElementById('form-projet').reset();
 }
 
 
-function deconnecter() {
-    // Effacer la session locale
+function logout() {
     localStorage.removeItem("user");
 
-    // Cacher le menu
     document.getElementById("main-screen").style.display = "none";
 
-    // Afficher l’écran de connexion + inscription
     document.getElementById("login-screen").style.display = "block";
 
-    // Réinitialiser le formulaire
     document.getElementById("login-nom").value = "";
     document.getElementById("login-prenom").value = "";
     document.getElementById("login-email").value = "";
@@ -720,14 +690,14 @@ function deconnecter() {
 
 
 
-function afficherLogin() {
+function showLogin() {
   document.getElementById('content').innerHTML = `
     <div class="login-box">
       <h2 class="title">Connexion</h2>
       <input type="text" id="email" placeholder="Email">
       <input type="password" id="password" placeholder="Mot de passe">
-      <button class="blue-btn" onclick="connexion()">Se connecter</button>
-      <button class="blue-btn" onclick="connexionTest()">Connexion test</button>
+      <button class="blue-btn" onclick="signIn()">Se connecter</button>
+      <button class="blue-btn" onclick="testLogin()">Connexion test</button>
       <p><a href="#">Mot de passe oublié ?</a></p>
     </div>
   `;
@@ -743,17 +713,16 @@ window.onload = () => {
 const video = document.getElementById('intro-video');
 if (video) {
     video.play().catch(() => {
-        // iOS bloque parfois → on force un deuxième play
         setTimeout(() => {
             video.play();
         }, 500);
     });
 }
 
-function afficherOrganigramme() {
+function showOrgChart() {
     document.getElementById('content').innerHTML = `
         <h2>Organigramme du cinéma</h2>
-        
+
         <div class="org-chart">
             <ul>
         <li>
@@ -822,40 +791,40 @@ function afficherOrganigramme() {
 
 
 
-function afficherMentionsLegales() {
+function showLegalNotice() {
     document.getElementById('content').innerHTML = `
         <h2>Mentions légales</h2>
         <p>
 © 2025 FRIGURACTION
-Tous droits réservés. 
-Cette application et son contenu sont protégés par les droits d’auteur et la législation belge sur la propriété intellectuelle. 
+Tous droits réservés.
+Cette application et son contenu sont protégés par les droits d'auteur et la législation belge sur la propriété intellectuelle.
 Toute reproduction, distribution ou utilisation non autorisée du contenu est interdite.
 </p>
     `;
 }
 
-function afficherConditions() {
+function showTerms() {
     document.getElementById('content').innerHTML = `
         <h2>Conditions d'utilisation</h2>
         <p>Ton texte ici…</p>
     `;
 }
 
-function afficherConfidentialite() {
+function showPrivacyPolicy() {
     document.getElementById('content').innerHTML = `
         <h2>Politique de confidentialité</h2>
         <p>Ton texte ici…</p>
     `;
 }
 
-function afficherPartenaire() {
+function showPartners() {
     document.getElementById('content').innerHTML = `
         <h2>Partenaires</h2>
         <p>Liste des partenaires, sponsors, collaborations, etc.</p>
     `;
 }
 
-function ouvrirFormulaireCasting() {
+function openCastingForm() {
   document.getElementById("content").innerHTML = `
     <h2>📩 Postuler au casting</h2>
 
@@ -879,15 +848,15 @@ function ouvrirFormulaireCasting() {
       <label>Photo (close-up ou entière) :</label>
       <input type="file" id="cast-photo" accept="image/*">
 
-      <button class="blue-btn" onclick="envoyerCandidature(); return false;">Envoyer</button>
+      <button class="blue-btn" onclick="submitApplication(); return false;">Envoyer</button>
     </form>
   `;
 }
 
 
-function afficherFormulairePostulation(titreCasting) {
+function showApplicationForm(castingTitle) {
   document.getElementById("content").innerHTML = `
-    <h2>Postuler – ${titreCasting}</h2>
+    <h2>Postuler – ${castingTitle}</h2>
 
     <form id="form-postulation" class="formulaire-postulation">
 
@@ -909,17 +878,17 @@ function afficherFormulairePostulation(titreCasting) {
       <label>Photo (face / full body)</label>
       <input type="file" id="post-photo" accept="image/*">
 
-      <button class="blue-btn" onclick="envoyerCandidature('${titreCasting}')">Envoyer</button>
+      <button class="blue-btn" onclick="submitApplication('${castingTitle}')">Envoyer</button>
     </form>
   `;
 }
 
-function envoyerCandidature(titreCasting) {
-  alert("Votre candidature pour : " + titreCasting + " a bien été envoyée !");
+function submitApplication(castingTitle) {
+  alert("Votre candidature pour : " + castingTitle + " a bien été envoyée !");
 }
 
 
-function afficherContrat() {
+function showContract() {
     document.getElementById("content").innerHTML = `
         <h2>📄 Contrat de participation</h2>
         <p>Veuillez lire attentivement le contrat ci-dessous puis signer.</p>
@@ -936,17 +905,17 @@ function afficherContrat() {
         <label>Signature :</label>
         <input type="text" id="signature" placeholder="Écrire votre nom ici">
 
-        <button class="blue-btn" onclick="soumettreContrat()">Signer et enregistrer</button>
+        <button class="blue-btn" onclick="submitContract()">Signer et enregistrer</button>
     `;
 }
 
-function soumettreContrat() {
+function submitContract() {
     alert("Votre contrat est bien signé ✔️");
 }
 
 
 
-function afficherCandidatures() {
+function showApplications() {
     document.getElementById("content").innerHTML = `
         <h2>📄 Mes candidatures</h2>
 
@@ -961,7 +930,7 @@ function afficherCandidatures() {
         </div>
 
         <div class="candidature-card">
-            <span>Film “La Frontière”</span>
+            <span>Film "La Frontière"</span>
             <span class="status refuse">❌</span>
         </div>
     `;
@@ -970,23 +939,23 @@ function afficherCandidatures() {
 
 
 
-function afficherCandidats() {
+function showCandidates() {
     document.getElementById("content").innerHTML = `
         <h2>👥 Liste des candidats</h2>
 
         <div class="select-actions">
-            <button class="blue-btn" onclick="selectionnerTousCandidats()">Tout sélectionner</button>
-            <button class="blue-btn" onclick="desactiverSelectionTous()">Sélection individuelle</button>
+            <button class="blue-btn" onclick="selectAllCandidates()">Tout sélectionner</button>
+            <button class="blue-btn" onclick="deselectAllCandidates()">Sélection individuelle</button>
         </div>
 
         <div id="liste-candidats" class="info-list">
-            ${candidatsFake.map(c => `
+            ${mockCandidates.map(c => `
                 <div class="info-item">
                     <input type="checkbox" class="select-candidat">
-                    <div onclick="ouvrirProfilCandidat('${c.id}')" style="flex:1; cursor:pointer;">
-                        <strong>${c.nom} ${c.prenom}</strong><br>
-                        Âge : ${c.age} — ${c.localite}<br>
-                        Disponible : ${c.disponibilite}
+                    <div onclick="openCandidateProfile('${c.id}')" style="flex:1; cursor:pointer;">
+                        <strong>${c.lastName} ${c.firstName}</strong><br>
+                        Âge : ${c.age} — ${c.city}<br>
+                        Disponible : ${c.availability}
                     </div>
                 </div>
             `).join("")}
@@ -994,43 +963,40 @@ function afficherCandidats() {
     `;
 }
 
-function selectionnerTousCandidats() {
+function selectAllCandidates() {
     document.querySelectorAll(".select-candidat").forEach(cb => cb.checked = true);
 }
 
-function desactiverSelectionTous() {
+function deselectAllCandidates() {
     document.querySelectorAll(".select-candidat").forEach(cb => cb.checked = false);
 }
 
 
-const candidatsFake = [
-    { id: "C1", nom: "Dupont", prenom: "Marie", age: 28, localite: "Bruxelles", disponibilite: "12/03/2025" },
-    { id: "C2", nom: "Lambert", prenom: "Julien", age: 34, localite: "Liège", disponibilite: "15/03/2025" },
-    { id: "C3", nom: "Moreau", prenom: "Sarah", age: 22, localite: "Namur", disponibilite: "20/03/2025" }
+const mockCandidates = [
+    { id: "C1", lastName: "Dupont", firstName: "Marie", age: 28, city: "Bruxelles", availability: "12/03/2025" },
+    { id: "C2", lastName: "Lambert", firstName: "Julien", age: 34, city: "Liège", availability: "15/03/2025" },
+    { id: "C3", lastName: "Moreau", firstName: "Sarah", age: 22, city: "Namur", availability: "20/03/2025" }
 ];
 
 
-function ouvrirProfilCandidat(id) {
-    const c = candidatsFake.find(x => x.id === id);
+function openCandidateProfile(id) {
+    const c = mockCandidates.find(x => x.id === id);
 
     document.getElementById("content").innerHTML = `
         <h2>📄 Profil candidat</h2>
 
         <div class="profile-box">
-            <p><strong>Nom :</strong> ${c.nom}</p>
-            <p><strong>Prénom :</strong> ${c.prenom}</p>
+            <p><strong>Nom :</strong> ${c.lastName}</p>
+            <p><strong>Prénom :</strong> ${c.firstName}</p>
             <p><strong>Âge :</strong> ${c.age}</p>
-            <p><strong>Localité :</strong> ${c.localite}</p>
-            <p><strong>Disponibilité :</strong> ${c.disponibilite}</p>
+            <p><strong>Localité :</strong> ${c.city}</p>
+            <p><strong>Disponibilité :</strong> ${c.availability}</p>
 
-            <button class="blue-btn" onclick="contacterCandidat('${c.prenom}', '${c.nom}')">📧 Contacter</button>
+            <button class="blue-btn" onclick="contactCandidate('${c.firstName}', '${c.lastName}')">📧 Contacter</button>
         </div>
     `;
 }
 
-function contacterCandidat(prenom, nom) {
-    window.location.href = `mailto:${prenom.toLowerCase()}.${nom.toLowerCase()}@mail.com`;
+function contactCandidate(firstName, lastName) {
+    window.location.href = `mailto:${firstName.toLowerCase()}.${lastName.toLowerCase()}@mail.com`;
 }
-
-
-

@@ -39,11 +39,11 @@
             <option value="admin">Admin</option>
         </select>
 
-        <button class="blue-btn" onclick="creerCompte()">Créer un compte</button>
-        <button class="blue-btn" onclick="seConnecter()">Se connecter</button>
-        <button class="blue-btn" onclick="motDePasseOublie()">Mot de passe oublié</button>
-        <button class="blue-btn" onclick="connexionTest()">Connexion test</button>
-        <button class="blue-btn" onclick="connexionProTest()">Connexion PRO (Test)</button>
+        <button class="blue-btn" onclick="createAccount()">Créer un compte</button>
+        <button class="blue-btn" onclick="signIn()">Se connecter</button>
+        <button class="blue-btn" onclick="forgotPassword()">Mot de passe oublié</button>
+        <button class="blue-btn" onclick="testLogin()">Connexion test</button>
+        <button class="blue-btn" onclick="testProLogin()">Connexion PRO (Test)</button>
     </div>
 </div>
 
@@ -51,17 +51,17 @@
 <div id="main-screen" style="display:none;">
     <nav>
         <ul>
-            <li onclick="afficherCasting()">Casting</li>
-            <li onclick="afficherCovoiturage()">Co-voiturage</li>
-            <li onclick="afficherInfos()">Infos</li>
-            <li onclick="afficherContact()">Contact</li>
-            <li id="projet-menu" style="display:none;" onclick="afficherProjets()">Projets</li>
-            <li id="admin-menu" style="display:none;" onclick="afficherAdmin()">Admin</li>
-            <li id="contrat-menu" style="display:none;" onclick="afficherContrat()">Contrat</li>
-            <li id="candidatures-menu" style="display:none;" onclick="afficherCandidatures()">Mes candidatures</li>
-            <li id="profil-menu" onclick="afficherProfil()">Profil</li>
-            <li id="candidats-menu" style="display:none;" onclick="afficherCandidats()">Candidats</li>
-            <li id="logout-btn" onclick="deconnecter()">🔌</li> 
+            <li onclick="showCasting()">Casting</li>
+            <li onclick="showRideshare()">Co-voiturage</li>
+            <li onclick="showInfo()">Infos</li>
+            <li onclick="showContact()">Contact</li>
+            <li id="projet-menu" style="display:none;" onclick="showProjects()">Projets</li>
+            <li id="admin-menu" style="display:none;" onclick="showAdmin()">Admin</li>
+            <li id="contrat-menu" style="display:none;" onclick="showContract()">Contrat</li>
+            <li id="candidatures-menu" style="display:none;" onclick="showApplications()">Mes candidatures</li>
+            <li id="profil-menu" onclick="showProfile()">Profil</li>
+            <li id="candidats-menu" style="display:none;" onclick="showCandidates()">Candidats</li>
+            <li id="logout-btn" onclick="logout()">🔌</li> 
         </ul>
     </nav>
 
