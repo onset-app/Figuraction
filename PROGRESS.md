@@ -1,6 +1,6 @@
 # Progress — FigurAction
 
-Last updated: 2026-06-02
+Last updated: 2026-06-02 (ticket #02)
 Prompt for Claude Code: `Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncompleted ticket.`
 
 ---
@@ -8,7 +8,7 @@ Prompt for Claude Code: `Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Impleme
 ## Sprint 0 — Fondations
 
 - [x] #01 — Init repo + toutes les dépendances
-- [ ] #02 — Tailwind + shadcn/ui
+- [x] #02 — Tailwind + shadcn/ui
 - [ ] #03 — Structure de dossiers + types de base
 - [ ] #04 — Biome (linter/formatter)
 - [ ] #05 — Setup Supabase ⚠️ MANUAL (créer projet sur supabase.com, récupérer clés)
