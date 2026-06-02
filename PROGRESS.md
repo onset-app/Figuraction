@@ -1,4 +1,4 @@
-# Progress — FigurAction
+# Progress — ONSET
 
 Last updated: 2026-06-02 (ticket #02)
 Prompt for Claude Code: `Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncompleted ticket.`
