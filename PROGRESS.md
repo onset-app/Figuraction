@@ -1,90 +1,99 @@
-# Progress — ONSET
+# Progress — FigurAction
 
-Last updated: 2026-06-02 (ticket #02)
-Prompt for Claude Code: `Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncompleted ticket.`
+Last updated: 2026-06-02 (ticket #03)
+
+```
+Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncompleted ticket.
+/clear : à chaque nouveau sprint ou si ça déraille
+/model : switcher selon l'annotation 〔sonnet〕 ou 〔opus〕 avant chaque ticket
+```
 
 ---
 
 ## Sprint 0 — Fondations
 
-- [x] #01 — Init repo + toutes les dépendances
-- [x] #02 — Tailwind + shadcn/ui
-- [x] #03 — Structure de dossiers + types de base
-- [ ] #04 — Biome (linter/formatter)
-- [ ] #05 — Setup Supabase ⚠️ MANUAL (créer projet sur supabase.com, récupérer clés)
-- [ ] #06 — Setup Drizzle ORM
-- [ ] #07 — Providers React (QueryClient + Zustand)
+- [x] #01 — Init repo + toutes les dépendances 〔sonnet〕
+- [x] #02 — Tailwind + shadcn/ui 〔sonnet〕
+- [x] #03 — Structure de dossiers + types de base 〔sonnet〕
+- [x] #04 — Biome (linter/formatter) 〔sonnet〕
+- [ ] #05 — Setup Supabase 〔opus〕 ⚠️ MANUAL (créer projet sur supabase.com, récupérer clés)
+- [ ] #06 — Setup Drizzle ORM 〔sonnet〕
+- [ ] #07 — Providers React (QueryClient + Zustand) 〔sonnet〕
 - [ ] #08 — Deploy Vercel (staging) ⚠️ MANUAL (connecter repo sur vercel.com)
-- [ ] #09 — GitHub Actions CI
-- [ ] #10 — Sentry + PostHog ⚠️ MANUAL (créer comptes, récupérer clés)
+- [ ] #09 — GitHub Actions CI 〔sonnet〕
+- [ ] #10 — Sentry + PostHog 〔sonnet〕 ⚠️ MANUAL (créer comptes, récupérer clés)
 
 ## Sprint 1 — Base de données
 
-- [ ] #11 — Tous les schemas Zod
-- [ ] #12 — Schema DB: profiles + types
-- [ ] #13 — Schema DB: projects + types
-- [ ] #14 — Schema DB: castings + types
-- [ ] #15 — Schema DB: applications + types
-- [ ] #16 — Schema DB: carpools + contracts + export global
-- [ ] #17 — RLS Policies
-- [ ] #18 — Seed data
+- [ ] #11 — Tous les schemas Zod 〔sonnet〕
+- [ ] #12 — Schema DB: profiles + types 〔sonnet〕
+- [ ] #13 — Schema DB: projects + types 〔sonnet〕
+- [ ] #14 — Schema DB: castings + types 〔sonnet〕
+- [ ] #15 — Schema DB: applications + types 〔sonnet〕
+- [ ] #16 — Schema DB: carpools + contracts + export global 〔sonnet〕
+- [ ] #17 — RLS Policies 〔opus〕
+- [ ] #18 — Seed data 〔opus〕
 
-## Sprint 2 — Auth
+## Sprint 2 — Auth (/clear avant ce sprint)
 
-- [ ] #19 — Server action: signup
-- [ ] #20 — Server actions: login + logout
-- [ ] #21 — Server action: reset password
-- [ ] #22 — Middleware auth + role routing
-- [ ] #23 — Pages auth UI (login + signup + forgot)
-- [ ] #24 — Hook useCurrentUser
-- [ ] #25 — App shell: sidebar + topbar + mobile nav
-- [ ] #26 — Dashboard
+- [ ] #19 — Server action: signup 〔opus〕
+- [ ] #20 — Server actions: login + logout 〔opus〕
+- [ ] #21 — Server action: reset password 〔opus〕
+- [ ] #22 — Middleware auth + role routing 〔opus〕
+- [ ] #23 — Pages auth UI (login + signup + forgot) 〔opus〕
+- [ ] #24 — Hook useCurrentUser 〔opus〕
+- [ ] #25 — App shell: sidebar + topbar + mobile nav 〔opus〕
+- [ ] #26 — Dashboard 〔opus〕
 
-## Sprint 3 — Profil + Projets + Castings
+## Sprint 3 — Profil + Projets + Castings (/clear avant ce sprint)
 
-- [ ] #27 — Server actions: profiles ⚠️ MANUAL (créer bucket avatars sur Supabase Storage)
-- [ ] #28 — Profil figurant: formulaire + upload photo
-- [ ] #29 — Profil figurant: page vue + édition
-- [ ] #30 — Server actions: projects + castings
-- [ ] #31 — Créer un projet (production)
-- [ ] #32 — Liste projets + hooks
-- [ ] #33 — Détail projet + créer casting
+- [ ] #27 — Server actions: profiles 〔opus〕 ⚠️ MANUAL (créer bucket avatars sur Supabase Storage)
+- [ ] #28 — Profil figurant: formulaire + upload photo 〔sonnet〕
+- [ ] #29 — Profil figurant: page vue + édition 〔sonnet〕
+- [ ] #30 — Server actions: projects + castings 〔opus〕
+- [ ] #31 — Créer un projet (production) 〔sonnet〕
+- [ ] #32 — Liste projets + hooks 〔sonnet〕
+- [ ] #33 — Détail projet + créer casting 〔opus〕
 
-## Sprint 4 — Candidatures
+## Sprint 4 — Candidatures (/clear avant ce sprint)
 
-- [ ] #34 — Catalogue castings public (SSR/SEO)
-- [ ] #35 — Catalogue castings authentifié + filtres
-- [ ] #36 — Postuler à un casting
-- [ ] #37 — Mes candidatures (figurant)
-- [ ] #38 — Liste candidats par casting (production)
-- [ ] #39 — Confirmer / Refuser un candidat
-- [ ] #40 — Fiche profil candidat (production)
+- [ ] #34 — Catalogue castings public (SSR/SEO) 〔sonnet〕
+- [ ] #35 — Catalogue castings authentifié + filtres 〔opus〕
+- [ ] #36 — Postuler à un casting 〔opus〕
+- [ ] #37 — Mes candidatures (figurant) 〔sonnet〕
+- [ ] #38 — Liste candidats par casting (production) 〔opus〕
+- [ ] #39 — Confirmer / Refuser un candidat 〔opus〕
+- [ ] #40 — Fiche profil candidat (production) 〔sonnet〕
 
-## Sprint 5 — Emails + Covoit
+## Sprint 5 — Emails + Covoit (/clear avant ce sprint)
 
-- [ ] #41 — Setup Resend + templates email ⚠️ MANUAL (créer compte Resend, API key, configurer domaine)
-- [ ] #42 — Brancher les emails sur les actions
-- [ ] #43 — Covoiturage: CRUD complet
+- [ ] #41 — Setup Resend + templates email 〔sonnet〕 ⚠️ MANUAL (créer compte Resend, API key, domaine)
+- [ ] #42 — Brancher les emails sur les actions 〔opus〕
+- [ ] #43 — Covoiturage: CRUD complet 〔sonnet〕
 
-## Sprint 6 — Landing + SEO + PWA
+## Sprint 6 — Landing + SEO + PWA (/clear avant ce sprint)
 
-- [ ] #44 — Landing page
-- [ ] #45 — Page B2B: Pour les productions
-- [ ] #46 — Page SEO: Devenir figurant
-- [ ] #47 — Meta tags + Open Graph + sitemap
-- [ ] #48 — PWA: manifest + service worker + install
+- [ ] #44 — Landing page 〔opus〕
+- [ ] #45 — Page B2B: Pour les productions 〔sonnet〕
+- [ ] #46 — Page SEO: Devenir figurant 〔sonnet〕
+- [ ] #47 — Meta tags + Open Graph + sitemap 〔sonnet〕
+- [ ] #48 — PWA: manifest + service worker + install 〔sonnet〕
 
-## Sprint 7 — Tests
+## Sprint 7 — Tests (/clear avant ce sprint)
 
-- [ ] #49 — Setup Vitest + tests schemas
-- [ ] #50 — Setup Playwright
-- [ ] #51 — Test e2e: auth flow
-- [ ] #52 — Test e2e: flow candidature
-- [ ] #53 — Test e2e: flow production
+- [ ] #49 — Setup Vitest + tests schemas 〔sonnet〕
+- [ ] #50 — Setup Playwright 〔sonnet〕
+- [ ] #51 — Test e2e: auth flow 〔opus〕
+- [ ] #52 — Test e2e: flow candidature 〔opus〕
+- [ ] #53 — Test e2e: flow production 〔opus〕
 
 ---
 
-## Notes
+## Légende
 
-⚠️ MANUAL = action manuelle requise (dashboard externe), Claude Code ne peut pas le faire.
-Après chaque ticket terminé, cocher [x] et mettre à jour la date "Last updated".
+- 〔sonnet〕 = ticket mécanique, bien défini → `/model sonnet`
+- 〔opus〕 = ticket complexe, logique métier, sécurité, multi-fichiers → `/model opus`
+- ⚠️ MANUAL = action manuelle requise sur un dashboard externe
+- (/clear avant ce sprint) = faire `/clear` dans Claude Code avant d'attaquer
+
+Après chaque ticket terminé : cocher [x], mettre à jour la date "Last updated".
