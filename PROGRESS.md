@@ -1,13 +1,13 @@
 # Progress — FigurAction
 
-Last updated: YYYY-MM-DD
+Last updated: 2026-06-02
 Prompt for Claude Code: `Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncompleted ticket.`
 
 ---
 
 ## Sprint 0 — Fondations
 
-- [ ] #01 — Init repo + toutes les dépendances
+- [x] #01 — Init repo + toutes les dépendances
 - [ ] #02 — Tailwind + shadcn/ui
 - [ ] #03 — Structure de dossiers + types de base
 - [ ] #04 — Biome (linter/formatter)

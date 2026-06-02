@@ -1,251 +1,36 @@
-# ONSET
-ONSET – Gestion intelligente des figurants & productions
-ONSET est une application destinée aux figurants, équipes de production et administrateurs, afin de simplifier et optimiser toute la gestion liée aux castings, disponibilités, convocations, informations de tournage, co-voiturage, communication et suivi administratif.
-L’objectif : réduire la charge mentale des équipes, fluidifier les échanges et centraliser toutes les informations de travail, tout en offrant aux figurants une expérience intuitive et transparente.
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
- 
-Fonctionnalités principales
+## Getting Started
 
-Pour les Figurants
-Création de profil complet (identité, photo, âge, localité, disponibilités…)
+First, run the development server:
 
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-Accès aux castings disponibles
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-Formulaire de candidature simple et rapide
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Learn More
 
-Suivi des candidatures :
+To learn more about Next.js, take a look at the following resources:
 
- ✔ confirmé — ❌ refusé — ⏳ en attente
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-Onglet “Mes candidatures” entièrement dédié
+## Deploy on Vercel
 
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Accès aux informations officielles :
-
- mentions légales, partenaires, organigramme, contrats…
-
-
-
-
-Pour les Productions
-Interface PRO dédiée (Connexion Test PRO)
-
-
-Accès aux projets en cours
-
-
-Consultation des candidatures par projet
-
-
-Fiches détaillées de chaque figurant
-
-
-Système d’envoi d’e-mails intégré :
-
-
-message personnalisé
-
-
-confirmation automatique
-
-
-refus automatique
-
-
-Listes scrollables type réseaux sociaux
-
-
-Gestion complète :
-
- ✔ candidats confirmés
-
- ✔ en attente
-
- ✔ refusés
-
-
-Possibilité future : importer/exporter des listes, convocations automatiques, call-sheets…
-
-
-
-
-Pour l’Administrateur
-Accès global à toutes les données : castings, projets, utilisateurs
-
-
-Gestion des partenaires, organisations, documents internes
-
-
-Outils évolutifs selon les besoins
-
-
-
-
-Architecture du Projet
-
-/
-├── index.html            → interface principale
-├── app.js                → logique et affichage dynamique
-├── style.css             → styles généraux
-├── assets/               → images (casting, photos, logos…)
-├── manifest.json         → configuration PWA
-├── service-worker.js     → cache & mode hors-ligne
-└── README.md             → documentation du projet
-
-
-
-Technologies utilisées
-HTML / CSS / JavaScript
-
-
-Supabase (auth, base de données, stockage)
-
-
-PWA (installation mobile + hors-ligne)
-
-
-Responsive design pour utilisation mobile/tablette
-
-
-
-
- 
-Roadmap (Évolution prévue)
-Fonctionnalités prochaines :
-✔ Signature en ligne des contrats (PDF)
-
-
-✔ Espace “Candidats” pour les productions
-
-
-✔ Système d’import/export Excel
-
-
-✔ Back-office complet (dashboard)
-
-
-✔ Vérification identité / profils
-
-
-✔ Calendrier de disponibilité intelligent
-
-
-✔ Notifications push (convocations, changements…)
-
-
-
-Pourquoi ONSET est utile ?
-Pour les productions :
-Gain de temps énorme
-
-
-Réduction des erreurs (mails, listes, convocations)
-
-
-Profil figurant complet en un clic
-
-
-Centralisation totale de la communication
-
-
-Plus besoin d’utiliser WhatsApp / mails dispersés / Excel
-
-
-Pour les figurants :
-Castings regroupés au même endroit
-
-
-Suivi facile et transparent
-
-
-Profil professionnel prêt à envoyer
-
-
-Notifications et communication directe
-
-
-Objectif : partenariats & test en conditions réelles
-ONSET est actuellement en phase de test.
-Nous recherchons des productions professionnelles pour :
-tester la plateforme
-
-
-améliorer les outils terrain
-
-
-adapter les fonctionnalités à vos réalités de plateau
-
-
-Un partenariat ou un simple test peut fortement accélérer le développement.
-
-
-Intention principale
-La plateforme vise à :
-Structurer la diffusion d’informations pratiques liées aux tournages (horaires, lieux, consignes)
-
-
-Faciliter certains aspects logistiques, notamment liés aux déplacements
-
-
-Clarifier les échanges entre intervenants concernés
-
-
-Réduire les incompréhensions et pertes d’informations de dernière minute
-
-
-L’outil n’a pas vocation à remplacer les workflows existants des productions, mais à optimiser certaines couches de communication autour d’eux.
-
-État actuel du projet
-Phase : réflexion et structuration
-
-
-Développement : non entamé (phase de cadrage)
-
-
-Architecture : à définir
-
-
-Stack technique : ouverte à proposition
-
-
-Le projet avance progressivement, avec une volonté de rester pragmatique et orienté terrain.
-
-Approche de développement
-Le développement se fera de manière itérative, avec :
-Définition d’un MVP (version minimale viable)
-
-
-Tests restreints et contrôlés
-
-
-Ajustements selon les retours d’usage
-
-
-La priorité est donnée à :
-La simplicité d’usage
-
-
-La clarté des flux d’information
-
-
-La stabilité
-
-
-La confidentialité
-
-
-
-Confidentialité
-Le projet est partagé dans un cadre strictement privé.
-Toute information relative à son concept, son fonctionnement ou son développement est confidentielle et ne peut être diffusée sans accord préalable.
-
-Contact
-Pour toute question :
-📧 odran.vervaecke@gmail.com - onset.casting@gmail.com
-📱 0486/16.57.73
-
-
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
