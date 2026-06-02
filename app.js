@@ -1,4 +1,3 @@
-
 // ----------------------
 // Récupération des champs formulaire
 // ----------------------
@@ -8,89 +7,80 @@ function getFormValues() {
     firstName: document.getElementById("login-prenom").value.trim(),
     email: document.getElementById("login-email").value.trim(),
     password: document.getElementById("login-password").value.trim(),
-    type: document.getElementById("login-type").value
-  };
+    type: document.getElementById("login-type").value,
+  }
 }
 
-
-let currentUser = null;
-
+const currentUser = null
 
 // --- Vidéo intro ---
 function skipIntro() {
-document.getElementById('intro-screen').style.display = 'none';
-document.getElementById('login-screen').style.display = 'block';
+  document.getElementById("intro-screen").style.display = "none"
+  document.getElementById("login-screen").style.display = "block"
 }
-
 
 // --- Authentification ---
 async function createAccount() {
-const email = document.getElementById('login-email').value;
-const password = document.getElementById('login-password').value;
-const lastName = document.getElementById('login-nom').value;
-const firstName = document.getElementById('login-prenom').value;
-const type = document.getElementById('login-type').value;
+  const email = document.getElementById("login-email").value
+  const password = document.getElementById("login-password").value
+  const lastName = document.getElementById("login-nom").value
+  const firstName = document.getElementById("login-prenom").value
+  const type = document.getElementById("login-type").value
 
+  const { user, error } = await supabase.auth.signUp({ email, password })
+  if (error) return alert(error.message)
 
-const { user, error } = await supabase.auth.signUp({ email, password });
-if (error) return alert(error.message);
-
-
-await supabase.from('profiles').insert([{ id: user.id, email, type, nom: lastName, prenom: firstName }]);
-alert('Compte créé ! Vérifie ton email pour confirmer.');
+  await supabase
+    .from("profiles")
+    .insert([{ id: user.id, email, type, nom: lastName, prenom: firstName }])
+  alert("Compte créé ! Vérifie ton email pour confirmer.")
 }
-
 
 async function createAccount() {
-const email = document.getElementById('login-email').value;
-const password = document.getElementById('login-password').value;
-const lastName = document.getElementById('login-nom').value;
-const firstName = document.getElementById('login-prenom').value;
-const type = document.getElementById('login-type').value;
+  const email = document.getElementById("login-email").value
+  const password = document.getElementById("login-password").value
+  const lastName = document.getElementById("login-nom").value
+  const firstName = document.getElementById("login-prenom").value
+  const type = document.getElementById("login-type").value
 
+  const { user, error } = await supabase.auth.signUp({ email, password })
+  if (error) return alert(error.message)
 
-const { user, error } = await supabase.auth.signUp({ email, password });
-if (error) return alert(error.message);
-
-
-await supabase.from('profiles').insert([{ id: user.id, email, type, nom: lastName, prenom: firstName }]);
-alert('Compte créé ! Vérifie ton email pour confirmer.');
+  await supabase
+    .from("profiles")
+    .insert([{ id: user.id, email, type, nom: lastName, prenom: firstName }])
+  alert("Compte créé ! Vérifie ton email pour confirmer.")
 }
 
-
 async function signIn() {
-  const email = document.getElementById('login-email').value;
-  const password = document.getElementById('login-password').value;
-  const type = document.getElementById('login-type').value;
-
+  const email = document.getElementById("login-email").value
+  const password = document.getElementById("login-password").value
+  const type = document.getElementById("login-type").value
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email: email,
     password: password,
-  });
-
+  })
 
   if (error) {
-    alert("Erreur de connexion : " + error.message);
+    alert("Erreur de connexion : " + error.message)
   } else {
-    showMainScreen(type);
+    showMainScreen(type)
   }
 }
 
-
 // --- Mot de passe oublié ---
 async function forgotPassword() {
-const email = prompt("Entrez votre email pour réinitialiser le mot de passe :");
-if (!email) return;
-const { error } = await supabase.auth.api.resetPasswordForEmail(email);
-if (error) alert(error.message);
-else alert('Email de réinitialisation envoyé !');
+  const email = prompt("Entrez votre email pour réinitialiser le mot de passe :")
+  if (!email) return
+  const { error } = await supabase.auth.api.resetPasswordForEmail(email)
+  if (error) alert(error.message)
+  else alert("Email de réinitialisation envoyé !")
 }
-
 
 // --- Menu principal ---
 function showCasting() {
-  document.getElementById('content').innerHTML = `
+  document.getElementById("content").innerHTML = `
     <h2>🎬 Castings en Belgique</h2>
     <div id="casting-list" class="casting-grid">
       <div class="casting-card">
@@ -142,24 +132,22 @@ function showCasting() {
         <button class="blue-btn">Postuler</button>
       </div>
     </div>
-  `;
+  `
 }
 
-
 function showRideshare() {
-  document.getElementById('content').innerHTML = `
+  document.getElementById("content").innerHTML = `
     <h2>Covoiturage</h2>
     <div id="covoit-buttons">
       <button class="blue-btn" onclick="showRideshareForm()">Conducteur</button>
       <button class="blue-btn" onclick="showRideshareList()">Covoiturage</button>
     </div>
     <div id="covoit-section"></div>
-  `;
+  `
 }
 
-
 function showRideshareForm() {
-  document.getElementById('covoit-section').innerHTML = `
+  document.getElementById("covoit-section").innerHTML = `
     <h3>Proposer un covoiturage</h3>
     <form id="form-covoiturage">
       <input type="text" id="projet" placeholder="Nom du projet / tournage" required>
@@ -174,53 +162,47 @@ function showRideshareForm() {
       </select>
       <button type="submit" class="blue-btn">Publier</button>
     </form>
-  `;
+  `
 
+  const form = document.getElementById("form-covoiturage")
+  form.addEventListener("submit", (event) => {
+    event.preventDefault()
 
-  const form = document.getElementById('form-covoiturage');
-  form.addEventListener('submit', (event) => {
-    event.preventDefault();
+    const project = document.getElementById("projet").value
+    const driver = document.getElementById("conducteur").value
+    const route = document.getElementById("trajet").value
+    const date = document.getElementById("date").value
+    const time = document.getElementById("heure").value
+    const seats = document.getElementById("places").value
+    const contact = document.getElementById("contact").value
 
+    const rideshares = JSON.parse(localStorage.getItem("rideshares") || "[]")
+    rideshares.push({ project, driver, route, date, time, seats, contact })
+    localStorage.setItem("rideshares", JSON.stringify(rideshares))
 
-    const project = document.getElementById('projet').value;
-    const driver = document.getElementById('conducteur').value;
-    const route = document.getElementById('trajet').value;
-    const date = document.getElementById('date').value;
-    const time = document.getElementById('heure').value;
-    const seats = document.getElementById('places').value;
-    const contact = document.getElementById('contact').value;
-
-
-    const rideshares = JSON.parse(localStorage.getItem('rideshares') || '[]');
-    rideshares.push({ project, driver, route, date, time, seats, contact });
-    localStorage.setItem('rideshares', JSON.stringify(rideshares));
-
-
-    alert("Covoiturage publié !");
-    showRideshareList();
-  });
+    alert("Covoiturage publié !")
+    showRideshareList()
+  })
 }
 
-
 function showRideshareList() {
-  const rideshares = JSON.parse(localStorage.getItem('rideshares') || '[]');
+  const rideshares = JSON.parse(localStorage.getItem("rideshares") || "[]")
   if (rideshares.length === 0) {
-    document.getElementById('covoit-section').innerHTML = "<p>Aucun covoiturage publié pour le moment.</p>";
-    return;
+    document.getElementById("covoit-section").innerHTML =
+      "<p>Aucun covoiturage publié pour le moment.</p>"
+    return
   }
 
-
-  let html = "<h3>Liste des covoiturages disponibles</h3>";
+  let html = "<h3>Liste des covoiturages disponibles</h3>"
   rideshares.forEach((c, idx) => {
-    const contact = c.contact || '';
-    const isEmail = contact.includes('@');
+    const contact = c.contact || ""
+    const isEmail = contact.includes("@")
     const contactAction = isEmail
       ? `window.location.href = 'mailto:${contact}?subject=Proposition%20covoiturage%20pour%20${encodeURIComponent(c.project)}'`
-      : `window.location.href = 'tel:${contact}'`;
-
+      : `window.location.href = 'tel:${contact}'`
 
     html += `
-      <div class="covoit-card ${c.full ? 'complet' : ''}">
+      <div class="covoit-card ${c.full ? "complet" : ""}">
         <div class="covoit-row">
           <div class="covoit-left">
             <strong>${escapeHtml(c.project)}</strong><br>
@@ -230,25 +212,21 @@ function showRideshareList() {
             Places : ${escapeHtml(String(c.seats))}<br>
           </div>
           <div class="covoit-actions">
-            <button class="blue-btn" ${c.full ? 'disabled' : `onclick="${contactAction}"`}>Contacter</button>
-            ${c.full ? '' : `<button class="blue-btn" onclick="markComplete(${idx})">Marquer complet</button>`}
+            <button class="blue-btn" ${c.full ? "disabled" : `onclick="${contactAction}"`}>Contacter</button>
+            ${c.full ? "" : `<button class="blue-btn" onclick="markComplete(${idx})">Marquer complet</button>`}
             <button class="blue-btn outline" onclick="deleteRide(${idx})">Supprimer</button>
           </div>
         </div>
       </div>
-    `;
-  });
+    `
+  })
 
-
-  document.getElementById('covoit-section').innerHTML = html;
+  document.getElementById("covoit-section").innerHTML = html
 }
-
-
-
 
 // --- FORMULAIRE CONDUCTEUR ---
 function showRideshareFormPage() {
-document.getElementById('content').innerHTML = `
+  document.getElementById("content").innerHTML = `
   <h2>Proposer un covoiturage</h2>
   <form id="form-covoiturage">
     <input type="text" id="projet" placeholder="Nom du projet / tournage" required>
@@ -263,28 +241,24 @@ document.getElementById('content').innerHTML = `
     </select>
     <button type="submit" class="blue-btn">Publier</button>
   </form>
-`;
-
+`
 }
 
-
 function publishRide() {
-  const project = document.getElementById('projet').value.trim();
-  const driver = document.getElementById('conducteur').value.trim();
-  const route = document.getElementById('trajet').value.trim();
-  const date = document.getElementById('date').value;
-  const time = document.getElementById('heure').value;
-  const seats = document.getElementById('places').value;
-  const contact = document.getElementById('contact').value.trim();
-
+  const project = document.getElementById("projet").value.trim()
+  const driver = document.getElementById("conducteur").value.trim()
+  const route = document.getElementById("trajet").value.trim()
+  const date = document.getElementById("date").value
+  const time = document.getElementById("heure").value
+  const seats = document.getElementById("places").value
+  const contact = document.getElementById("contact").value.trim()
 
   if (!project || !driver || !route || !date || !time || !seats || !contact) {
-    alert("Merci de remplir tous les champs !");
-    return;
+    alert("Merci de remplir tous les champs !")
+    return
   }
 
-
-  const rideshares = JSON.parse(localStorage.getItem('rideshares') || '[]');
+  const rideshares = JSON.parse(localStorage.getItem("rideshares") || "[]")
   rideshares.push({
     project,
     driver,
@@ -293,28 +267,24 @@ function publishRide() {
     time,
     seats,
     contact,
-    full: false
-  });
-  localStorage.setItem('rideshares', JSON.stringify(rideshares));
+    full: false,
+  })
+  localStorage.setItem("rideshares", JSON.stringify(rideshares))
 
-
-  alert("Covoiturage publié !");
-  showRideshareList();
+  alert("Covoiturage publié !")
+  showRideshareList()
 }
 
-
 // --- LISTE DES TRAJETS ---
-let rides = [];
-
+const rides = []
 
 function showRideList() {
   if (rides.length === 0) {
-    document.getElementById('covoiturage-content').innerHTML = `<p>Aucun trajet pour le moment.</p>`;
-    return;
+    document.getElementById("covoiturage-content").innerHTML = `<p>Aucun trajet pour le moment.</p>`
+    return
   }
 
-
-  let html = '<h3>Trajets disponibles</h3>';
+  let html = "<h3>Trajets disponibles</h3>"
   rides.forEach((t, i) => {
     html += `
       <div class="trajet">
@@ -328,52 +298,45 @@ function showRideList() {
         <button class="blue-btn" onclick="deleteRide(${i})">Supprimer</button>
       </div>
       <hr>
-    `;
-  });
+    `
+  })
 
-
-  document.getElementById('covoiturage-content').innerHTML = html;
+  document.getElementById("covoiturage-content").innerHTML = html
 }
-
 
 // --- PUBLIER UN TRAJET ---
 function publishRideshare(event) {
-  event.preventDefault();
-
+  event.preventDefault()
 
   const newRide = {
-    driverName: document.getElementById('nomConducteur').value,
-    route: document.getElementById('trajet').value,
-    date: document.getElementById('dateTrajet').value,
-    time: document.getElementById('heureTrajet').value,
-    seats: document.getElementById('places').value,
-    contact: document.getElementById('contact').value,
-    full: false
-  };
+    driverName: document.getElementById("nomConducteur").value,
+    route: document.getElementById("trajet").value,
+    date: document.getElementById("dateTrajet").value,
+    time: document.getElementById("heureTrajet").value,
+    seats: document.getElementById("places").value,
+    contact: document.getElementById("contact").value,
+    full: false,
+  }
 
-
-  rides.push(newRide);
-  showRideList();
+  rides.push(newRide)
+  showRideList()
 }
-
 
 // --- MARQUER COMPLET ---
 function markComplete(index) {
-  rides[index].full = true;
-  rides[index].seats = "Complet";
-  showRideList();
+  rides[index].full = true
+  rides[index].seats = "Complet"
+  showRideList()
 }
-
 
 // --- SUPPRIMER UN TRAJET ---
 function deleteRide(index) {
-  rides.splice(index, 1);
-  showRideList();
+  rides.splice(index, 1)
+  showRideList()
 }
 
-
 function showInfo() {
-    document.getElementById('content').innerHTML = `
+  document.getElementById("content").innerHTML = `
         <h2>Informations</h2>
 <p>ONSET aide les productions à organiser plus facilement leurs castings et tournages,
     et permet aux figurants de trouver des opportunités et du covoiturage.
@@ -386,32 +349,30 @@ function showInfo() {
             <li onclick="showOrgChart()">🎬 Organigramme cinéma</li>
             <li onclick="showPartners()">🤝 Partenaire</li>
         </ul>
-    `;
+    `
 }
 
 function showContact() {
-document.getElementById('content').innerHTML = '<h2>Contact</h2><p>Email : onset.casting@gmail.com</p>';
+  document.getElementById("content").innerHTML =
+    "<h2>Contact</h2><p>Email : onset.casting@gmail.com</p>"
 }
-
 
 function showAdmin() {
-document.getElementById('content').innerHTML = '<h2>Admin</h2><p>Liste de toutes les candidatures et projets ici.</p>';
+  document.getElementById("content").innerHTML =
+    "<h2>Admin</h2><p>Liste de toutes les candidatures et projets ici.</p>"
 }
 
-
-
-let userProfile = {
+const userProfile = {
   lastName: "Utilisateur",
   firstName: "Démonstration",
   email: "demo@onset.app",
   city: "Non précisé",
   age: "Non précisé",
-  level: "Débutant"
-};
-
+  level: "Débutant",
+}
 
 function showProfile() {
-  document.getElementById('content').innerHTML = `
+  document.getElementById("content").innerHTML = `
     <h2>Mon Profil</h2>
 
 
@@ -424,12 +385,11 @@ function showProfile() {
 
 
     <button class="blue-btn" onclick="editProfile()">Modifier mon profil</button>
-  `;
+  `
 }
 
-
 function editProfile() {
-  document.getElementById('content').innerHTML = `
+  document.getElementById("content").innerHTML = `
     <h2>Modifier mon profil</h2>
 
 
@@ -462,97 +422,87 @@ function editProfile() {
 
 
     <button class="blue-btn" onclick="saveProfile()">Enregistrer</button>
-  `;
+  `
 
-
-  document.getElementById("edit-niveau").value = userProfile.level;
+  document.getElementById("edit-niveau").value = userProfile.level
 }
-
 
 function saveProfile() {
-  userProfile.lastName = document.getElementById('edit-nom').value;
-  userProfile.firstName = document.getElementById('edit-prenom').value;
-  userProfile.email = document.getElementById('edit-email').value;
-  userProfile.city = document.getElementById('edit-ville').value;
-  userProfile.age = document.getElementById('edit-age').value;
-  userProfile.level = document.getElementById('edit-niveau').value;
+  userProfile.lastName = document.getElementById("edit-nom").value
+  userProfile.firstName = document.getElementById("edit-prenom").value
+  userProfile.email = document.getElementById("edit-email").value
+  userProfile.city = document.getElementById("edit-ville").value
+  userProfile.age = document.getElementById("edit-age").value
+  userProfile.level = document.getElementById("edit-niveau").value
 
-
-  showProfile();
+  showProfile()
 }
 
-
 function testLogin() {
+  document.getElementById("login-screen").style.display = "none"
+  document.getElementById("logout-btn").style.display = "block"
+  document.getElementById("candidats-menu").style.display = "none"
 
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('logout-btn').style.display = 'block';
-  document.getElementById("candidats-menu").style.display = "none";
+  document.querySelector("li[onclick='showCasting()']").style.display = "block"
 
-  document.querySelector("li[onclick='showCasting()']").style.display = "block";
+  document.getElementById("main-screen").style.display = "block"
 
+  document.getElementById("projet-menu").style.display = "block"
 
-  document.getElementById('main-screen').style.display = 'block';
+  showProjects()
 
+  document.getElementById("projet-menu").style.display = "none"
 
-  document.getElementById('projet-menu').style.display = 'block';
+  document.getElementById("contrat-menu").style.display = "block"
+  document.getElementById("candidatures-menu").style.display = "block"
 
-
-  showProjects();
-
-    document.getElementById("projet-menu").style.display = "none";
-
-    document.getElementById("contrat-menu").style.display = "block";
-    document.getElementById("candidatures-menu").style.display = "block";
-
-    showCasting();
-
+  showCasting()
 }
 
 function testProLogin() {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('logout-btn').style.display = 'block';
+  document.getElementById("login-screen").style.display = "none"
+  document.getElementById("logout-btn").style.display = "block"
 
-    document.getElementById('main-screen').style.display = 'block';
-    document.getElementById("candidats-menu").style.display = "block";
+  document.getElementById("main-screen").style.display = "block"
+  document.getElementById("candidats-menu").style.display = "block"
 
-    const castMenu = document.querySelector("nav ul li[onclick='showCasting()']");
-    if (castMenu) castMenu.style.display = 'none';
+  const castMenu = document.querySelector("nav ul li[onclick='showCasting()']")
+  if (castMenu) castMenu.style.display = "none"
 
-    document.getElementById('projet-menu').style.display = 'block';
+  document.getElementById("projet-menu").style.display = "block"
 
-    document.getElementById("contrat-menu").style.display = "none";
-    document.getElementById("candidatures-menu").style.display = "none";
+  document.getElementById("contrat-menu").style.display = "none"
+  document.getElementById("candidatures-menu").style.display = "none"
 
-    showProjects();
+  showProjects()
 }
 
-
-
-
-function escapeHtml(str){ if(!str) return ''; return String(str).replace(/[&<>"']/g, s=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[s]));
+function escapeHtml(str) {
+  if (!str) return ""
+  return String(str).replace(
+    /[&<>"']/g,
+    (s) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[s]
+  )
 }
-
 
 function markComplete(index) {
-  const rideshares = JSON.parse(localStorage.getItem('rideshares') || '[]');
-  if (!rideshares[index]) return;
-  rideshares[index].full = true;
-  rideshares[index].seats = 0;
-  localStorage.setItem('rideshares', JSON.stringify(rideshares));
-  showRideshareList();
+  const rideshares = JSON.parse(localStorage.getItem("rideshares") || "[]")
+  if (!rideshares[index]) return
+  rideshares[index].full = true
+  rideshares[index].seats = 0
+  localStorage.setItem("rideshares", JSON.stringify(rideshares))
+  showRideshareList()
 }
-
 
 function deleteRide(index) {
-  const rideshares = JSON.parse(localStorage.getItem('rideshares') || '[]');
-  rideshares.splice(index, 1);
-  localStorage.setItem('rideshares', JSON.stringify(rideshares));
-  showRideshareList();
+  const rideshares = JSON.parse(localStorage.getItem("rideshares") || "[]")
+  rideshares.splice(index, 1)
+  localStorage.setItem("rideshares", JSON.stringify(rideshares))
+  showRideshareList()
 }
 
-
 function showProjectForm() {
-  document.getElementById('content').innerHTML = `
+  document.getElementById("content").innerHTML = `
     <h2>Ajouter un projet</h2>
     <form id="form-projet" onsubmit="submitProject(event)">
       <label>Titre du projet :</label>
@@ -582,51 +532,42 @@ function showProjectForm() {
 
       <button type="submit" class="blue-btn">Publier le projet</button>
     </form>
-  `;
+  `
 }
-
 
 function submitProject(event) {
-  event.preventDefault();
-
+  event.preventDefault()
 
   const project = {
-    title: document.getElementById('projet-titre').value,
-    description: document.getElementById('projet-description').value,
-    date: document.getElementById('projet-date').value,
-    zone: document.getElementById('projet-zone').value,
-    type: document.getElementById('projet-type').value
-  };
-
-
-  alert(`Projet ajouté : ${project.title}\n(${project.zone})`);
-
-}
-
-
-function showMainScreen(type) {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('main-screen').style.display = 'block';
-
-
-  document.getElementById('admin-menu').style.display = 'none';
-  const projectMenu = document.getElementById('projet-menu');
-  if (projectMenu) projectMenu.style.display = 'none';
-
-
-  if (type === "production" && projectMenu) {
-    projectMenu.style.display = 'block';
-  } else if (type === "admin") {
-    document.getElementById('admin-menu').style.display = 'block';
+    title: document.getElementById("projet-titre").value,
+    description: document.getElementById("projet-description").value,
+    date: document.getElementById("projet-date").value,
+    zone: document.getElementById("projet-zone").value,
+    type: document.getElementById("projet-type").value,
   }
 
-
-  document.getElementById('content').innerHTML = `<h2>Bienvenue sur ONSET 👋</h2>`;
+  alert(`Projet ajouté : ${project.title}\n(${project.zone})`)
 }
 
+function showMainScreen(type) {
+  document.getElementById("login-screen").style.display = "none"
+  document.getElementById("main-screen").style.display = "block"
+
+  document.getElementById("admin-menu").style.display = "none"
+  const projectMenu = document.getElementById("projet-menu")
+  if (projectMenu) projectMenu.style.display = "none"
+
+  if (type === "production" && projectMenu) {
+    projectMenu.style.display = "block"
+  } else if (type === "admin") {
+    document.getElementById("admin-menu").style.display = "block"
+  }
+
+  document.getElementById("content").innerHTML = `<h2>Bienvenue sur ONSET 👋</h2>`
+}
 
 function showProjects() {
-  document.getElementById('content').innerHTML = `
+  document.getElementById("content").innerHTML = `
     <h2>Mes Projets (démo producteur)</h2>
     <form id="form-projet">
       <input type="text" id="titre" placeholder="Titre du projet" required>
@@ -639,23 +580,20 @@ function showProjects() {
 
 
     <div id="liste-projets"></div>
-  `;
+  `
 }
 
-
 function addProject() {
-  const title = document.getElementById('titre').value;
-  const description = document.getElementById('description').value;
-  const location = document.getElementById('lieu').value;
-  const date = document.getElementById('date').value;
-  const type = document.getElementById('type').value;
-
+  const title = document.getElementById("titre").value
+  const description = document.getElementById("description").value
+  const location = document.getElementById("lieu").value
+  const date = document.getElementById("date").value
+  const type = document.getElementById("type").value
 
   if (!title) {
-    alert("Merci de remplir au moins le titre !");
-    return;
+    alert("Merci de remplir au moins le titre !")
+    return
   }
-
 
   const projectHTML = `
     <div class="projet-card">
@@ -665,33 +603,28 @@ function addProject() {
       <p><strong>Date :</strong> ${date}</p>
       <p><strong>Rôle recherché :</strong> ${type}</p>
     </div>
-  `;
+  `
 
-
-  document.getElementById('liste-projets').innerHTML += projectHTML;
-  document.getElementById('form-projet').reset();
+  document.getElementById("liste-projets").innerHTML += projectHTML
+  document.getElementById("form-projet").reset()
 }
-
 
 function logout() {
-    localStorage.removeItem("user");
+  localStorage.removeItem("user")
 
-    document.getElementById("main-screen").style.display = "none";
+  document.getElementById("main-screen").style.display = "none"
 
-    document.getElementById("login-screen").style.display = "block";
+  document.getElementById("login-screen").style.display = "block"
 
-    document.getElementById("login-nom").value = "";
-    document.getElementById("login-prenom").value = "";
-    document.getElementById("login-email").value = "";
-    document.getElementById("login-password").value = "";
-    document.getElementById("login-type").value = "figurant";
+  document.getElementById("login-nom").value = ""
+  document.getElementById("login-prenom").value = ""
+  document.getElementById("login-email").value = ""
+  document.getElementById("login-password").value = ""
+  document.getElementById("login-type").value = "figurant"
 }
 
-
-
-
 function showLogin() {
-  document.getElementById('content').innerHTML = `
+  document.getElementById("content").innerHTML = `
     <div class="login-box">
       <h2 class="title">Connexion</h2>
       <input type="text" id="email" placeholder="Email">
@@ -700,27 +633,25 @@ function showLogin() {
       <button class="blue-btn" onclick="testLogin()">Connexion test</button>
       <p><a href="#">Mot de passe oublié ?</a></p>
     </div>
-  `;
+  `
 }
-
 
 // Cache le bouton déconnexion au démarrage
 window.onload = () => {
-  document.getElementById('logout-btn').style.display = 'none';
-};
+  document.getElementById("logout-btn").style.display = "none"
+}
 
-
-const video = document.getElementById('intro-video');
+const video = document.getElementById("intro-video")
 if (video) {
-    video.play().catch(() => {
-        setTimeout(() => {
-            video.play();
-        }, 500);
-    });
+  video.play().catch(() => {
+    setTimeout(() => {
+      video.play()
+    }, 500)
+  })
 }
 
 function showOrgChart() {
-    document.getElementById('content').innerHTML = `
+  document.getElementById("content").innerHTML = `
         <h2>Organigramme du cinéma</h2>
 
         <div class="org-chart">
@@ -786,13 +717,11 @@ function showOrgChart() {
         </li>
       </ul>
     </div>
-  `;
+  `
 }
 
-
-
 function showLegalNotice() {
-    document.getElementById('content').innerHTML = `
+  document.getElementById("content").innerHTML = `
         <h2>Mentions légales</h2>
         <p>
 © 2025 ONSET
@@ -800,28 +729,28 @@ Tous droits réservés.
 Cette application et son contenu sont protégés par les droits d'auteur et la législation belge sur la propriété intellectuelle.
 Toute reproduction, distribution ou utilisation non autorisée du contenu est interdite.
 </p>
-    `;
+    `
 }
 
 function showTerms() {
-    document.getElementById('content').innerHTML = `
+  document.getElementById("content").innerHTML = `
         <h2>Conditions d'utilisation</h2>
         <p>Ton texte ici…</p>
-    `;
+    `
 }
 
 function showPrivacyPolicy() {
-    document.getElementById('content').innerHTML = `
+  document.getElementById("content").innerHTML = `
         <h2>Politique de confidentialité</h2>
         <p>Ton texte ici…</p>
-    `;
+    `
 }
 
 function showPartners() {
-    document.getElementById('content').innerHTML = `
+  document.getElementById("content").innerHTML = `
         <h2>Partenaires</h2>
         <p>Liste des partenaires, sponsors, collaborations, etc.</p>
-    `;
+    `
 }
 
 function openCastingForm() {
@@ -850,9 +779,8 @@ function openCastingForm() {
 
       <button class="blue-btn" onclick="submitApplication(); return false;">Envoyer</button>
     </form>
-  `;
+  `
 }
-
 
 function showApplicationForm(castingTitle) {
   document.getElementById("content").innerHTML = `
@@ -880,16 +808,15 @@ function showApplicationForm(castingTitle) {
 
       <button class="blue-btn" onclick="submitApplication('${castingTitle}')">Envoyer</button>
     </form>
-  `;
+  `
 }
 
 function submitApplication(castingTitle) {
-  alert("Votre candidature pour : " + castingTitle + " a bien été envoyée !");
+  alert("Votre candidature pour : " + castingTitle + " a bien été envoyée !")
 }
 
-
 function showContract() {
-    document.getElementById("content").innerHTML = `
+  document.getElementById("content").innerHTML = `
         <h2>📄 Contrat de participation</h2>
         <p>Veuillez lire attentivement le contrat ci-dessous puis signer.</p>
 
@@ -906,17 +833,15 @@ function showContract() {
         <input type="text" id="signature" placeholder="Écrire votre nom ici">
 
         <button class="blue-btn" onclick="submitContract()">Signer et enregistrer</button>
-    `;
+    `
 }
 
 function submitContract() {
-    alert("Votre contrat est bien signé ✔️");
+  alert("Votre contrat est bien signé ✔️")
 }
 
-
-
 function showApplications() {
-    document.getElementById("content").innerHTML = `
+  document.getElementById("content").innerHTML = `
         <h2>📄 Mes candidatures</h2>
 
         <div class="candidature-card">
@@ -933,14 +858,11 @@ function showApplications() {
             <span>Film "La Frontière"</span>
             <span class="status refuse">❌</span>
         </div>
-    `;
+    `
 }
 
-
-
-
 function showCandidates() {
-    document.getElementById("content").innerHTML = `
+  document.getElementById("content").innerHTML = `
         <h2>👥 Liste des candidats</h2>
 
         <div class="select-actions">
@@ -949,7 +871,9 @@ function showCandidates() {
         </div>
 
         <div id="liste-candidats" class="info-list">
-            ${mockCandidates.map(c => `
+            ${mockCandidates
+              .map(
+                (c) => `
                 <div class="info-item">
                     <input type="checkbox" class="select-candidat">
                     <div onclick="openCandidateProfile('${c.id}')" style="flex:1; cursor:pointer;">
@@ -958,31 +882,52 @@ function showCandidates() {
                         Disponible : ${c.availability}
                     </div>
                 </div>
-            `).join("")}
+            `
+              )
+              .join("")}
         </div>
-    `;
+    `
 }
 
 function selectAllCandidates() {
-    document.querySelectorAll(".select-candidat").forEach(cb => cb.checked = true);
+  document.querySelectorAll(".select-candidat").forEach((cb) => (cb.checked = true))
 }
 
 function deselectAllCandidates() {
-    document.querySelectorAll(".select-candidat").forEach(cb => cb.checked = false);
+  document.querySelectorAll(".select-candidat").forEach((cb) => (cb.checked = false))
 }
 
-
 const mockCandidates = [
-    { id: "C1", lastName: "Dupont", firstName: "Marie", age: 28, city: "Bruxelles", availability: "12/03/2025" },
-    { id: "C2", lastName: "Lambert", firstName: "Julien", age: 34, city: "Liège", availability: "15/03/2025" },
-    { id: "C3", lastName: "Moreau", firstName: "Sarah", age: 22, city: "Namur", availability: "20/03/2025" }
-];
-
+  {
+    id: "C1",
+    lastName: "Dupont",
+    firstName: "Marie",
+    age: 28,
+    city: "Bruxelles",
+    availability: "12/03/2025",
+  },
+  {
+    id: "C2",
+    lastName: "Lambert",
+    firstName: "Julien",
+    age: 34,
+    city: "Liège",
+    availability: "15/03/2025",
+  },
+  {
+    id: "C3",
+    lastName: "Moreau",
+    firstName: "Sarah",
+    age: 22,
+    city: "Namur",
+    availability: "20/03/2025",
+  },
+]
 
 function openCandidateProfile(id) {
-    const c = mockCandidates.find(x => x.id === id);
+  const c = mockCandidates.find((x) => x.id === id)
 
-    document.getElementById("content").innerHTML = `
+  document.getElementById("content").innerHTML = `
         <h2>📄 Profil candidat</h2>
 
         <div class="profile-box">
@@ -994,9 +939,9 @@ function openCandidateProfile(id) {
 
             <button class="blue-btn" onclick="contactCandidate('${c.firstName}', '${c.lastName}')">📧 Contacter</button>
         </div>
-    `;
+    `
 }
 
 function contactCandidate(firstName, lastName) {
-    window.location.href = `mailto:${firstName.toLowerCase()}.${lastName.toLowerCase()}@mail.com`;
+  window.location.href = `mailto:${firstName.toLowerCase()}.${lastName.toLowerCase()}@mail.com`
 }

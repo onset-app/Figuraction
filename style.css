@@ -1,5 +1,5 @@
 body {
-  font-family: 'Arial', sans-serif;
+  font-family: "Arial", sans-serif;
   background-color: #111;
   color: #fff;
   margin: 0;
@@ -32,7 +32,7 @@ body {
   top: 20px;
   right: 20px;
   padding: 10px 20px;
-  background-color: rgba(0,0,0,0.6);
+  background-color: rgba(0, 0, 0, 0.6);
   color: #fff;
   border: none;
   cursor: pointer;
@@ -41,7 +41,7 @@ body {
 
 /* Connexion */
 .login-box {
-  background-color: rgba(0,0,0,0.8);
+  background-color: rgba(0, 0, 0, 0.8);
   border: 2px solid #00f;
   border-radius: 15px;
   padding: 30px;
@@ -54,10 +54,12 @@ body {
   font-size: 3rem;
   margin-bottom: 20px;
   color: #fff;
-  text-shadow: 2px 2px 10px rgba(0,0,0,0.7);
+  text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.7);
 }
 
-input, select, button {
+input,
+select,
+button {
   display: block;
   margin: 10px auto;
   padding: 10px;
@@ -107,8 +109,6 @@ nav li {
   box-sizing: border-box;
 }
 
-
-
 nav li:hover {
   background-color: #444;
 }
@@ -152,7 +152,7 @@ nav li:hover {
 }
 
 .trajet-list li {
-  background-color: rgba(0,0,0,0.7);
+  background-color: rgba(0, 0, 0, 0.7);
   border: 1px solid #00f;
   border-radius: 10px;
   margin: 10px 0;
@@ -163,7 +163,6 @@ nav li:hover {
   opacity: 0.5;
   background-color: #333;
 }
-
 
 /* ===== ORGANIGRAMME CINÉMA COMPLET ===== */
 .org-chart {
@@ -251,7 +250,7 @@ nav li:hover {
   padding: 10px 15px;
   font-weight: bold;
   transition: all 0.3s;
-  box-shadow: 0 0 10px rgba(0,123,255,0.4);
+  box-shadow: 0 0 10px rgba(0, 123, 255, 0.4);
 }
 
 .org-box:hover {
@@ -268,12 +267,12 @@ nav li:hover {
 }
 
 .casting-card {
-  background-color: rgba(0,0,0,0.8);
+  background-color: rgba(0, 0, 0, 0.8);
   border: 2px solid #007bff;
   border-radius: 15px;
   padding: 15px;
   text-align: center;
-  box-shadow: 0 0 10px rgba(0,0,255,0.3);
+  box-shadow: 0 0 10px rgba(0, 0, 255, 0.3);
 }
 
 .casting-card img {
@@ -282,57 +281,51 @@ nav li:hover {
   margin-bottom: 10px;
 }
 
-
-
 /* LISTE CASTINGS — STYLE SCROLLABLE TYPE RÉSEAUX SOCIAUX */
 #casting-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    max-height: calc(100vh - 160px); /* Adapté à l'écran */
-    overflow-y: auto; /* Scroll vertical */
-    padding-right: 10px; /* marge pour éviter que ça touche le bord */
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: calc(100vh - 160px); /* Adapté à l'écran */
+  overflow-y: auto; /* Scroll vertical */
+  padding-right: 10px; /* marge pour éviter que ça touche le bord */
 }
 
 /* CARTE CASTING — VERSION PLUS PETITE */
 .casting-card {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    background: white;
-    padding: 12px;
-    border-radius: 12px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    font-size: 14px; /* plus petit */
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: white;
+  padding: 12px;
+  border-radius: 12px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  font-size: 14px; /* plus petit */
 }
 
 .casting-card img {
-    width: 90px;
-    height: 90px;
-    object-fit: cover;
-    border-radius: 6px;
-    margin-right: 10px;
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-right: 10px;
 }
 
-
 .casting-card h3 {
-    font-size: 16px;
-    margin: 5px 0;
+  font-size: 16px;
+  margin: 5px 0;
 }
 
 .casting-card p {
-    margin: 2px 0;
-    font-size: 13px;
+  margin: 2px 0;
+  font-size: 13px;
 }
 
 .casting-card .blue-btn {
-    margin-top: 8px;
-    padding: 6px 10px;
-    font-size: 14px;
+  margin-top: 8px;
+  padding: 6px 10px;
+  font-size: 14px;
 }
-
-
-
 
 /* ✅ Correction affichage mobile */
 @media (max-width: 768px) {
@@ -367,7 +360,7 @@ nav li:hover {
 }
 
 .projet-card {
-  background-color: rgba(0,0,0,0.7);
+  background-color: rgba(0, 0, 0, 0.7);
   border: 1px solid #007bff;
   border-radius: 10px;
   padding: 15px;
@@ -393,28 +386,28 @@ nav li:hover {
   color: #007bff;
 }
 
-
 #content label {
-  display:block;
-  margin-top:10px;
-  font-weight:bold;
+  display: block;
+  margin-top: 10px;
+  font-weight: bold;
 }
 
-#content input, #content select {
+#content input,
+#content select {
   width: 90%;
   padding: 10px;
   margin: 5px 0 15px 0;
   border-radius: 5px;
-  border:none;
+  border: none;
 }
-
 
 /* Empêche le site de dépasser sur mobile */
 * {
   box-sizing: border-box;
 }
 
-body, html {
+body,
+html {
   max-width: 100%;
   overflow-x: hidden;
 }
@@ -435,7 +428,6 @@ img {
 
 /* --- FIX COMPLET AFFICHAGE MOBILE --- */
 @media (max-width: 768px) {
-
   /* Menu réduit mais toujours lisible */
   nav {
     position: fixed;
@@ -455,7 +447,8 @@ img {
   }
 
   /* Empêche tout débordement */
-  body, html {
+  body,
+  html {
     overflow-x: hidden !important;
     width: 100% !important;
   }
@@ -472,7 +465,7 @@ img {
   border-radius: 10px;
   margin: 10px 0;
   cursor: pointer;
-  background-color: rgba(0,0,0,0.6);
+  background-color: rgba(0, 0, 0, 0.6);
   transition: 0.3s;
 }
 
@@ -481,78 +474,70 @@ img {
 }
 
 #logout-menu {
-    color: #ff3b3b;
-    font-weight: bold;
+  color: #ff3b3b;
+  font-weight: bold;
 }
 #logout-menu:hover {
-    opacity: 0.7;
+  opacity: 0.7;
 }
 
-
-
-
-
 .candidature-item {
-    width: 100%;
-    background: #222;
-    padding: 15px;
-    margin-bottom: 12px;
-    border-radius: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: white;
-    font-size: 16px;
-    border: 1px solid #444;
+  width: 100%;
+  background: #222;
+  padding: 15px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+  font-size: 16px;
+  border: 1px solid #444;
 }
 
 .candidature-icon {
-    font-size: 22px;
+  font-size: 22px;
 }
 
 /* Couleurs selon le statut */
 .candidature-icon.confirme {
-    color: #2ecc71; /* vert */
+  color: #2ecc71; /* vert */
 }
 
 .candidature-icon.refuse {
-    color: #e74c3c; /* rouge */
+  color: #e74c3c; /* rouge */
 }
 
 .candidature-icon.attente {
-    color: #f1c40f; /* jaune/blanc */
+  color: #f1c40f; /* jaune/blanc */
 }
 
-
 .list-container {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    max-height: 70vh;
-    overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 70vh;
+  overflow-y: auto;
 }
 
 .list-item {
-    padding: 12px;
-    background: #222;
-    border-radius: 8px;
-    color: white;
-    font-size: 15px;
-    cursor: pointer;
-    border: 1px solid #444;
+  padding: 12px;
+  background: #222;
+  border-radius: 8px;
+  color: white;
+  font-size: 15px;
+  cursor: pointer;
+  border: 1px solid #444;
 }
 
 .list-item:hover {
-    background: #333;
+  background: #333;
 }
 
 .profil-card {
-    padding: 15px;
-    background: #222;
-    border-radius: 10px;
-    line-height: 1.6;
-    border: 1px solid #444;
+  padding: 15px;
+  background: #222;
+  border-radius: 10px;
+  line-height: 1.6;
+  border: 1px solid #444;
 }
-
-
-

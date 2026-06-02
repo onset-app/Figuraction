@@ -1,8 +1,8 @@
-export type UserRole = 'figurant' | 'production' | 'admin'
-export type ApplicationStatus = 'pending' | 'confirmed' | 'rejected' | 'withdrawn'
-export type ProjectStatus = 'draft' | 'open' | 'closed' | 'archived'
-export type CastingStatus = 'open' | 'closed'
-export type ContractStatus = 'pending' | 'signed' | 'expired'
-export type ExperienceLevel = 'debutant' | 'premiere_fois' | 'confirme'
-export type RoleType = 'figurant' | 'acteur' | 'doublure'
-export type ContactMethod = 'email' | 'phone'
+export type UserRole = "figurant" | "production" | "admin"
+export type ApplicationStatus = "pending" | "confirmed" | "rejected" | "withdrawn"
+export type ProjectStatus = "draft" | "open" | "closed" | "archived"
+export type CastingStatus = "open" | "closed"
+export type ContractStatus = "pending" | "signed" | "expired"
+export type ExperienceLevel = "debutant" | "premiere_fois" | "confirme"
+export type RoleType = "figurant" | "acteur" | "doublure"
+export type ContactMethod = "email" | "phone"
