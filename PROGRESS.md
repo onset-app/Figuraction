@@ -9,7 +9,7 @@ Prompt for Claude Code: `Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Impleme
 
 - [x] #01 — Init repo + toutes les dépendances
 - [x] #02 — Tailwind + shadcn/ui
-- [ ] #03 — Structure de dossiers + types de base
+- [x] #03 — Structure de dossiers + types de base
 - [ ] #04 — Biome (linter/formatter)
 - [ ] #05 — Setup Supabase ⚠️ MANUAL (créer projet sur supabase.com, récupérer clés)
 - [ ] #06 — Setup Drizzle ORM
