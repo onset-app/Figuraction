@@ -1,6 +1,6 @@
 {
-"name": "FigurAction",
-"short_name": "FigurAction",
+"name": "ONSET",
+"short_name": "ONSET",
 "description": "Application pour gérer les castings et covoiturages pour productions et figurants.",
 "start_url": "./index.html",
 "display": "standalone",

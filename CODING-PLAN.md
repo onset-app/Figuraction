@@ -1,4 +1,4 @@
-# FigurAction — Plan de Coding v2 (Optimisé)
+# ONSET — Plan de Coding v2 (Optimisé)
 
 Chaque ticket liste ses dépendances strictes. Aucun ticket ne doit être commencé
 sans que ses dépendances soient terminées. Un ticket = une branche = une PR.
@@ -24,7 +24,7 @@ Objectif : repo prêt à coder, toutes les dépendances installées, déployé e
 - **Dépend de :** —
 - **Estimation :** 1.5h
 - **Quoi faire :**
-  - `pnpm create next-app@latest figuraction --typescript --tailwind --eslint --app --src-dir`
+  - `pnpm create next-app@latest onset --typescript --tailwind --eslint --app --src-dir`
   - Configurer `tsconfig.json` strict mode
   - Installer TOUT d'un coup (plus jamais d'install en milieu de sprint) :
     ```bash

@@ -1,4 +1,4 @@
-const CACHE_NAME = "figuraction-cache-v1";
+const CACHE_NAME = "onset-cache-v1";
 const urlsToCache = [
 "./index.html",
 "./style.css",

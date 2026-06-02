@@ -1,6 +1,6 @@
-# Figuraction
-FigurAction – Gestion intelligente des figurants & productions
-FigurAction est une application destinée aux figurants, équipes de production et administrateurs, afin de simplifier et optimiser toute la gestion liée aux castings, disponibilités, convocations, informations de tournage, co-voiturage, communication et suivi administratif.
+# ONSET
+ONSET – Gestion intelligente des figurants & productions
+ONSET est une application destinée aux figurants, équipes de production et administrateurs, afin de simplifier et optimiser toute la gestion liée aux castings, disponibilités, convocations, informations de tournage, co-voiturage, communication et suivi administratif.
 L’objectif : réduire la charge mentale des équipes, fluidifier les échanges et centraliser toutes les informations de travail, tout en offrant aux figurants une expérience intuitive et transparente.
 
  
@@ -138,7 +138,7 @@ Fonctionnalités prochaines :
 
 
 
-Pourquoi FigurAction est utile ?
+Pourquoi ONSET est utile ?
 Pour les productions :
 Gain de temps énorme
 
@@ -169,7 +169,7 @@ Notifications et communication directe
 
 
 Objectif : partenariats & test en conditions réelles
-FigurAction est actuellement en phase de test.
+ONSET est actuellement en phase de test.
 Nous recherchons des productions professionnelles pour :
 tester la plateforme
 
@@ -245,7 +245,7 @@ Toute information relative à son concept, son fonctionnement ou son développem
 
 Contact
 Pour toute question :
-📧 odran.vervaecke@gmail.com - figuraction.casting@gmail.com
+📧 odran.vervaecke@gmail.com - onset.casting@gmail.com
 📱 0486/16.57.73
 
 

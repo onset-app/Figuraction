@@ -1,8 +1,8 @@
-# CLAUDE.md — FigurAction Project Brief
+# CLAUDE.md — ONSET Project Brief
 
 ## Project Overview
 
-FigurAction is a B2B2C SaaS platform connecting film/TV productions with extras (figurants) in Belgium. It replaces the current fragmented workflow (WhatsApp groups, scattered emails, Excel spreadsheets) with a centralized platform for casting management, applications, communication, carpooling, and contract signing.
+ONSET is a B2B2C SaaS platform connecting film/TV productions with extras (figurants) in Belgium. It replaces the current fragmented workflow (WhatsApp groups, scattered emails, Excel spreadsheets) with a centralized platform for casting management, applications, communication, carpooling, and contract signing.
 
 **Current state:** Legacy codebase in vanilla HTML/CSS/JS + Supabase. No real users in production. Full rebuild required.
 
@@ -58,8 +58,10 @@ FigurAction is a B2B2C SaaS platform connecting film/TV productions with extras 
 ## Project Structure
 
 ```
-figuraction/
+onset/
 ├── CLAUDE.md                          # This file
+├── CODING-PLAN.md
+├── PROGRESS.md
 ├── next.config.ts
 ├── tailwind.config.ts
 ├── drizzle.config.ts
@@ -540,7 +542,7 @@ STRIPE_WEBHOOK_SECRET=
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
 SENTRY_DSN=
 NEXT_PUBLIC_POSTHOG_KEY=
-NEXT_PUBLIC_APP_URL=               # https://figuraction.app or localhost
+NEXT_PUBLIC_APP_URL=               # https://onset.app or localhost
 ```
 
 ---

@@ -375,7 +375,7 @@ function deleteRide(index) {
 function showInfo() {
     document.getElementById('content').innerHTML = `
         <h2>Informations</h2>
-<p>FigurAction aide les productions à organiser plus facilement leurs castings et tournages,
+<p>ONSET aide les productions à organiser plus facilement leurs castings et tournages,
     et permet aux figurants de trouver des opportunités et du covoiturage.
     Voici un aperçu de la hiérarchie typique sur un plateau de tournage.</p>
 
@@ -390,7 +390,7 @@ function showInfo() {
 }
 
 function showContact() {
-document.getElementById('content').innerHTML = '<h2>Contact</h2><p>Email : figuraction.casting@gmail.com</p>';
+document.getElementById('content').innerHTML = '<h2>Contact</h2><p>Email : onset.casting@gmail.com</p>';
 }
 
 
@@ -403,7 +403,7 @@ document.getElementById('content').innerHTML = '<h2>Admin</h2><p>Liste de toutes
 let userProfile = {
   lastName: "Utilisateur",
   firstName: "Démonstration",
-  email: "demo@figuraction.com",
+  email: "demo@onset.app",
   city: "Non précisé",
   age: "Non précisé",
   level: "Débutant"
@@ -621,7 +621,7 @@ function showMainScreen(type) {
   }
 
 
-  document.getElementById('content').innerHTML = `<h2>Bienvenue sur FigurAction 👋</h2>`;
+  document.getElementById('content').innerHTML = `<h2>Bienvenue sur ONSET 👋</h2>`;
 }
 
 
@@ -795,7 +795,7 @@ function showLegalNotice() {
     document.getElementById('content').innerHTML = `
         <h2>Mentions légales</h2>
         <p>
-© 2025 FRIGURACTION
+© 2025 ONSET
 Tous droits réservés.
 Cette application et son contenu sont protégés par les droits d'auteur et la législation belge sur la propriété intellectuelle.
 Toute reproduction, distribution ou utilisation non autorisée du contenu est interdite.
