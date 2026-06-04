@@ -1,6 +1,6 @@
 # Progress — FigurAction
 
-Last updated: 2026-06-04 (ticket #05)
+Last updated: 2026-06-04 (ticket #06)
 
 ```
 Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncompleted ticket.
@@ -17,7 +17,7 @@ Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncom
 - [x] #03 — Structure de dossiers + types de base 〔sonnet〕
 - [x] #04 — Biome (linter/formatter) 〔sonnet〕
 - [x] #05 — Setup Supabase 〔opus〕 ⚠️ MANUAL (créer projet sur supabase.com, récupérer clés)
-- [ ] #06 — Setup Drizzle ORM 〔sonnet〕
+- [x] #06 — Setup Drizzle ORM 〔sonnet〕 ⚠️ DATABASE_URL password is wrong (auth fails) — fix before #12
 - [ ] #07 — Providers React (QueryClient + Zustand) 〔sonnet〕
 - [ ] #08 — Deploy Vercel (staging) ⚠️ MANUAL (connecter repo sur vercel.com)
 - [ ] #09 — GitHub Actions CI 〔sonnet〕
