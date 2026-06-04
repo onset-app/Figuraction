@@ -1,6 +1,6 @@
 # Progress — FigurAction
 
-Last updated: 2026-06-02 (ticket #03)
+Last updated: 2026-06-04 (ticket #05)
 
 ```
 Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncompleted ticket.
@@ -16,7 +16,7 @@ Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncom
 - [x] #02 — Tailwind + shadcn/ui 〔sonnet〕
 - [x] #03 — Structure de dossiers + types de base 〔sonnet〕
 - [x] #04 — Biome (linter/formatter) 〔sonnet〕
-- [ ] #05 — Setup Supabase 〔opus〕 ⚠️ MANUAL (créer projet sur supabase.com, récupérer clés)
+- [x] #05 — Setup Supabase 〔opus〕 ⚠️ MANUAL (créer projet sur supabase.com, récupérer clés)
 - [ ] #06 — Setup Drizzle ORM 〔sonnet〕
 - [ ] #07 — Providers React (QueryClient + Zustand) 〔sonnet〕
 - [ ] #08 — Deploy Vercel (staging) ⚠️ MANUAL (connecter repo sur vercel.com)

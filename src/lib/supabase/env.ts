@@ -1,0 +1,17 @@
+/**
+ * Reads and validates the public Supabase environment variables.
+ * Throws at call time if a variable is missing, surfacing misconfiguration
+ * early instead of failing deep inside the Supabase client.
+ */
+export function getSupabaseEnv() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!url || !anonKey) {
+    throw new Error(
+      "Missing Supabase env vars: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set."
+    )
+  }
+
+  return { url, anonKey }
+}
