@@ -1,6 +1,6 @@
 # Progress — FigurAction
 
-Last updated: 2026-07-13 (ticket #17)
+Last updated: 2026-07-13 (ticket #18)
 
 ```
 Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncompleted ticket.
@@ -32,7 +32,7 @@ Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncom
 - [x] #15 — Schema DB: applications + types 〔sonnet〕
 - [x] #16 — Schema DB: carpools + contracts + export global 〔sonnet〕
 - [x] #17 — RLS Policies 〔opus〕 (helpers use `(select ...)` wrapping; 23/23 isolation assertions pass)
-- [ ] #18 — Seed data 〔opus〕
+- [x] #18 — Seed data 〔opus〕 (8 users / 3 projects / 6 castings / 10 applications / 3 carpools; auth users via admin API — login `Password123!`; idempotent)
 
 ## Sprint 2 — Auth (/clear avant ce sprint)
 

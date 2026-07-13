@@ -50,6 +50,12 @@
       }
     }
   },
+  "overrides": [
+    {
+      "includes": ["src/db/seed.ts"],
+      "linter": { "rules": { "suspicious": { "noConsole": "off" } } }
+    }
+  ],
   "assist": {
     "enabled": true,
     "actions": {
