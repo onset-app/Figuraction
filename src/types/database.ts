@@ -1,4 +1,6 @@
 export type { Application, NewApplication } from "@/db/schema/applications"
+export type { Carpool, NewCarpool } from "@/db/schema/carpools"
 export type { Casting, NewCasting } from "@/db/schema/castings"
+export type { Contract, NewContract } from "@/db/schema/contracts"
 export type { NewProfile, Profile } from "@/db/schema/profiles"
 export type { NewProject, Project } from "@/db/schema/projects"

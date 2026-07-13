@@ -1,6 +1,6 @@
 # Progress — FigurAction
 
-Last updated: 2026-07-13 (ticket #15)
+Last updated: 2026-07-13 (ticket #16)
 
 ```
 Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncompleted ticket.
@@ -30,7 +30,7 @@ Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncom
 - [x] #13 — Schema DB: projects + types 〔sonnet〕
 - [x] #14 — Schema DB: castings + types 〔sonnet〕
 - [x] #15 — Schema DB: applications + types 〔sonnet〕
-- [ ] #16 — Schema DB: carpools + contracts + export global 〔sonnet〕
+- [x] #16 — Schema DB: carpools + contracts + export global 〔sonnet〕
 - [ ] #17 — RLS Policies 〔opus〕
 - [ ] #18 — Seed data 〔opus〕
 
