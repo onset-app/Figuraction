@@ -1,6 +1,6 @@
 # Progress — FigurAction
 
-Last updated: 2026-06-04 (ticket #09)
+Last updated: 2026-06-04 (ticket #10)
 
 ```
 Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncompleted ticket.
@@ -21,7 +21,7 @@ Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncom
 - [x] #07 — Providers React (QueryClient + Zustand) 〔sonnet〕
 - [x] #08 — Deploy Vercel (staging) ⚠️ MANUAL (connecter repo sur vercel.com)
 - [x] #09 — GitHub Actions CI 〔sonnet〕
-- [ ] #10 — Sentry + PostHog 〔sonnet〕 ⚠️ MANUAL (créer comptes, récupérer clés)
+- [x] #10 — Sentry + PostHog 〔sonnet〕 ⚠️ MANUAL (créer comptes, récupérer clés)
 
 ## Sprint 1 — Base de données
 
