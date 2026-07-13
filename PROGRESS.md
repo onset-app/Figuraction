@@ -1,6 +1,6 @@
 # Progress — FigurAction
 
-Last updated: 2026-07-13 (ticket #11)
+Last updated: 2026-07-13 (ticket #12)
 
 ```
 Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncompleted ticket.
@@ -26,7 +26,7 @@ Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncom
 ## Sprint 1 — Base de données
 
 - [x] #11 — Tous les schemas Zod 〔sonnet〕
-- [ ] #12 — Schema DB: profiles + types 〔sonnet〕 ⚠️ BLOCKED: code done (`src/db/schema/profiles.ts`), but `pnpm db:push` fails — `ojkbbclnfmqtzvvqehit.supabase.co` no longer resolves in DNS. Supabase project from #05/#06 appears paused/deleted; needs manual check on supabase.com and possibly new `.env.local` credentials before this can be pushed.
+- [x] #12 — Schema DB: profiles + types 〔sonnet〕
 - [ ] #13 — Schema DB: projects + types 〔sonnet〕
 - [ ] #14 — Schema DB: castings + types 〔sonnet〕
 - [ ] #15 — Schema DB: applications + types 〔sonnet〕
