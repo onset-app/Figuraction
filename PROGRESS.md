@@ -1,6 +1,6 @@
 # Progress — FigurAction
 
-Last updated: 2026-06-04 (ticket #07)
+Last updated: 2026-06-04 (ticket #09)
 
 ```
 Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncompleted ticket.
@@ -19,8 +19,8 @@ Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncom
 - [x] #05 — Setup Supabase 〔opus〕 ⚠️ MANUAL (créer projet sur supabase.com, récupérer clés)
 - [x] #06 — Setup Drizzle ORM 〔sonnet〕 (DB connectée via session pooler port 5432 — le transaction pooler 6543 ne s'authentifie pas sur ce projet)
 - [x] #07 — Providers React (QueryClient + Zustand) 〔sonnet〕
-- [ ] #08 — Deploy Vercel (staging) ⚠️ MANUAL (connecter repo sur vercel.com)
-- [ ] #09 — GitHub Actions CI 〔sonnet〕
+- [x] #08 — Deploy Vercel (staging) ⚠️ MANUAL (connecter repo sur vercel.com)
+- [x] #09 — GitHub Actions CI 〔sonnet〕
 - [ ] #10 — Sentry + PostHog 〔sonnet〕 ⚠️ MANUAL (créer comptes, récupérer clés)
 
 ## Sprint 1 — Base de données
