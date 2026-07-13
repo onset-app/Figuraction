@@ -1,6 +1,6 @@
 # Progress — FigurAction
 
-Last updated: 2026-06-04 (ticket #10)
+Last updated: 2026-07-13 (ticket #11)
 
 ```
 Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncompleted ticket.
@@ -25,7 +25,7 @@ Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncom
 
 ## Sprint 1 — Base de données
 
-- [ ] #11 — Tous les schemas Zod 〔sonnet〕
+- [x] #11 — Tous les schemas Zod 〔sonnet〕
 - [ ] #12 — Schema DB: profiles + types 〔sonnet〕
 - [ ] #13 — Schema DB: projects + types 〔sonnet〕
 - [ ] #14 — Schema DB: castings + types 〔sonnet〕
