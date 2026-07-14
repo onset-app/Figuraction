@@ -7,7 +7,7 @@ import { getSupabaseEnv } from "./env"
  * cookies in sync between the request and the response.
  *
  * Returns the refreshed `response` (whose cookies must be copied onto any
- * response that replaces it — see src/middleware.ts), the authenticated `user`
+ * response that replaces it — see src/proxy.ts), the authenticated `user`
  * (or null), and the `supabase` client bound to this request's cookies so the
  * caller can make further authenticated reads (e.g. the profile role).
  *

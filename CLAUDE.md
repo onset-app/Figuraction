@@ -16,7 +16,7 @@ ONSET is a B2B2C SaaS platform connecting film/TV productions with extras (figur
 ## Tech Stack
 
 ### Frontend
-- **Next.js 15** (App Router) — SSR for public SEO pages + SPA for authenticated app
+- **Next.js 16** (App Router) — SSR for public SEO pages + SPA for authenticated app. Note: the root request handler uses the `proxy.ts` convention (the old `middleware.ts` name is deprecated in Next 16)
 - **TypeScript** — strict mode enabled
 - **Tailwind CSS** — utility-first styling
 - **shadcn/ui** — component library (copy-paste, no dependency lock-in)
@@ -228,7 +228,7 @@ onset/
 │   │   ├── auth.ts
 │   │   └── enums.ts                   # UserRole, ApplicationStatus, etc.
 │   │
-│   └── middleware.ts                  # Next.js middleware: auth check, redirects, role routing
+│   └── proxy.ts                       # Next.js proxy (ex-middleware): auth check, redirects, role routing
 │
 ├── supabase/
 │   ├── config.toml                    # Supabase local dev config
@@ -528,7 +528,7 @@ Build in this order. Each feature is a vertical slice (DB + backend + frontend).
 - All user input validated with Zod before touching the DB
 - All dynamic content rendered with proper escaping (React handles this by default, but no dangerouslySetInnerHTML with user data)
 - Supabase anon key is public — all security relies on RLS policies
-- Server-side auth check in middleware.ts for all /app/* routes
+- Server-side auth check in proxy.ts (Next.js proxy convention, ex-middleware.ts) for all /app/* routes
 - Rate limiting on auth endpoints (Supabase handles this)
 
 ### Environment Variables

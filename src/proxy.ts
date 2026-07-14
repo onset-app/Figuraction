@@ -32,7 +32,7 @@ function redirectTo(request: NextRequest, pathname: string, from: NextResponse):
   return response
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { supabase, user, response } = await updateSession(request)
   const { pathname } = request.nextUrl
 
