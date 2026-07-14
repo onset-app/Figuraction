@@ -1,11 +1,12 @@
 "use server"
 
 import type { AuthError } from "@supabase/supabase-js"
+import { redirect } from "next/navigation"
 import { db } from "@/db"
 import { profiles } from "@/db/schema"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
-import { type SignupInput, signupSchema } from "@/schemas/auth"
+import { type LoginInput, loginSchema, type SignupInput, signupSchema } from "@/schemas/auth"
 
 /** Discriminated result returned by every auth action. */
 export type AuthActionResult = { success: true } | { success: false; error: string }
@@ -91,4 +92,58 @@ export async function signup(input: SignupInput): Promise<AuthActionResult> {
   }
 
   return { success: true }
+}
+
+/** Translate a Supabase sign-in error into a user-facing French message. */
+function mapLoginError(error: AuthError): string {
+  const message = error.message.toLowerCase()
+
+  if (message.includes("email not confirmed")) {
+    return "Veuillez confirmer votre email avant de vous connecter."
+  }
+  if (message.includes("invalid login credentials")) {
+    return "Email ou mot de passe incorrect."
+  }
+  if (error.status === 429 || message.includes("rate limit")) {
+    return "Trop de tentatives. Réessayez dans quelques minutes."
+  }
+  return "Une erreur est survenue lors de la connexion. Réessayez."
+}
+
+/**
+ * Sign in with email and password.
+ *
+ * On success the session cookies are written by the server client and the user
+ * is redirected to the dashboard. On failure a typed error is returned so the
+ * form can render it inline. Errors are kept generic (never distinguishing a
+ * wrong password from an unknown email) to avoid account enumeration.
+ */
+export async function login(input: LoginInput): Promise<AuthActionResult> {
+  const parsed = loginSchema.safeParse(input)
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: parsed.error.issues[0]?.message ?? "Données invalides.",
+    }
+  }
+
+  const { email, password } = parsed.data
+
+  const supabase = await createClient()
+  const { error } = await supabase.auth.signInWithPassword({ email, password })
+
+  if (error) {
+    return { success: false, error: mapLoginError(error) }
+  }
+
+  // redirect() throws internally, so it must sit outside any try/catch. The
+  // return type below is never reached on success.
+  redirect("/app/dashboard")
+}
+
+/** Sign out the current user and return to the login page. */
+export async function logout(): Promise<void> {
+  const supabase = await createClient()
+  await supabase.auth.signOut()
+  redirect("/login")
 }

@@ -1,6 +1,6 @@
 # Progress — FigurAction
 
-Last updated: 2026-07-13 (ticket #19)
+Last updated: 2026-07-14 (ticket #20)
 
 ```
 Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncompleted ticket.
@@ -37,7 +37,7 @@ Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncom
 ## Sprint 2 — Auth (/clear avant ce sprint)
 
 - [x] #19 — Server action: signup 〔opus〕 (profile insert via Drizzle/service-role — bypasses RLS since no session exists pre-confirmation; rolls back orphaned auth user on failure)
-- [ ] #20 — Server actions: login + logout 〔opus〕
+- [x] #20 — Server actions: login + logout 〔opus〕 (server-side redirect on success; generic errors to avoid account enumeration)
 - [ ] #21 — Server action: reset password 〔opus〕
 - [ ] #22 — Middleware auth + role routing 〔opus〕
 - [ ] #23 — Pages auth UI (login + signup + forgot) 〔opus〕
