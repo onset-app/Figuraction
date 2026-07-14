@@ -6,12 +6,13 @@ import { getSupabaseEnv } from "./env"
  * Refreshes the Supabase auth session on every request and keeps the auth
  * cookies in sync between the request and the response.
  *
- * This helper only handles session refresh. Route protection and role-based
- * routing are layered on top in src/middleware.ts (ticket #22).
+ * Returns the refreshed `response` (whose cookies must be copied onto any
+ * response that replaces it — see src/middleware.ts), the authenticated `user`
+ * (or null), and the `supabase` client bound to this request's cookies so the
+ * caller can make further authenticated reads (e.g. the profile role).
  *
- * IMPORTANT: always return the `supabaseResponse` object as-is. If you create a
- * new response, copy over `request.cookies` to avoid desynchronising the
- * browser and server sessions.
+ * IMPORTANT: if you replace `response` with a new one (e.g. a redirect), copy
+ * over its cookies to avoid desynchronising the browser and server sessions.
  */
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
@@ -36,7 +37,9 @@ export async function updateSession(request: NextRequest) {
 
   // Do not run code between createServerClient and getUser — it refreshes the
   // session token and must happen before any other logic.
-  await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  return supabaseResponse
+  return { supabase, user, response: supabaseResponse }
 }
