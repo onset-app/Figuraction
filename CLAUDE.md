@@ -98,7 +98,7 @@ onset/
 │   │   │   ├── forgot-password/page.tsx
 │   │   │   └── layout.tsx             # Centered card layout
 │   │   │
-│   │   ├── (app)/                     # Authenticated app (with sidebar/nav)
+│   │   ├── app/                       # Authenticated app (with sidebar/nav) — real /app/* URL segment (not a route group, so proxy /app/:path* and nav links resolve)
 │   │   │   ├── layout.tsx             # App shell: sidebar, topbar, role-based nav
 │   │   │   ├── dashboard/page.tsx     # Home after login (role-dependent)
 │   │   │   │
