@@ -1,6 +1,6 @@
 # Progress — FigurAction
 
-Last updated: 2026-07-14 (ticket #20)
+Last updated: 2026-07-14 (ticket #21)
 
 ```
 Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncompleted ticket.
@@ -38,7 +38,7 @@ Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncom
 
 - [x] #19 — Server action: signup 〔opus〕 (profile insert via Drizzle/service-role — bypasses RLS since no session exists pre-confirmation; rolls back orphaned auth user on failure)
 - [x] #20 — Server actions: login + logout 〔opus〕 (server-side redirect on success; generic errors to avoid account enumeration)
-- [ ] #21 — Server action: reset password 〔opus〕
+- [x] #21 — Server action: reset password 〔opus〕 (resetPassword + updatePassword actions, /auth/callback route exchanges code→session, /update-password page; neutral success to avoid enumeration)
 - [ ] #22 — Middleware auth + role routing 〔opus〕
 - [ ] #23 — Pages auth UI (login + signup + forgot) 〔opus〕
 - [ ] #24 — Hook useCurrentUser 〔opus〕

@@ -6,7 +6,16 @@ import { db } from "@/db"
 import { profiles } from "@/db/schema"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
-import { type LoginInput, loginSchema, type SignupInput, signupSchema } from "@/schemas/auth"
+import {
+  type LoginInput,
+  loginSchema,
+  type ResetPasswordInput,
+  resetPasswordSchema,
+  type SignupInput,
+  signupSchema,
+  type UpdatePasswordInput,
+  updatePasswordSchema,
+} from "@/schemas/auth"
 
 /** Discriminated result returned by every auth action. */
 export type AuthActionResult = { success: true } | { success: false; error: string }
@@ -146,4 +155,91 @@ export async function logout(): Promise<void> {
   const supabase = await createClient()
   await supabase.auth.signOut()
   redirect("/login")
+}
+
+/** Map a rate-limit error to a French message, else a generic fallback. */
+function mapRateLimitError(error: AuthError, fallback: string): string {
+  if (error.status === 429 || error.message.toLowerCase().includes("rate limit")) {
+    return "Trop de tentatives. Réessayez dans quelques minutes."
+  }
+  return fallback
+}
+
+/**
+ * Send a password-reset email.
+ *
+ * The recovery link points at /auth/callback, which exchanges the code for a
+ * session and forwards to /update-password. Supabase does not reveal whether
+ * the address exists (it returns success either way), so the caller should show
+ * a neutral "if an account exists, an email was sent" message on success.
+ */
+export async function resetPassword(input: ResetPasswordInput): Promise<AuthActionResult> {
+  const parsed = resetPasswordSchema.safeParse(input)
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: parsed.error.issues[0]?.message ?? "Données invalides.",
+    }
+  }
+
+  const supabase = await createClient()
+  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/update-password`,
+  })
+
+  if (error) {
+    return {
+      success: false,
+      error: mapRateLimitError(
+        error,
+        "Une erreur est survenue lors de l'envoi de l'email. Réessayez."
+      ),
+    }
+  }
+
+  return { success: true }
+}
+
+/**
+ * Set a new password for the currently authenticated user.
+ *
+ * Reached from the recovery session established by /auth/callback. Requires a
+ * live session — if it has expired the user must request a new reset link.
+ */
+export async function updatePassword(input: UpdatePasswordInput): Promise<AuthActionResult> {
+  const parsed = updatePasswordSchema.safeParse(input)
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: parsed.error.issues[0]?.message ?? "Données invalides.",
+    }
+  }
+
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return {
+      success: false,
+      error: "Session expirée. Refaites une demande de réinitialisation.",
+    }
+  }
+
+  const { error } = await supabase.auth.updateUser({ password: parsed.data.password })
+  if (error) {
+    if (error.message.toLowerCase().includes("password")) {
+      return { success: false, error: "Le mot de passe est trop faible." }
+    }
+    return {
+      success: false,
+      error: mapRateLimitError(
+        error,
+        "Une erreur est survenue lors de la mise à jour du mot de passe. Réessayez."
+      ),
+    }
+  }
+
+  // The recovery session is now a normal session; send the user into the app.
+  redirect("/app/dashboard")
 }
