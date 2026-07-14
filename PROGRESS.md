@@ -1,6 +1,6 @@
 # Progress — FigurAction
 
-Last updated: 2026-07-14 (ticket #24)
+Last updated: 2026-07-14 (ticket #25)
 
 ```
 Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncompleted ticket.
@@ -42,7 +42,7 @@ Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncom
 - [x] #22 — Middleware auth + role routing 〔opus〕 (protège /app/*, redirige auth pages si loggé, role gating projets/candidats→production, admin→admin; rôle lu depuis profiles via RLS.)
 - [x] #23 — Pages auth UI (login + signup + forgot) 〔opus〕 ((auth) route group + layout centré; react-hook-form + zodResolver; erreurs inline; signup → écran "Vérifiez votre email", forgot → message neutre; les 4 pages rendent 200. Flow submit complet couvert par e2e #51)
 - [x] #24 — Hook useCurrentUser 〔opus〕 (TanStack Query; expose user/profile/role/isLoading/isAuthenticated; select supabase alias snake→camel; invalide sur onAuthStateChange. Exercé en live par #25)
-- [ ] #25 — App shell: sidebar + topbar + mobile nav 〔opus〕
+- [x] #25 — App shell: sidebar + topbar + mobile nav 〔opus〕 (nav-config partagé filtré par rôle; sidebar desktop collapsible via ui-store; topbar titre + drawer mobile (Sheet Base UI, contrôlé — pas de asChild); bottom tabs mobile; RoleGuard 403. Rendu live via #26)
 - [ ] #26 — Dashboard 〔opus〕
 
 ## Sprint 3 — Profil + Projets + Castings (/clear avant ce sprint)
