@@ -1,6 +1,7 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useQueryClient } from "@tanstack/react-query"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
@@ -10,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { MY_PROJECTS_QUERY_KEY } from "@/hooks/use-projects"
 import { type ProjectInput, projectSchema } from "@/schemas/project"
 
 // shootDateStart/shootDateEnd use z.coerce.date(), so the pre-parse (input)
@@ -19,6 +21,7 @@ type ProjectFormValues = z.input<typeof projectSchema>
 
 export function ProjectForm() {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const {
     register,
     handleSubmit,
@@ -30,6 +33,10 @@ export function ProjectForm() {
   async function onSubmit(values: ProjectInput) {
     const result = await createProject(values)
     if (result.success) {
+      // The list page reads from the client query cache, which revalidatePath
+      // (server-side) doesn't touch — invalidate it so the new project shows
+      // immediately after the redirect instead of after staleTime expires.
+      queryClient.invalidateQueries({ queryKey: MY_PROJECTS_QUERY_KEY })
       toast.success("Projet créé.")
       router.push("/app/projets")
     } else {
