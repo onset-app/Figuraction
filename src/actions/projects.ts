@@ -1,0 +1,167 @@
+"use server"
+
+import { revalidatePath } from "next/cache"
+import { getUserRole } from "@/lib/supabase/roles"
+import { createClient } from "@/lib/supabase/server"
+import { nullableText, toDateString } from "@/lib/utils"
+import { type ProjectInput, projectSchema } from "@/schemas/project"
+import type { Project } from "@/types/database"
+
+/**
+ * A project as returned through the supabase-js client: column names aliased
+ * back to the camelCase Drizzle field names (see PROJECT_SELECT), and the
+ * timestamptz columns delivered as ISO strings rather than Date objects.
+ * Same approach as use-current-user.ts — the raw client returns snake_case
+ * strings, so the Drizzle row type would be doubly inaccurate here.
+ */
+export type ProjectRow = Omit<Project, "createdAt" | "updatedAt"> & {
+  createdAt: string
+  updatedAt: string
+}
+
+/** Aliased column list mapping snake_case DB columns to camelCase fields. */
+const PROJECT_SELECT =
+  "id, productionId:production_id, title, description, shootLocation:shoot_location, shootDateStart:shoot_date_start, shootDateEnd:shoot_date_end, status, createdAt:created_at, updatedAt:updated_at"
+
+export type ProjectActionResult =
+  | { success: true; project: ProjectRow }
+  | { success: false; error: string }
+
+export type ProjectMutationResult = { success: true } | { success: false; error: string }
+
+const GENERIC_ERROR = "Une erreur est survenue. Réessayez."
+const OWNERSHIP_ERROR = "Projet introuvable ou accès refusé."
+
+function toRow(input: ProjectInput) {
+  return {
+    title: input.title,
+    description: nullableText(input.description),
+    shoot_location: nullableText(input.shootLocation),
+    shoot_date_start: input.shootDateStart ? toDateString(input.shootDateStart) : null,
+    shoot_date_end: input.shootDateEnd ? toDateString(input.shootDateEnd) : null,
+  }
+}
+
+/**
+ * Create a new project owned by the current user.
+ *
+ * RLS's `projects_manage_own` policy only checks that `production_id` matches
+ * the caller, not their role — a figurant could otherwise insert a project
+ * under their own id. The role check below is the real gate against that.
+ */
+export async function createProject(input: ProjectInput): Promise<ProjectActionResult> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return { success: false, error: "Vous devez être connecté." }
+  }
+
+  const role = await getUserRole(supabase, user.id)
+  if (role !== "production" && role !== "admin") {
+    return { success: false, error: "Seules les productions peuvent créer un projet." }
+  }
+
+  const parsed = projectSchema.safeParse(input)
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Données invalides." }
+  }
+
+  const { data, error } = await supabase
+    .from("projects")
+    .insert({ production_id: user.id, ...toRow(parsed.data) })
+    .select(PROJECT_SELECT)
+    .single()
+
+  if (error || !data) {
+    return { success: false, error: GENERIC_ERROR }
+  }
+
+  revalidatePath("/app/projets")
+  return { success: true, project: data as ProjectRow }
+}
+
+/**
+ * Update a project. RLS's `projects_manage_own` policy silently filters out
+ * rows the caller doesn't own (no error, just zero rows affected), so a
+ * missing row after update is how ownership is verified here.
+ */
+export async function updateProject(id: string, input: ProjectInput): Promise<ProjectActionResult> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return { success: false, error: "Vous devez être connecté." }
+  }
+
+  const parsed = projectSchema.safeParse(input)
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Données invalides." }
+  }
+
+  const { data, error } = await supabase
+    .from("projects")
+    .update({ ...toRow(parsed.data), updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select(PROJECT_SELECT)
+
+  if (error) {
+    return { success: false, error: GENERIC_ERROR }
+  }
+  const project = data?.[0]
+  if (!project) {
+    return { success: false, error: OWNERSHIP_ERROR }
+  }
+
+  revalidatePath("/app/projets")
+  revalidatePath(`/app/projets/${id}`)
+  return { success: true, project: project as ProjectRow }
+}
+
+/** Archive a project (soft-delete — projects are never hard-deleted). */
+export async function deleteProject(id: string): Promise<ProjectMutationResult> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return { success: false, error: "Vous devez être connecté." }
+  }
+
+  const { data, error } = await supabase
+    .from("projects")
+    .update({ status: "archived", updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select()
+
+  if (error) {
+    return { success: false, error: GENERIC_ERROR }
+  }
+  if (!data || data.length === 0) {
+    return { success: false, error: OWNERSHIP_ERROR }
+  }
+
+  revalidatePath("/app/projets")
+  return { success: true }
+}
+
+/** List every project owned by the current production, any status. */
+export async function getMyProjects(): Promise<ProjectRow[]> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return []
+  }
+
+  const { data } = await supabase
+    .from("projects")
+    .select(PROJECT_SELECT)
+    .eq("production_id", user.id)
+    .order("created_at", { ascending: false })
+
+  return (data as ProjectRow[] | null) ?? []
+}

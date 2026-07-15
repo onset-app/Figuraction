@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { nullableText } from "@/lib/utils"
 import { type ProfileInput, profileSchema } from "@/schemas/profile"
 
 /** Discriminated result returned by profile mutations that carry no payload. */
@@ -14,12 +15,6 @@ export type PhotoUploadResult = { success: true; url: string } | { success: fals
 /** Accepted avatar formats. Stored under a `.jpg` path regardless (see below). */
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"]
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024 // 5 MB
-
-/** Normalise an optional free-text field: blank/whitespace becomes null. */
-function nullableText(value: string | undefined): string | null {
-  const trimmed = value?.trim()
-  return trimmed ? trimmed : null
-}
 
 /**
  * Update the current user's profile.

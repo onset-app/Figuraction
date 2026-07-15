@@ -1,6 +1,6 @@
-import type { SupabaseClient } from "@supabase/supabase-js"
 import { type NextRequest, NextResponse } from "next/server"
 import { updateSession } from "@/lib/supabase/middleware"
+import { getUserRole } from "@/lib/supabase/roles"
 import type { UserRole } from "@/types/enums"
 
 /**
@@ -13,12 +13,6 @@ const ROLE_GUARDS: ReadonlyArray<{ prefix: string; allow: ReadonlyArray<UserRole
   { prefix: "/app/projets", allow: ["production", "admin"] },
   { prefix: "/app/candidats", allow: ["production", "admin"] },
 ]
-
-/** Read the caller's authoritative role from their profile (RLS: own row). */
-async function getUserRole(supabase: SupabaseClient, userId: string): Promise<UserRole | null> {
-  const { data } = await supabase.from("profiles").select("role").eq("id", userId).single()
-  return (data?.role as UserRole | undefined) ?? null
-}
 
 /** Build a same-origin redirect that carries over the refreshed session cookies. */
 function redirectTo(request: NextRequest, pathname: string, from: NextResponse): NextResponse {
