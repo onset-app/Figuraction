@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { optionalDate, optionalNumber } from "./shared"
 
 export const roleTypes = ["figurant", "acteur", "doublure"] as const
 
@@ -7,10 +8,10 @@ export const castingSchema = z
     title: z.string().trim().min(1, "Le titre est requis").max(200),
     description: z.string().trim().max(5000).optional().or(z.literal("")),
     roleType: z.enum(roleTypes, { message: "Veuillez choisir un type de rôle" }),
-    ageMin: z.coerce.number().int().min(0).max(120).optional(),
-    ageMax: z.coerce.number().int().min(0).max(120).optional(),
+    ageMin: optionalNumber(z.coerce.number().int().min(0).max(120)),
+    ageMax: optionalNumber(z.coerce.number().int().min(0).max(120)),
     location: z.string().trim().max(200).optional().or(z.literal("")),
-    shootDate: z.coerce.date().optional(),
+    shootDate: optionalDate,
     spotsAvailable: z.coerce
       .number()
       .int("Le nombre de places doit être un nombre entier")

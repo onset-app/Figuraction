@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { optionalNumber } from "./shared"
 
 export const experienceLevels = ["debutant", "premiere_fois", "confirme"] as const
 
@@ -25,12 +26,13 @@ export const profileSchema = z.object({
     .optional()
     .or(z.literal("")),
   city: z.string().trim().max(100).optional().or(z.literal("")),
-  age: z.coerce
-    .number()
-    .int("L'âge doit être un nombre entier")
-    .min(16, "L'âge minimum est de 16 ans")
-    .max(120, "Âge invalide")
-    .optional(),
+  age: optionalNumber(
+    z.coerce
+      .number()
+      .int("L'âge doit être un nombre entier")
+      .min(16, "L'âge minimum est de 16 ans")
+      .max(120, "Âge invalide")
+  ),
   bio: z.string().trim().max(2000, "La bio ne peut pas dépasser 2000 caractères").optional(),
   experience: z.enum(experienceLevels, {
     message: "Veuillez choisir un niveau d'expérience",

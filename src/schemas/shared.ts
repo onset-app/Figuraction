@@ -1,0 +1,25 @@
+import { z } from "zod"
+
+/**
+ * An optional date that also accepts an empty string as "unset".
+ *
+ * Native `<input type="date">` fields submit `""` when left blank, not
+ * `undefined` — and `z.coerce.date().optional()` alone rejects `""` with a
+ * confusing "Invalid date" error, since `.optional()` only skips validation
+ * for `undefined`. This normalises `""` to `undefined` before coercion.
+ */
+export const optionalDate = z.preprocess(
+  (val) => (val === "" ? undefined : val),
+  z.coerce.date().optional()
+)
+
+/**
+ * Wrap a coerced-number schema so a blank input string ("" — what native
+ * number inputs submit when left empty) is treated as "unset" instead of
+ * `z.coerce.number()` turning it into `0`. Without this, an optional field
+ * whose lower bound is 0 (e.g. an age minimum) would silently accept a blank
+ * input as a real `0` rather than leaving it unset.
+ */
+export function optionalNumber<T extends z.ZodTypeAny>(schema: T) {
+  return z.preprocess((val) => (val === "" ? undefined : val), schema.optional())
+}
