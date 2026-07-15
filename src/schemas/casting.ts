@@ -3,6 +3,12 @@ import { optionalDate, optionalNumber } from "./shared"
 
 export const roleTypes = ["figurant", "acteur", "doublure"] as const
 
+export const ROLE_TYPE_LABELS: Record<(typeof roleTypes)[number], string> = {
+  figurant: "Figurant",
+  acteur: "Acteur",
+  doublure: "Doublure",
+}
+
 export const castingSchema = z
   .object({
     title: z.string().trim().min(1, "Le titre est requis").max(200),

@@ -97,7 +97,10 @@ export function ProfileForm({ defaultValues, onSuccess }: ProfileFormProps) {
             control={control}
             name="experience"
             render={({ field }) => (
-              <Select onValueChange={field.onChange} value={field.value}>
+              // value ?? null keeps the Select controlled even when the profile
+              // has no experience yet (undefined), avoiding Base UI's
+              // uncontrolled→controlled warning.
+              <Select onValueChange={field.onChange} value={field.value ?? null}>
                 <SelectTrigger id="experience" className="w-full">
                   {/* Base UI's SelectValue renders the raw value as text unless
                       given a render-prop, so map it to the French label here. */}

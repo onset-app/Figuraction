@@ -147,6 +147,33 @@ export async function deleteProject(id: string): Promise<ProjectMutationResult> 
   return { success: true }
 }
 
+/**
+ * Fetch a single project the current user owns.
+ *
+ * Scoped to the owner (like getMyProjects) rather than relying on RLS alone:
+ * `projects_select_open` would otherwise let a production open another
+ * production's *open* project in this management view. Admin oversight is a
+ * separate back-office ticket. Returns null when not found or not owned.
+ */
+export async function getProject(id: string): Promise<ProjectRow | null> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return null
+  }
+
+  const { data } = await supabase
+    .from("projects")
+    .select(PROJECT_SELECT)
+    .eq("id", id)
+    .eq("production_id", user.id)
+    .maybeSingle()
+
+  return (data as ProjectRow | null) ?? null
+}
+
 /** A project row plus its total casting count, for the project list. */
 export type ProjectListItem = ProjectRow & { castingsCount: number }
 
