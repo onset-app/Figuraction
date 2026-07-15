@@ -15,10 +15,7 @@
       "!dist",
       "!coverage",
       "!src/components/ui",
-      "!app.js",
-      "!style.css",
-      "!index.html",
-      "!service-worker.js",
+      "!archived-code",
       "!**/*.css"
     ]
   },
