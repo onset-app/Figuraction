@@ -1,6 +1,6 @@
 # Progress — FigurAction
 
-Last updated: 2026-07-15 (ticket #28)
+Last updated: 2026-07-15 (ticket #29)
 
 ```
 Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncompleted ticket.
@@ -49,7 +49,7 @@ Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncom
 
 - [x] #27 — Server actions: profiles 〔opus〕 (updateProfile via client RLS-scoped; uploadPhoto via service-role → path `{userId}/profile.jpg` dérivé de l'user auth (jamais du client), upsert + `?v=` cache-bust; empty strings → null; revalidatePath /app/profil. Bucket `avatars` créé (public read) — upload en service-role donc pas besoin de write policy)
 - [x] #28 — Profil figurant: formulaire + upload photo 〔sonnet〕 (profile-form.tsx: RHF+zodResolver, form values typed `z.input<profileSchema>`→submit receives coerced `ProfileInput` since `age` uses z.coerce; photo-upload.tsx: optimistic local object-URL preview, reverts on error; file-upload.tsx: generic label-wrapped hidden-input primitive, reusable. FIX: Base UI's `SelectValue` renders the raw enum value unless given a children render-prop — added one to show French labels. Added `<Toaster />` to root layout (sonner) since no page mounted it yet. Verified live end-to-end via Playwright: login → photo upload → form submit, all confirmed by toasts and persisted values)
-- [ ] #29 — Profil figurant: page vue + édition 〔sonnet〕
+- [x] #29 — Profil figurant: page vue + édition 〔sonnet〕 (src/app/app/profil/page.tsx; toggle vue/édition via useState; defaultValues construits depuis useCurrentUser avec isExperienceLevel guard car profile.experience est `string | null` en DB; onSuccess/onUploaded invalident CURRENT_USER_QUERY_KEY pour refléter les changements sans reload. EXPERIENCE_LABELS + isExperienceLevel déplacés de profile-form.tsx vers schemas/profile.ts pour être partagés. Vérifié live via Playwright : login → nav sidebar → vue → édition pré-remplie → save → vue mise à jour + toast)
 - [ ] #30 — Server actions: projects + castings 〔opus〕
 - [ ] #31 — Créer un projet (production) 〔sonnet〕
 - [ ] #32 — Liste projets + hooks 〔sonnet〕

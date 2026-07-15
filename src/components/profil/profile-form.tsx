@@ -16,13 +16,12 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { experienceLevels, type ProfileInput, profileSchema } from "@/schemas/profile"
-
-const EXPERIENCE_LABELS: Record<(typeof experienceLevels)[number], string> = {
-  debutant: "Débutant",
-  premiere_fois: "Première fois",
-  confirme: "Confirmé",
-}
+import {
+  EXPERIENCE_LABELS,
+  experienceLevels,
+  type ProfileInput,
+  profileSchema,
+} from "@/schemas/profile"
 
 // `age` uses z.coerce.number(), so the pre-parse (input) shape differs from
 // the post-parse (output) shape. Typing the form as input→output keeps

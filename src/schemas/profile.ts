@@ -2,6 +2,19 @@ import { z } from "zod"
 
 export const experienceLevels = ["debutant", "premiere_fois", "confirme"] as const
 
+export const EXPERIENCE_LABELS: Record<(typeof experienceLevels)[number], string> = {
+  debutant: "Débutant",
+  premiere_fois: "Première fois",
+  confirme: "Confirmé",
+}
+
+/** Narrow a DB value (nullable free-form text) to a known experience level. */
+export function isExperienceLevel(
+  value: string | null | undefined
+): value is (typeof experienceLevels)[number] {
+  return !!value && (experienceLevels as readonly string[]).includes(value)
+}
+
 export const profileSchema = z.object({
   firstName: z.string().trim().min(1, "Le prénom est requis").max(100),
   lastName: z.string().trim().min(1, "Le nom est requis").max(100),
