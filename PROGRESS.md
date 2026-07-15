@@ -1,6 +1,6 @@
 # Progress — FigurAction
 
-Last updated: 2026-07-14 (ticket #26 — clôture Sprint 2)
+Last updated: 2026-07-15 (ticket #27 — début Sprint 3)
 
 ```
 Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncompleted ticket.
@@ -47,7 +47,7 @@ Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncom
 
 ## Sprint 3 — Profil + Projets + Castings (/clear avant ce sprint)
 
-- [ ] #27 — Server actions: profiles 〔opus〕 ⚠️ MANUAL (créer bucket avatars sur Supabase Storage)
+- [x] #27 — Server actions: profiles 〔opus〕 (updateProfile via client RLS-scoped; uploadPhoto via service-role → path `{userId}/profile.jpg` dérivé de l'user auth (jamais du client), upsert + `?v=` cache-bust; empty strings → null; revalidatePath /app/profil. Bucket `avatars` créé (public read) — upload en service-role donc pas besoin de write policy)
 - [ ] #28 — Profil figurant: formulaire + upload photo 〔sonnet〕
 - [ ] #29 — Profil figurant: page vue + édition 〔sonnet〕
 - [ ] #30 — Server actions: projects + castings 〔opus〕
