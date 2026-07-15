@@ -147,8 +147,15 @@ export async function deleteProject(id: string): Promise<ProjectMutationResult> 
   return { success: true }
 }
 
-/** List every project owned by the current production, any status. */
-export async function getMyProjects(): Promise<ProjectRow[]> {
+/** A project row plus its total casting count, for the project list. */
+export type ProjectListItem = ProjectRow & { castingsCount: number }
+
+/**
+ * List every project owned by the current production, any status, with the
+ * number of castings under each. Uses PostgREST's embedded-resource count
+ * aggregate (`castings(count)`) instead of a per-project follow-up query.
+ */
+export async function getMyProjects(): Promise<ProjectListItem[]> {
   const supabase = await createClient()
   const {
     data: { user },
@@ -159,9 +166,14 @@ export async function getMyProjects(): Promise<ProjectRow[]> {
 
   const { data } = await supabase
     .from("projects")
-    .select(PROJECT_SELECT)
+    .select(`${PROJECT_SELECT}, castings(count)`)
     .eq("production_id", user.id)
     .order("created_at", { ascending: false })
 
-  return (data as ProjectRow[] | null) ?? []
+  return ((data ?? []) as Array<ProjectRow & { castings: Array<{ count: number }> }>).map(
+    ({ castings, ...project }) => ({
+      ...project,
+      castingsCount: castings?.[0]?.count ?? 0,
+    })
+  )
 }
