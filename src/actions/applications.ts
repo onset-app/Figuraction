@@ -1,14 +1,104 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { nullableText } from "@/lib/utils"
 import { type ApplicationInput, applicationSchema } from "@/schemas/application"
-import type { ApplicationStatus } from "@/types/enums"
+import type { ApplicationStatus, CastingStatus } from "@/types/enums"
 
 const GENERIC_ERROR = "Une erreur est survenue. Réessayez."
 
 export type ApplicationActionResult = { success: true } | { success: false; error: string }
+
+/** One row of the figurant's "Mes candidatures" list, with joined casting info. */
+export type MyApplication = {
+  id: string
+  status: ApplicationStatus
+  createdAt: string
+  casting: {
+    id: string
+    title: string
+    location: string | null
+    shootDate: string | null
+    status: CastingStatus
+  } | null
+}
+
+/**
+ * The current figurant's applications, newest first, with the casting they
+ * applied to.
+ *
+ * Read via the service-role client, scoped strictly to `figurant_id = user.id`:
+ * a figurant must keep seeing castings they applied to even after those castings
+ * close, which the RLS `castings_select_open` policy would otherwise hide (the
+ * embed would come back null). The explicit figurant_id filter — never a
+ * client-supplied value — is the security boundary here, same pattern as
+ * uploadPhoto deriving its path from the auth user.
+ */
+export async function getMyApplications(): Promise<MyApplication[]> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return []
+  }
+
+  const admin = createAdminClient()
+  const { data } = await admin
+    .from("applications")
+    .select(
+      "id, status, createdAt:created_at, castings(id, title, location, shootDate:shoot_date, status)"
+    )
+    .eq("figurant_id", user.id)
+    .order("created_at", { ascending: false })
+
+  // supabase-js infers the to-one `castings` embed as an array; it's an object
+  // at runtime (or null when the FK target was deleted).
+  return (
+    (data ?? []) as unknown as Array<
+      Omit<MyApplication, "casting"> & {
+        castings: MyApplication["casting"]
+      }
+    >
+  ).map(({ castings, ...application }) => ({ ...application, casting: castings ?? null }))
+}
+
+/**
+ * Withdraw the current figurant's own application (status → withdrawn).
+ *
+ * Runs on the RLS client: `applications_update_own_figurant` both scopes the
+ * update to the caller's rows and caps the new status at pending/withdrawn. The
+ * extra figurant_id filter is defense in depth; a missing row after the update
+ * means it wasn't theirs.
+ */
+export async function withdrawApplication(id: string): Promise<ApplicationActionResult> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return { success: false, error: "Vous devez être connecté." }
+  }
+
+  const { data, error } = await supabase
+    .from("applications")
+    .update({ status: "withdrawn", updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("figurant_id", user.id)
+    .select("id")
+
+  if (error) {
+    return { success: false, error: GENERIC_ERROR }
+  }
+  if (!data || data.length === 0) {
+    return { success: false, error: "Candidature introuvable." }
+  }
+
+  revalidatePath("/app/candidatures")
+  return { success: true }
+}
 
 /**
  * The current figurant's own application to a given casting, or null. Drives
