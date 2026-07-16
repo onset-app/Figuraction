@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { getMyApplications } from "@/actions/applications"
+import { getProjectCandidates } from "@/actions/projects"
 
 export const MY_APPLICATIONS_QUERY_KEY = ["my-applications"] as const
 
@@ -10,5 +11,17 @@ export function useMyApplications() {
   return useQuery({
     queryKey: MY_APPLICATIONS_QUERY_KEY,
     queryFn: getMyApplications,
+  })
+}
+
+/** Query key for the candidates (applications + profiles) under a given project. */
+export const projectCandidatesQueryKey = (projectId: string) =>
+  ["project-candidates", projectId] as const
+
+/** Candidates to a production's project, grouped/consumed by the review view. */
+export function useProjectCandidates(projectId: string) {
+  return useQuery({
+    queryKey: projectCandidatesQueryKey(projectId),
+    queryFn: () => getProjectCandidates(projectId),
   })
 }

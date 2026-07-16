@@ -1,7 +1,7 @@
 "use client"
 
 import { useQueryClient } from "@tanstack/react-query"
-import { ArrowLeft, Loader2, Plus } from "lucide-react"
+import { ArrowLeft, Loader2, Plus, Users } from "lucide-react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useState } from "react"
@@ -9,7 +9,7 @@ import { RoleGuard } from "@/components/layout/role-guard"
 import { CastingCard } from "@/components/projets/casting-card"
 import { CastingForm } from "@/components/projets/casting-form"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -103,6 +103,12 @@ function ProjectDetail({ projectId }: { projectId: string }) {
           {project.shootLocation && <span>{project.shootLocation}</span>}
           {dateRange && <span>{dateRange}</span>}
         </div>
+        <Link
+          href={`/app/projets/${projectId}/candidats`}
+          className={buttonVariants({ variant: "outline", size: "sm" })}
+        >
+          <Users className="size-4" /> Voir les candidats
+        </Link>
       </div>
 
       <div className="flex items-center justify-between">

@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server"
 import { nullableText, toDateString } from "@/lib/utils"
 import { type ProjectInput, projectSchema } from "@/schemas/project"
 import type { Project } from "@/types/database"
+import type { ApplicationStatus } from "@/types/enums"
 
 /**
  * A project as returned through the supabase-js client: column names aliased
@@ -203,4 +204,67 @@ export async function getMyProjects(): Promise<ProjectListItem[]> {
       castingsCount: castings?.[0]?.count ?? 0,
     })
   )
+}
+
+/** A candidate (application + applicant profile) under one of a project's castings. */
+export type ProjectCandidate = {
+  id: string
+  status: ApplicationStatus
+  message: string | null
+  createdAt: string
+  casting: { id: string; title: string }
+  figurant: {
+    id: string
+    firstName: string
+    lastName: string
+    age: number | null
+    city: string | null
+    photoUrl: string | null
+  } | null
+}
+
+/**
+ * Every application to the castings of a given project, with the applicant's
+ * profile, for the production's candidate-review view.
+ *
+ * Relies on RLS rather than an explicit ownership check: `applications_select_production`
+ * (owns_casting) only returns applications on castings the caller owns, and
+ * `profiles_select_figurants_by_staff` lets a production read figurant profiles.
+ * A production passing another production's projectId therefore gets an empty
+ * list. `castings!inner` scopes to this project; the `profiles!figurant_id`
+ * hint disambiguates the two applications→profiles FKs (figurant_id vs
+ * reviewed_by). Withdrawn applications are excluded — they aren't actionable.
+ */
+export async function getProjectCandidates(projectId: string): Promise<ProjectCandidate[]> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return []
+  }
+
+  const { data } = await supabase
+    .from("applications")
+    .select(
+      "id, status, message, createdAt:created_at, castings!inner(id, title, project_id), figurant:profiles!figurant_id(id, firstName:first_name, lastName:last_name, age, city, photoUrl:photo_url)"
+    )
+    .eq("castings.project_id", projectId)
+    .neq("status", "withdrawn")
+    .order("created_at", { ascending: false })
+
+  // supabase-js infers the to-one embeds as arrays; both are single objects at
+  // runtime (figurant may be null if the profile row was removed).
+  return (
+    (data ?? []) as unknown as Array<
+      Omit<ProjectCandidate, "casting" | "figurant"> & {
+        castings: { id: string; title: string }
+        figurant: ProjectCandidate["figurant"]
+      }
+    >
+  ).map(({ castings, figurant, ...application }) => ({
+    ...application,
+    casting: { id: castings.id, title: castings.title },
+    figurant: figurant ?? null,
+  }))
 }
