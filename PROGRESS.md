@@ -1,6 +1,6 @@
 # Progress — FigurAction
 
-Last updated: 2026-07-15 (ticket #33 — clôture Sprint 3)
+Last updated: 2026-07-16 (ticket #34)
 
 ```
 Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncompleted ticket.
@@ -57,7 +57,7 @@ Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncom
 
 ## Sprint 4 — Candidatures (/clear avant ce sprint)
 
-- [ ] #34 — Catalogue castings public (SSR/SEO) 〔sonnet〕
+- [x] #34 — Catalogue castings public (SSR/SEO) 〔sonnet〕 (`(public)/castings/page.tsx` Server Component réutilisant `getPublicCastings()` déjà écrit en #30 — pas de nouvelle query ; `components/castings/casting-card.tsx` nouveau (distinct du `casting-card.tsx` de gestion sous `projets/`, qui a un bouton "Fermer" et pas de lien) — prend un `href` fourni par l'appelant plutôt que de décider lui-même de la destination, pour être réutilisable tel quel par #35 (catalogue authentifié) ; la page vérifie `supabase.auth.getUser()` côté serveur pour choisir le CTA de chaque card : `/login` si non connecté, `/app/castings/[id]` si connecté (cette dernière route n'existe pas encore — livrée par #36, lien correct dès maintenant). Metadata SEO (title/description/OG) statique sur la page. Pas de page `(public)/castings/[id]` créée — hors périmètre du ticket, la CTA renvoie vers l'espace authentifié plutôt que vers une fiche publique. Vérifié en live : build + `pnpm check` propres, route `/castings` bien listée en ƒ (dynamic/SSR) dans l'output de build, fetch non-authentifié → 200, 2 castings ouverts affichés (les 4 autres du seed sont closed/draft ou sous projet non-open), titres/lieu/date/tranche d'âge/places rendus correctement, liens pointent vers `/login` en session anonyme)
 - [ ] #35 — Catalogue castings authentifié + filtres 〔opus〕
 - [ ] #36 — Postuler à un casting 〔opus〕
 - [ ] #37 — Mes candidatures (figurant) 〔sonnet〕
