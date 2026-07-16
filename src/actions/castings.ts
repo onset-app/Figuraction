@@ -222,3 +222,48 @@ export async function getCastingsByProject(projectId: string): Promise<CastingRo
 
   return (data as CastingRow[] | null) ?? []
 }
+
+/** The parent project fields shown alongside a casting on its detail page. */
+export type CastingParentProject = {
+  id: string
+  title: string
+  description: string | null
+  shootLocation: string | null
+  shootDateStart: string | null
+  shootDateEnd: string | null
+}
+
+export type CastingDetailRow = CastingRow & { project: CastingParentProject }
+
+/**
+ * A single open casting (inside an open project) plus its parent project, for
+ * the public/authenticated detail + application page.
+ *
+ * The `projects!inner` embed both pulls the parent fields and, via RLS on the
+ * projects table (`projects_select_open`), re-asserts that the project is open
+ * — a closed/draft project's castings are never applyable here regardless of
+ * who asks. Returns null when the casting isn't open or doesn't exist.
+ */
+export async function getCastingDetail(id: string): Promise<CastingDetailRow | null> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from("castings")
+    .select(
+      `${CASTING_SELECT}, projects!inner(id, title, description, shootLocation:shoot_location, shootDateStart:shoot_date_start, shootDateEnd:shoot_date_end)`
+    )
+    .eq("id", id)
+    .eq("status", "open")
+    .eq("projects.status", "open")
+    .maybeSingle()
+
+  if (!data) {
+    return null
+  }
+  // supabase-js (untyped schema) infers the `projects` embed as an array, but a
+  // many-to-one relationship returns a single object at runtime — hence the
+  // cast through unknown.
+  const { projects, ...casting } = data as unknown as CastingRow & {
+    projects: CastingParentProject
+  }
+  return { ...casting, project: projects }
+}
