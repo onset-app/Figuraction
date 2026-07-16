@@ -9,16 +9,19 @@ import type { RoleType } from "@/types/enums"
 export interface CastingFilters {
   location: string | null
   roleType: RoleType | null
-  ageMin: number | null
-  ageMax: number | null
+  /**
+   * The figurant's own age. Feeds `getPublicCastings`' age filter, which keeps
+   * castings whose [ageMin, ageMax] range accepts this age (a single value, not
+   * a range — a range would be meaningless against the castings' own ranges).
+   */
+  age: number | null
   date: string | null
 }
 
 const emptyFilters: CastingFilters = {
   location: null,
   roleType: null,
-  ageMin: null,
-  ageMax: null,
+  age: null,
   date: null,
 }
 
