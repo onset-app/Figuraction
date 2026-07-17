@@ -4,6 +4,7 @@ import type { AuthError } from "@supabase/supabase-js"
 import { redirect } from "next/navigation"
 import { db } from "@/db"
 import { profiles } from "@/db/schema"
+import { sendWelcomeEmail } from "@/lib/resend/send"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import {
@@ -99,6 +100,10 @@ export async function signup(input: SignupInput): Promise<AuthActionResult> {
     await admin.auth.admin.deleteUser(user.id)
     return { success: false, error: "Une erreur est survenue lors de l'inscription. Réessayez." }
   }
+
+  // Best-effort welcome email — never block or fail signup on a mail error
+  // (sendWelcomeEmail swallows its own failures and reports them to Sentry).
+  await sendWelcomeEmail({ to: email, firstName, role })
 
   return { success: true }
 }

@@ -1,11 +1,15 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { sendApplicationConfirmedEmail, sendApplicationRejectedEmail } from "@/lib/resend/send"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
-import { nullableText } from "@/lib/utils"
+import { formatDateFr, nullableText } from "@/lib/utils"
 import { type ApplicationInput, applicationSchema } from "@/schemas/application"
 import type { ApplicationStatus, CastingStatus } from "@/types/enums"
+
+/** The server-side Supabase client type, derived from the factory. */
+type ServerClient = Awaited<ReturnType<typeof createClient>>
 
 const GENERIC_ERROR = "Une erreur est survenue. Réessayez."
 
@@ -108,6 +112,65 @@ export type BulkUpdateResult =
   | { success: false; error: string }
 
 /**
+ * Notify the figurants of the applications that were just reviewed.
+ *
+ * Reads through the production's RLS session (same visibility as the update
+ * that preceded it), joining the figurant email + casting/project context, and
+ * dispatches a confirmation or rejection email per application. Best-effort:
+ * the senders swallow their own failures, and any unexpected error here is
+ * caught so a mail problem never turns a successful review into a failed one.
+ */
+async function notifyReviewOutcome(
+  supabase: ServerClient,
+  ids: string[],
+  status: ReviewStatus
+): Promise<void> {
+  try {
+    const { data } = await supabase
+      .from("applications")
+      .select(
+        "id, figurant:profiles!figurant_id(email, firstName:first_name), castings!inner(title, location, shootDate:shoot_date, projects!inner(title))"
+      )
+      .in("id", ids)
+
+    const rows = (data ?? []) as unknown as Array<{
+      figurant: { email: string; firstName: string } | null
+      castings: {
+        title: string
+        location: string | null
+        shootDate: string | null
+        projects: { title: string } | null
+      }
+    }>
+
+    await Promise.all(
+      rows.map((row) => {
+        if (!row.figurant?.email) {
+          return undefined
+        }
+        if (status === "confirmed") {
+          return sendApplicationConfirmedEmail({
+            to: row.figurant.email,
+            firstName: row.figurant.firstName,
+            castingTitle: row.castings.title,
+            projectTitle: row.castings.projects?.title ?? "votre tournage",
+            location: row.castings.location ?? "à confirmer",
+            shootDate: formatDateFr(row.castings.shootDate),
+          })
+        }
+        return sendApplicationRejectedEmail({
+          to: row.figurant.email,
+          firstName: row.figurant.firstName,
+          castingTitle: row.castings.title,
+        })
+      })
+    )
+  } catch {
+    // Email is a best-effort side effect; never fail the review because of it.
+  }
+}
+
+/**
  * Set the review status of one or more applications (production decision).
  *
  * Runs on the RLS client: `applications_update_production` (owns_casting) caps
@@ -115,6 +178,9 @@ export type BulkUpdateResult =
  * doesn't own are silently filtered out — `updated` reflects how many actually
  * changed. `reviewed_by`/`reviewed_at` stamp who decided and when; `updated_at`
  * is set explicitly (no DB trigger, cf. #27/#30).
+ *
+ * The figurants whose applications actually changed are then emailed (all three
+ * public entry points — confirm/reject single and bulk — funnel through here).
  */
 async function reviewApplications(ids: string[], status: ReviewStatus): Promise<BulkUpdateResult> {
   const supabase = await createClient()
@@ -138,7 +204,13 @@ async function reviewApplications(ids: string[], status: ReviewStatus): Promise<
   if (error) {
     return { success: false, error: GENERIC_ERROR }
   }
-  return { success: true, updated: data?.length ?? 0 }
+
+  const updatedIds = (data ?? []).map((row) => (row as { id: string }).id)
+  if (updatedIds.length > 0) {
+    await notifyReviewOutcome(supabase, updatedIds, status)
+  }
+
+  return { success: true, updated: updatedIds.length }
 }
 
 /** Confirm a single application (status → confirmed). */

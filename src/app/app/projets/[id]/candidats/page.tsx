@@ -8,6 +8,7 @@ import type { ReviewStatus } from "@/actions/applications"
 import type { ProjectCandidate } from "@/actions/projects"
 import { RoleGuard } from "@/components/layout/role-guard"
 import { CandidateList } from "@/components/projets/candidate-list"
+import { ConvocationDialog } from "@/components/projets/convocation-dialog"
 import { EmptyState } from "@/components/shared/empty-state"
 import { Button } from "@/components/ui/button"
 import { useProjectCandidates, useReviewApplications } from "@/hooks/use-applications"
@@ -92,8 +93,9 @@ function ProjectCandidates({ projectId }: { projectId: string }) {
         <ArrowLeft className="size-4" /> Retour au projet
       </Link>
 
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="font-bold text-2xl">Candidats{project ? ` — ${project.title}` : ""}</h1>
+        <ConvocationDialog projectId={projectId} />
       </div>
 
       {selectedIds.size > 0 && (
