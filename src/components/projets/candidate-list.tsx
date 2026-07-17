@@ -1,9 +1,12 @@
 "use client"
 
+import { Check, X } from "lucide-react"
 import Link from "next/link"
+import type { ReviewStatus } from "@/actions/applications"
 import type { ProjectCandidate } from "@/actions/projects"
 import { StatusBadge } from "@/components/shared/status-badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 
 function initials(firstName: string, lastName: string): string {
@@ -11,9 +14,9 @@ function initials(firstName: string, lastName: string): string {
 }
 
 /**
- * Candidates for a single casting, with per-row and select-all checkboxes.
- * Selection is owned by the parent page (keyed by application id) so a future
- * bulk confirm/reject bar can act across castings.
+ * Candidates for a single casting, with per-row and select-all checkboxes plus
+ * confirm/reject actions. Selection is owned by the parent page (keyed by
+ * application id) so the bulk bar can act across castings.
  */
 export function CandidateList({
   castingTitle,
@@ -21,12 +24,16 @@ export function CandidateList({
   selectedIds,
   onToggle,
   onToggleGroup,
+  onReview,
+  isReviewing,
 }: {
   castingTitle: string
   candidates: ProjectCandidate[]
   selectedIds: Set<string>
   onToggle: (id: string) => void
   onToggleGroup: (ids: string[], select: boolean) => void
+  onReview: (ids: string[], status: ReviewStatus) => void
+  isReviewing: boolean
 }) {
   const groupIds = candidates.map((candidate) => candidate.id)
   const selectedCount = groupIds.filter((id) => selectedIds.has(id)).length
@@ -60,7 +67,7 @@ export function CandidateList({
               />
               {figurant ? (
                 <Link
-                  href={`/app/candidats/${figurant.id}`}
+                  href={`/app/candidats/${figurant.id}?application=${candidate.id}`}
                   className="flex flex-1 items-center gap-3 hover:underline"
                 >
                   <Avatar>
@@ -84,6 +91,32 @@ export function CandidateList({
                 <span className="flex-1 text-muted-foreground text-sm">Profil indisponible</span>
               )}
               <StatusBadge status={candidate.status} />
+              <div className="flex gap-1">
+                {candidate.status !== "confirmed" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={isReviewing}
+                    onClick={() => onReview([candidate.id], "confirmed")}
+                    aria-label="Confirmer"
+                    className="text-green-600 hover:text-green-600"
+                  >
+                    <Check className="size-4" />
+                  </Button>
+                )}
+                {candidate.status !== "rejected" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={isReviewing}
+                    onClick={() => onReview([candidate.id], "rejected")}
+                    aria-label="Refuser"
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <X className="size-4" />
+                  </Button>
+                )}
+              </div>
             </li>
           )
         })}

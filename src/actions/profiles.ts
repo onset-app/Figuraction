@@ -131,3 +131,46 @@ export async function uploadPhoto(file: File): Promise<PhotoUploadResult> {
   revalidatePath("/app/profil")
   return { success: true, url: photoUrl }
 }
+
+/** A figurant profile as viewed by a production/admin on the candidate detail page. */
+export type FigurantProfile = {
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+  phone: string | null
+  city: string | null
+  age: number | null
+  bio: string | null
+  experience: string | null
+  photoUrl: string | null
+}
+
+/**
+ * Fetch a figurant's full profile for the production candidate view.
+ *
+ * Relies on RLS's `profiles_select_figurants_by_staff`, which only lets a
+ * production/admin read rows where `role = 'figurant'`. A production therefore
+ * can't reach a non-figurant profile through this path; `.eq('role','figurant')`
+ * also keeps the result honest. Returns null when not found / not permitted.
+ */
+export async function getFigurantProfile(id: string): Promise<FigurantProfile | null> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return null
+  }
+
+  const { data } = await supabase
+    .from("profiles")
+    .select(
+      "id, email, firstName:first_name, lastName:last_name, phone, city, age, bio, experience, photoUrl:photo_url"
+    )
+    .eq("id", id)
+    .eq("role", "figurant")
+    .maybeSingle()
+
+  return (data as FigurantProfile | null) ?? null
+}

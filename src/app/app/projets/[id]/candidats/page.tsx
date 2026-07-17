@@ -1,14 +1,16 @@
 "use client"
 
-import { ArrowLeft, Loader2, Users } from "lucide-react"
+import { ArrowLeft, Check, Loader2, Users, X } from "lucide-react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useMemo, useState } from "react"
+import type { ReviewStatus } from "@/actions/applications"
 import type { ProjectCandidate } from "@/actions/projects"
 import { RoleGuard } from "@/components/layout/role-guard"
 import { CandidateList } from "@/components/projets/candidate-list"
 import { EmptyState } from "@/components/shared/empty-state"
-import { useProjectCandidates } from "@/hooks/use-applications"
+import { Button } from "@/components/ui/button"
+import { useProjectCandidates, useReviewApplications } from "@/hooks/use-applications"
 import { useProject } from "@/hooks/use-projects"
 
 type CastingGroup = { id: string; title: string; candidates: ProjectCandidate[] }
@@ -34,9 +36,26 @@ function groupByCasting(candidates: ProjectCandidate[]): CastingGroup[] {
 function ProjectCandidates({ projectId }: { projectId: string }) {
   const { data: project } = useProject(projectId)
   const { data: candidates, isLoading } = useProjectCandidates(projectId)
+  const review = useReviewApplications(projectId)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const groups = useMemo(() => groupByCasting(candidates ?? []), [candidates])
+
+  function handleReview(ids: string[], status: ReviewStatus) {
+    review.mutate(
+      { ids, status },
+      {
+        onSuccess: () =>
+          setSelectedIds((prev) => {
+            const next = new Set(prev)
+            for (const id of ids) {
+              next.delete(id)
+            }
+            return next
+          }),
+      }
+    )
+  }
 
   function toggle(id: string) {
     setSelectedIds((prev) => {
@@ -75,12 +94,33 @@ function ProjectCandidates({ projectId }: { projectId: string }) {
 
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h1 className="font-bold text-2xl">Candidats{project ? ` — ${project.title}` : ""}</h1>
-        {selectedIds.size > 0 && (
-          <span className="text-muted-foreground text-sm">
+      </div>
+
+      {selectedIds.size > 0 && (
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-muted/40 p-3">
+          <span className="text-sm">
             {selectedIds.size} sélectionné{selectedIds.size !== 1 ? "s" : ""}
           </span>
-        )}
-      </div>
+          <div className="ml-auto flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={review.isPending}
+              onClick={() => handleReview([...selectedIds], "confirmed")}
+            >
+              <Check className="size-4" /> Confirmer
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={review.isPending}
+              onClick={() => handleReview([...selectedIds], "rejected")}
+            >
+              <X className="size-4" /> Refuser
+            </Button>
+          </div>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex justify-center py-20 text-muted-foreground">
@@ -102,6 +142,8 @@ function ProjectCandidates({ projectId }: { projectId: string }) {
               selectedIds={selectedIds}
               onToggle={toggle}
               onToggleGroup={toggleGroup}
+              onReview={handleReview}
+              isReviewing={review.isPending}
             />
           ))}
         </div>

@@ -100,6 +100,104 @@ export async function withdrawApplication(id: string): Promise<ApplicationAction
   return { success: true }
 }
 
+/** A review decision a production can apply to an application. */
+export type ReviewStatus = Extract<ApplicationStatus, "confirmed" | "rejected">
+
+export type BulkUpdateResult =
+  | { success: true; updated: number }
+  | { success: false; error: string }
+
+/**
+ * Set the review status of one or more applications (production decision).
+ *
+ * Runs on the RLS client: `applications_update_production` (owns_casting) caps
+ * the update to applications on castings the caller owns, so ids the production
+ * doesn't own are silently filtered out — `updated` reflects how many actually
+ * changed. `reviewed_by`/`reviewed_at` stamp who decided and when; `updated_at`
+ * is set explicitly (no DB trigger, cf. #27/#30).
+ */
+async function reviewApplications(ids: string[], status: ReviewStatus): Promise<BulkUpdateResult> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return { success: false, error: "Vous devez être connecté." }
+  }
+  if (ids.length === 0) {
+    return { success: true, updated: 0 }
+  }
+
+  const now = new Date().toISOString()
+  const { data, error } = await supabase
+    .from("applications")
+    .update({ status, reviewed_at: now, reviewed_by: user.id, updated_at: now })
+    .in("id", ids)
+    .select("id")
+
+  if (error) {
+    return { success: false, error: GENERIC_ERROR }
+  }
+  return { success: true, updated: data?.length ?? 0 }
+}
+
+/** Confirm a single application (status → confirmed). */
+export async function confirmApplication(id: string): Promise<BulkUpdateResult> {
+  return reviewApplications([id], "confirmed")
+}
+
+/** Reject a single application (status → rejected). */
+export async function rejectApplication(id: string): Promise<BulkUpdateResult> {
+  return reviewApplications([id], "rejected")
+}
+
+/** Confirm/reject several applications at once. */
+export async function bulkUpdateApplications(
+  ids: string[],
+  status: ReviewStatus
+): Promise<BulkUpdateResult> {
+  return reviewApplications(ids, status)
+}
+
+/** The reviewable context of an application, for the candidate detail page. */
+export type ApplicationReviewInfo = {
+  id: string
+  status: ApplicationStatus
+  castingTitle: string
+}
+
+/**
+ * The status + casting of a single application, or null if the caller doesn't
+ * own its casting. RLS's `applications_select_production` (owns_casting)
+ * restricts visibility, so this doubles as an ownership check for the
+ * confirm/reject buttons on the candidate page.
+ */
+export async function getApplicationReviewInfo(id: string): Promise<ApplicationReviewInfo | null> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return null
+  }
+
+  const { data } = await supabase
+    .from("applications")
+    .select("id, status, castings!inner(title)")
+    .eq("id", id)
+    .maybeSingle()
+
+  if (!data) {
+    return null
+  }
+  const row = data as unknown as {
+    id: string
+    status: ApplicationStatus
+    castings: { title: string }
+  }
+  return { id: row.id, status: row.status, castingTitle: row.castings.title }
+}
+
 /**
  * The current figurant's own application to a given casting, or null. Drives
  * the "already applied" state (disabled form + status) on the detail page.
