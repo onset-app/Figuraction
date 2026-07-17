@@ -1,6 +1,13 @@
 import { z } from "zod"
+import type { ContactMethod } from "@/types/enums"
 
 export const contactMethods = ["email", "phone"] as const
+
+/** French labels for each contact method, shared by forms and lists. */
+export const CONTACT_METHOD_LABELS: Record<ContactMethod, string> = {
+  email: "Email",
+  phone: "Téléphone",
+}
 
 export const carpoolSchema = z
   .object({
