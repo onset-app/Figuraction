@@ -29,7 +29,7 @@ export function useCastings(filters: CastingFilters) {
     queryKey: [CASTINGS_QUERY_KEY, filters] as const,
     queryFn: () =>
       getPublicCastings({
-        location: filters.location ?? undefined,
+        location: filters.location?.trim() || undefined,
         roleType: filters.roleType ?? undefined,
         age: filters.age ?? undefined,
         date: filters.date ?? undefined,

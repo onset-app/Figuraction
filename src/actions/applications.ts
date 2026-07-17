@@ -162,6 +162,7 @@ export async function bulkUpdateApplications(
 /** The reviewable context of an application, for the candidate detail page. */
 export type ApplicationReviewInfo = {
   id: string
+  figurantId: string
   status: ApplicationStatus
   castingTitle: string
 }
@@ -170,7 +171,8 @@ export type ApplicationReviewInfo = {
  * The status + casting of a single application, or null if the caller doesn't
  * own its casting. RLS's `applications_select_production` (owns_casting)
  * restricts visibility, so this doubles as an ownership check for the
- * confirm/reject buttons on the candidate page.
+ * confirm/reject buttons on the candidate page. `figurantId` lets the page
+ * confirm the application actually belongs to the profile being viewed.
  */
 export async function getApplicationReviewInfo(id: string): Promise<ApplicationReviewInfo | null> {
   const supabase = await createClient()
@@ -183,7 +185,7 @@ export async function getApplicationReviewInfo(id: string): Promise<ApplicationR
 
   const { data } = await supabase
     .from("applications")
-    .select("id, status, castings!inner(title)")
+    .select("id, figurantId:figurant_id, status, castings!inner(title)")
     .eq("id", id)
     .maybeSingle()
 
@@ -192,10 +194,16 @@ export async function getApplicationReviewInfo(id: string): Promise<ApplicationR
   }
   const row = data as unknown as {
     id: string
+    figurantId: string
     status: ApplicationStatus
     castings: { title: string }
   }
-  return { id: row.id, status: row.status, castingTitle: row.castings.title }
+  return {
+    id: row.id,
+    figurantId: row.figurantId,
+    status: row.status,
+    castingTitle: row.castings.title,
+  }
 }
 
 /**
@@ -233,8 +241,11 @@ export async function getMyApplication(
  *   - The casting must be open: the insert policy doesn't check casting status,
  *     so we verify it via the RLS-scoped read (only open castings in open
  *     projects are visible to the applicant).
- *   - Duplicate application: the UNIQUE(casting_id, figurant_id) constraint is
- *     the race-safe backstop, surfaced as a friendly message (23505).
+ *   - A previously withdrawn application is revived (status → pending) rather
+ *     than re-inserted: the UNIQUE(casting_id, figurant_id) constraint would
+ *     otherwise permanently lock a figurant out of a casting after a withdrawal.
+ *   - Duplicate active application: the unique constraint is the race-safe
+ *     backstop for the insert path, surfaced as a friendly message (23505).
  */
 export async function createApplication(input: ApplicationInput): Promise<ApplicationActionResult> {
   const supabase = await createClient()
@@ -260,14 +271,49 @@ export async function createApplication(input: ApplicationInput): Promise<Applic
     return { success: false, error: "Ce casting n'accepte plus de candidatures." }
   }
 
+  const message = nullableText(parsed.data.message)
+
+  // An existing row means the figurant already applied. If they had withdrawn,
+  // revive it (clearing any stale review); otherwise it's a genuine duplicate.
+  const { data: existing } = await supabase
+    .from("applications")
+    .select("id, status")
+    .eq("casting_id", parsed.data.castingId)
+    .eq("figurant_id", user.id)
+    .maybeSingle()
+
+  if (existing) {
+    if ((existing as { status: ApplicationStatus }).status !== "withdrawn") {
+      return { success: false, error: "Vous avez déjà postulé à ce casting." }
+    }
+    const { error: updateError } = await supabase
+      .from("applications")
+      .update({
+        status: "pending",
+        message,
+        reviewed_at: null,
+        reviewed_by: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", (existing as { id: string }).id)
+      .eq("figurant_id", user.id)
+    if (updateError) {
+      return { success: false, error: GENERIC_ERROR }
+    }
+    revalidatePath("/app/candidatures")
+    revalidatePath(`/app/castings/${parsed.data.castingId}`)
+    return { success: true }
+  }
+
   const { error } = await supabase.from("applications").insert({
     casting_id: parsed.data.castingId,
     figurant_id: user.id,
     status: "pending",
-    message: nullableText(parsed.data.message),
+    message,
   })
 
   if (error) {
+    // 23505 races another insert between the check above and here.
     if (error.code === "23505") {
       return { success: false, error: "Vous avez déjà postulé à ce casting." }
     }

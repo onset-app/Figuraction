@@ -34,7 +34,9 @@ export function ApplicationForm({
     return <p className="text-muted-foreground text-sm">Chargement…</p>
   }
 
-  if (appliedStatus) {
+  // A withdrawn application can be resubmitted (createApplication revives it),
+  // so it doesn't block the form — only an active application does.
+  if (appliedStatus && appliedStatus !== "withdrawn") {
     return (
       <div className="rounded-lg border p-4 text-sm">
         <p className="font-medium">Vous avez déjà postulé à ce casting.</p>
@@ -51,6 +53,8 @@ export function ApplicationForm({
     )
   }
 
+  const hasWithdrawn = appliedStatus === "withdrawn"
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setIsSubmitting(true)
@@ -66,6 +70,12 @@ export function ApplicationForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {hasWithdrawn && (
+        <p className="rounded-lg border border-dashed p-3 text-muted-foreground text-sm">
+          Vous aviez retiré votre candidature. Vous pouvez postuler à nouveau.
+        </p>
+      )}
+
       <div className="space-y-1 rounded-lg border p-4 text-sm">
         <p className="font-medium">Votre profil</p>
         {profile ? (

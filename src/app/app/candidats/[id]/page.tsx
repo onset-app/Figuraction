@@ -39,8 +39,12 @@ function CandidateDetail({ figurantId }: { figurantId: string }) {
   const queryClient = useQueryClient()
 
   const { data: profile, isLoading } = useFigurantProfile(figurantId)
-  const { data: application } = useApplicationReview(applicationId)
+  const { data: reviewInfo } = useApplicationReview(applicationId)
   const [isReviewing, setIsReviewing] = useState(false)
+
+  // Only trust the review context if the application actually belongs to the
+  // figurant whose profile is shown (guards a hand-crafted, mismatched URL).
+  const application = reviewInfo?.figurantId === figurantId ? reviewInfo : null
 
   async function handleReview(action: "confirmed" | "rejected") {
     if (!applicationId) return

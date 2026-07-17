@@ -37,7 +37,11 @@ export function CastingFilters() {
             id="filter-location"
             placeholder="Ex : Bruxelles"
             value={filters.location ?? ""}
-            onChange={(event) => setFilter("location", event.target.value.trim() || null)}
+            // Keep the raw value (spaces allowed for multi-word locations); the
+            // hook trims before querying. Blank/whitespace clears the filter.
+            onChange={(event) =>
+              setFilter("location", event.target.value.trim() === "" ? null : event.target.value)
+            }
           />
         </div>
 
