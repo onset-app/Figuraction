@@ -15,10 +15,25 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 })
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
+
 export const metadata: Metadata = {
-  title: "ONSET",
+  metadataBase: new URL(APP_URL),
+  title: {
+    default: "ONSET — Casting figurants en Belgique",
+    template: "%s | ONSET",
+  },
   description:
     "ONSET — la plateforme qui connecte les productions audiovisuelles et les figurants en Belgique.",
+  applicationName: "ONSET",
+  openGraph: {
+    siteName: "ONSET",
+    locale: "fr_BE",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 }
 
 export default function RootLayout({

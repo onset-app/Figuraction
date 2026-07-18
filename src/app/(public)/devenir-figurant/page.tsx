@@ -5,15 +5,9 @@ import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 export const metadata: Metadata = {
-  title: "Devenir figurant en Belgique : le guide complet | ONSET",
+  title: "Devenir figurant en Belgique : le guide complet",
   description:
     "Comment devenir figurant en Belgique ? Conditions, castings à Bruxelles et en Wallonie, rémunération, conseils pour être sélectionné : le guide complet pour décrocher votre premier tournage.",
-  openGraph: {
-    title: "Devenir figurant en Belgique : le guide complet",
-    description:
-      "Conditions, castings, rémunération, conseils : tout pour décrocher votre premier rôle de figurant en Belgique.",
-    type: "article",
-  },
 }
 
 const WHY_BECOME = [

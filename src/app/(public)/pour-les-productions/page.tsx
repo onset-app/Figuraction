@@ -15,15 +15,9 @@ import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 export const metadata: Metadata = {
-  title: "ONSET pour les productions — Castez vos figurants sans friction | Belgique",
+  title: "Pour les productions — Castez vos figurants sans friction",
   description:
     "Publiez vos castings, recevez des candidatures qualifiées avec photos et profils complets, confirmez en un clic et convoquez automatiquement. La plateforme de casting figurants pensée pour les productions audiovisuelles en Belgique.",
-  openGraph: {
-    title: "ONSET pour les productions — Castez vos figurants sans friction",
-    description:
-      "Publiez vos castings, triez les candidatures, confirmez et convoquez vos figurants au même endroit.",
-    type: "website",
-  },
 }
 
 const PAIN_POINTS = [

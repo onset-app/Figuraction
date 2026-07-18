@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Mentions légales | ONSET",
+  title: "Mentions légales",
   description: "Mentions légales de la plateforme ONSET.",
   robots: { index: false },
 }

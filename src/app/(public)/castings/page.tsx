@@ -4,15 +4,9 @@ import { CastingCard } from "@/components/castings/casting-card"
 import { createClient } from "@/lib/supabase/server"
 
 export const metadata: Metadata = {
-  title: "Castings figurants en Belgique | ONSET",
+  title: "Castings figurants en Belgique",
   description:
     "Découvrez les castings de figurants ouverts en Belgique : tournages, lieux, dates et places disponibles. Postulez en quelques clics sur ONSET.",
-  openGraph: {
-    title: "Castings figurants en Belgique | ONSET",
-    description:
-      "Découvrez les castings de figurants ouverts en Belgique : tournages, lieux, dates et places disponibles.",
-    type: "website",
-  },
 }
 
 export default async function PublicCastingsPage() {
@@ -44,7 +38,7 @@ export default async function PublicCastingsPage() {
             <CastingCard
               key={casting.id}
               casting={casting}
-              href={isAuthenticated ? `/app/castings/${casting.id}` : "/login"}
+              href={isAuthenticated ? `/app/castings/${casting.id}` : `/castings/${casting.id}`}
             />
           ))}
         </div>

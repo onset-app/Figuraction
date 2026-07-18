@@ -16,15 +16,9 @@ import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 export const metadata: Metadata = {
-  title: "ONSET — Le casting de figurants, enfin simple | Belgique",
+  title: { absolute: "ONSET — Le casting de figurants, enfin simple en Belgique" },
   description:
     "ONSET connecte les productions audiovisuelles et les figurants en Belgique. Publiez vos castings, postulez en quelques clics, suivez vos candidatures et organisez vos tournages au même endroit.",
-  openGraph: {
-    title: "ONSET — Le casting de figurants, enfin simple",
-    description:
-      "La plateforme qui connecte les productions audiovisuelles et les figurants en Belgique.",
-    type: "website",
-  },
 }
 
 const OLD_WAY = [
