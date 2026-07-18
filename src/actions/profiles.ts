@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { nullableText } from "@/lib/utils"
 import { type ProfileInput, profileSchema } from "@/schemas/profile"
+import type { ExperienceLevel } from "@/types/enums"
 
 /** Discriminated result returned by profile mutations that carry no payload. */
 export type ProfileActionResult = { success: true } | { success: false; error: string }
@@ -154,7 +155,8 @@ export type FigurantProfile = {
   city: string | null
   age: number | null
   bio: string | null
-  experience: string | null
+  // The DB check constraint guarantees the value set, so type it as the union.
+  experience: ExperienceLevel | null
   photoUrl: string | null
 }
 
@@ -185,4 +187,45 @@ export async function getFigurantProfile(id: string): Promise<FigurantProfile | 
     .maybeSingle()
 
   return (data as FigurantProfile | null) ?? null
+}
+
+/** A figurant summary row for the production's browse-all-candidates page. */
+export type FigurantSummary = {
+  id: string
+  firstName: string
+  lastName: string
+  city: string | null
+  age: number | null
+  experience: ExperienceLevel | null
+  photoUrl: string | null
+  available: boolean
+}
+
+/**
+ * Every figurant profile, for the production's candidate browser
+ * (/app/candidats). Same RLS boundary as getFigurantProfile:
+ * `profiles_select_figurants_by_staff` only exposes figurant rows to
+ * production/admin callers — anyone else gets an empty list.
+ */
+export async function getFigurants(): Promise<FigurantSummary[]> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return []
+  }
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select(
+      "id, firstName:first_name, lastName:last_name, city, age, experience, photoUrl:photo_url, available"
+    )
+    .eq("role", "figurant")
+    .order("last_name", { ascending: true })
+
+  if (error) {
+    Sentry.captureException(error, { tags: { feature: "profiles" }, extra: { step: "figurants" } })
+  }
+  return (data as FigurantSummary[] | null) ?? []
 }

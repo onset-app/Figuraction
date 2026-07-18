@@ -11,13 +11,12 @@ import { EmptyState } from "@/components/shared/empty-state"
 import { StatusBadge } from "@/components/shared/status-badge"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { MY_APPLICATIONS_QUERY_KEY, useMyApplications } from "@/hooks/use-applications"
-
-/** Format a `YYYY-MM-DD` string as `DD/MM/YYYY` without Date/timezone conversion. */
-function formatDate(isoDate: string): string {
-  const [year, month, day] = isoDate.split("-")
-  return `${day}/${month}/${year}`
-}
+import {
+  MY_APPLICATIONS_QUERY_KEY,
+  useMyApplications,
+  useMyApplicationsRealtime,
+} from "@/hooks/use-applications"
+import { formatDateShortFr } from "@/lib/utils"
 
 function ApplicationRow({ application }: { application: MyApplication }) {
   const queryClient = useQueryClient()
@@ -53,7 +52,7 @@ function ApplicationRow({ application }: { application: MyApplication }) {
           )}
           <div className="flex flex-wrap gap-x-3 text-muted-foreground text-sm">
             {casting?.location && <span>{casting.location}</span>}
-            {casting?.shootDate && <span>{formatDate(casting.shootDate)}</span>}
+            {casting?.shootDate && <span>{formatDateShortFr(casting.shootDate)}</span>}
           </div>
         </div>
 
@@ -72,6 +71,8 @@ function ApplicationRow({ application }: { application: MyApplication }) {
 
 export default function CandidaturesPage() {
   const { data: applications, isLoading } = useMyApplications()
+  // Live refresh when a production confirms/rejects while this page is open.
+  useMyApplicationsRealtime()
 
   return (
     <div className="space-y-6">

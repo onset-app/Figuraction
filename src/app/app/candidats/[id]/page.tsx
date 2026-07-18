@@ -17,7 +17,7 @@ import {
   useApplicationReview,
   useFigurantProfile,
 } from "@/hooks/use-candidates"
-import { EXPERIENCE_LABELS, isExperienceLevel } from "@/schemas/profile"
+import { EXPERIENCE_LABELS } from "@/schemas/profile"
 
 function initials(firstName: string, lastName: string): string {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
@@ -88,7 +88,7 @@ function CandidateDetail({ figurantId }: { figurantId: string }) {
     profile.age != null ? { label: "Âge", value: `${profile.age} ans` } : null,
     profile.city ? { label: "Ville", value: profile.city } : null,
     profile.phone ? { label: "Téléphone", value: profile.phone } : null,
-    isExperienceLevel(profile.experience)
+    profile.experience
       ? { label: "Expérience", value: EXPERIENCE_LABELS[profile.experience] }
       : null,
   ].filter((row): row is { label: string; value: string } => row !== null)

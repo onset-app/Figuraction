@@ -1,5 +1,6 @@
 "use server"
 
+import * as Sentry from "@sentry/nextjs"
 import { revalidatePath } from "next/cache"
 import { sendApplicationConfirmedEmail, sendApplicationRejectedEmail } from "@/lib/resend/send"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -50,13 +51,17 @@ export async function getMyApplications(): Promise<MyApplication[]> {
   }
 
   const admin = createAdminClient()
-  const { data } = await admin
+  const { data, error } = await admin
     .from("applications")
     .select(
       "id, status, createdAt:created_at, castings(id, title, location, shootDate:shoot_date, status)"
     )
     .eq("figurant_id", user.id)
     .order("created_at", { ascending: false })
+
+  if (error) {
+    Sentry.captureException(error, { tags: { feature: "applications" }, extra: { step: "mine" } })
+  }
 
   // supabase-js infers the to-one `castings` embed as an array; it's an object
   // at runtime (or null when the FK target was deleted).
@@ -94,6 +99,10 @@ export async function withdrawApplication(id: string): Promise<ApplicationAction
     .select("id")
 
   if (error) {
+    Sentry.captureException(error, {
+      tags: { feature: "applications" },
+      extra: { step: "withdraw" },
+    })
     return { success: false, error: GENERIC_ERROR }
   }
   if (!data || data.length === 0) {
@@ -143,30 +152,40 @@ async function notifyReviewOutcome(
       }
     }>
 
-    await Promise.all(
-      rows.map((row) => {
-        if (!row.figurant?.email) {
-          return undefined
-        }
-        if (status === "confirmed") {
-          return sendApplicationConfirmedEmail({
+    // Chunked so a large bulk review doesn't fire an unbounded burst of
+    // concurrent Resend calls (their rate limit would silently eat some).
+    const CHUNK_SIZE = 5
+    for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
+      await Promise.all(
+        rows.slice(i, i + CHUNK_SIZE).map((row) => {
+          if (!row.figurant?.email) {
+            return undefined
+          }
+          if (status === "confirmed") {
+            return sendApplicationConfirmedEmail({
+              to: row.figurant.email,
+              firstName: row.figurant.firstName,
+              castingTitle: row.castings.title,
+              projectTitle: row.castings.projects?.title ?? "votre tournage",
+              location: row.castings.location ?? "à confirmer",
+              shootDate: formatDateFr(row.castings.shootDate),
+            })
+          }
+          return sendApplicationRejectedEmail({
             to: row.figurant.email,
             firstName: row.figurant.firstName,
             castingTitle: row.castings.title,
-            projectTitle: row.castings.projects?.title ?? "votre tournage",
-            location: row.castings.location ?? "à confirmer",
-            shootDate: formatDateFr(row.castings.shootDate),
           })
-        }
-        return sendApplicationRejectedEmail({
-          to: row.figurant.email,
-          firstName: row.figurant.firstName,
-          castingTitle: row.castings.title,
         })
-      })
-    )
-  } catch {
-    // Email is a best-effort side effect; never fail the review because of it.
+      )
+    }
+  } catch (error) {
+    // Email is a best-effort side effect; never fail the review because of it
+    // — but do leave a trace (e.g. the context SELECT failing).
+    Sentry.captureException(error, {
+      tags: { feature: "applications" },
+      extra: { step: "notify-review" },
+    })
   }
 }
 
@@ -183,6 +202,17 @@ async function notifyReviewOutcome(
  * public entry points — confirm/reject single and bulk — funnel through here).
  */
 async function reviewApplications(ids: string[], status: ReviewStatus): Promise<BulkUpdateResult> {
+  // Trust boundary: TypeScript's ReviewStatus only constrains honest callers.
+  // A crafted "pending" would pass the RLS WITH CHECK (un-review is allowed)
+  // but then hit notifyReviewOutcome's binary branch and send rejection
+  // emails for applications that are actually back to pending.
+  if (status !== "confirmed" && status !== "rejected") {
+    return { success: false, error: "Statut invalide." }
+  }
+  if (!Array.isArray(ids) || ids.length > 200 || ids.some((id) => typeof id !== "string")) {
+    return { success: false, error: "Données invalides." }
+  }
+
   const supabase = await createClient()
   const {
     data: { user },
@@ -202,6 +232,7 @@ async function reviewApplications(ids: string[], status: ReviewStatus): Promise<
     .select("id")
 
   if (error) {
+    Sentry.captureException(error, { tags: { feature: "applications" }, extra: { step: "review" } })
     return { success: false, error: GENERIC_ERROR }
   }
 
@@ -370,6 +401,10 @@ export async function createApplication(input: ApplicationInput): Promise<Applic
       .eq("id", (existing as { id: string }).id)
       .eq("figurant_id", user.id)
     if (updateError) {
+      Sentry.captureException(updateError, {
+        tags: { feature: "applications" },
+        extra: { step: "revive" },
+      })
       return { success: false, error: GENERIC_ERROR }
     }
     revalidatePath("/app/candidatures")
@@ -392,6 +427,7 @@ export async function createApplication(input: ApplicationInput): Promise<Applic
     if (error.code === "42501") {
       return { success: false, error: "Seuls les figurants peuvent postuler." }
     }
+    Sentry.captureException(error, { tags: { feature: "applications" }, extra: { step: "apply" } })
     return { success: false, error: GENERIC_ERROR }
   }
 

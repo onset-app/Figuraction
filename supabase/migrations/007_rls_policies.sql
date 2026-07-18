@@ -341,6 +341,28 @@ create policy "contracts_admin_all" on public.contracts
   with check ((select public.is_admin()));
 
 -- ---------------------------------------------------------------------------
+-- Realtime
+--
+-- Figurants get live status updates on their applications (MVP §5). Postgres
+-- changes only stream for tables in the supabase_realtime publication, and
+-- subscribers only receive rows their RLS SELECT policies allow — so a
+-- figurant's subscription is bounded by applications_select_own_figurant.
+-- Idempotent: adding a table twice errors, hence the membership check.
+-- ---------------------------------------------------------------------------
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'applications'
+  ) then
+    alter publication supabase_realtime add table public.applications;
+  end if;
+end $$;
+
+-- ---------------------------------------------------------------------------
 -- updated_at triggers
 --
 -- Keep updated_at accurate at the database level instead of relying on every

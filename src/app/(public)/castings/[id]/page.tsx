@@ -7,19 +7,11 @@ import { getCastingDetail } from "@/actions/castings"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/server"
-import { cn, formatDateFr } from "@/lib/utils"
+import { cn, formatAgeRangeFr, formatDateFr } from "@/lib/utils"
 import { ROLE_TYPE_LABELS } from "@/schemas/casting"
-import type { RoleType } from "@/types/enums"
 
 /** Dedupe the fetch between generateMetadata and the page render. */
 const getCasting = cache(getCastingDetail)
-
-function formatAgeRange(ageMin: number | null, ageMax: number | null): string | null {
-  if (ageMin != null && ageMax != null) return `${ageMin}–${ageMax} ans`
-  if (ageMin != null) return `${ageMin}+ ans`
-  if (ageMax != null) return `≤ ${ageMax} ans`
-  return null
-}
 
 function truncate(text: string, max: number): string {
   return text.length <= max ? text : `${text.slice(0, max - 1).trimEnd()}…`
@@ -68,7 +60,7 @@ export default async function PublicCastingDetailPage({
 
   const isAuthenticated = Boolean(userData.user)
   const applyHref = isAuthenticated ? `/app/castings/${casting.id}` : "/signup"
-  const ageRange = formatAgeRange(casting.ageMin, casting.ageMax)
+  const ageRange = formatAgeRangeFr(casting.ageMin, casting.ageMax)
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
@@ -84,7 +76,7 @@ export default async function PublicCastingDetailPage({
           {casting.title}
         </h1>
         {casting.roleType && (
-          <Badge variant="secondary">{ROLE_TYPE_LABELS[casting.roleType as RoleType]}</Badge>
+          <Badge variant="secondary">{ROLE_TYPE_LABELS[casting.roleType]}</Badge>
         )}
       </div>
 

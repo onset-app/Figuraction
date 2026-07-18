@@ -15,6 +15,11 @@ const STATUS_CONFIG: Record<
   withdrawn: { label: "Retirée", variant: "secondary", icon: Ban },
 }
 
+/** French label per application status, for plain-text contexts (no badge). */
+export const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = Object.fromEntries(
+  Object.entries(STATUS_CONFIG).map(([status, { label }]) => [status, label])
+) as Record<ApplicationStatus, string>
+
 /** Coloured badge for an application status, shared across figurant/production views. */
 export function StatusBadge({ status }: { status: ApplicationStatus }) {
   const { label, variant, icon: Icon } = STATUS_CONFIG[status]

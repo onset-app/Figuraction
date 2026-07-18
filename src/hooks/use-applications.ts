@@ -1,13 +1,13 @@
 "use client"
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { toast } from "sonner"
-import {
-  bulkUpdateApplications,
-  getMyApplications,
-  type ReviewStatus,
-} from "@/actions/applications"
-import { getProjectCandidates, type ProjectCandidate } from "@/actions/projects"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useEffect } from "react"
+import { getMyApplications } from "@/actions/applications"
+import { useCurrentUser } from "@/hooks/use-current-user"
+import { createClient } from "@/lib/supabase/client"
+
+// Figurant-side hooks: the current user's own applications. The production-
+// side hooks (candidates, review) live in use-candidates.ts.
 
 export const MY_APPLICATIONS_QUERY_KEY = ["my-applications"] as const
 
@@ -19,55 +19,43 @@ export function useMyApplications() {
   })
 }
 
-/** Query key for the candidates (applications + profiles) under a given project. */
-export const projectCandidatesQueryKey = (projectId: string) =>
-  ["project-candidates", projectId] as const
-
-/** Candidates to a production's project, grouped/consumed by the review view. */
-export function useProjectCandidates(projectId: string) {
-  return useQuery({
-    queryKey: projectCandidatesQueryKey(projectId),
-    queryFn: () => getProjectCandidates(projectId),
-  })
-}
-
 /**
- * Confirm/reject applications with an optimistic status flip on the project's
- * candidate list, rolled back on failure and reconciled on settle.
+ * Live status updates for the figurant's applications (CLAUDE.md MVP §5):
+ * subscribes to Postgres changes on the caller's own application rows and
+ * invalidates the list so a production's confirm/reject shows up without a
+ * refresh. RLS scopes the stream to rows the subscriber can SELECT
+ * (`applications_select_own_figurant`); the figurant_id filter narrows the
+ * firehose server-side. Requires `applications` in the supabase_realtime
+ * publication (007_rls_policies.sql).
  */
-export function useReviewApplications(projectId: string) {
+export function useMyApplicationsRealtime() {
   const queryClient = useQueryClient()
-  const queryKey = projectCandidatesQueryKey(projectId)
+  const { user } = useCurrentUser()
+  const userId = user?.id ?? null
 
-  return useMutation({
-    mutationFn: async ({ ids, status }: { ids: string[]; status: ReviewStatus }) => {
-      const result = await bulkUpdateApplications(ids, status)
-      if (!result.success) {
-        throw new Error(result.error)
-      }
-      return result
-    },
-    onMutate: async ({ ids, status }) => {
-      await queryClient.cancelQueries({ queryKey })
-      const previous = queryClient.getQueryData<ProjectCandidate[]>(queryKey)
-      const target = new Set(ids)
-      queryClient.setQueryData<ProjectCandidate[]>(queryKey, (old) =>
-        old?.map((candidate) => (target.has(candidate.id) ? { ...candidate, status } : candidate))
+  useEffect(() => {
+    if (!userId) {
+      return
+    }
+    const supabase = createClient()
+    const channel = supabase
+      .channel(`my-applications-${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "applications",
+          filter: `figurant_id=eq.${userId}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: MY_APPLICATIONS_QUERY_KEY })
+        }
       )
-      return { previous }
-    },
-    onError: (error, _variables, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(queryKey, context.previous)
-      }
-      toast.error(error instanceof Error ? error.message : "Une erreur est survenue. Réessayez.")
-    },
-    onSuccess: ({ updated }, { status }) => {
-      const verb = status === "confirmed" ? "confirmée" : "refusée"
-      toast.success(updated <= 1 ? `Candidature ${verb}.` : `${updated} candidatures ${verb}s.`)
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey })
-    },
-  })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [userId, queryClient])
 }

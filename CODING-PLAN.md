@@ -875,6 +875,8 @@ Objectif : flows critiques couverts par des tests, prêt pour les premiers utili
   - `tests/e2e/application.spec.ts` :
     - Login figurant → castings → postuler → vérifier dans "Mes candidatures" (pending)
     - Vérifier impossible de postuler deux fois
+    - Bulk reject de N candidatures → exactement N emails de refus (régression revue Sprint 4 : validation runtime du status dans reviewApplications)
+    - Confirm côté production pendant que "Mes candidatures" est ouvert → le statut se met à jour sans refresh (Realtime)
 - **Livrable :** Tests candidature verts
 
 ---

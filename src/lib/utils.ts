@@ -46,6 +46,14 @@ export function formatDateRangeShortFr(start: string | null, end: string | null)
   return formatDateShortFr(start ?? (end as string))
 }
 
+/** Human age-range label for a casting ("18–65 ans", "18+ ans", "≤ 65 ans"). */
+export function formatAgeRangeFr(ageMin: number | null, ageMax: number | null): string | null {
+  if (ageMin != null && ageMax != null) return `${ageMin}–${ageMax} ans`
+  if (ageMin != null) return `${ageMin}+ ans`
+  if (ageMax != null) return `≤ ${ageMax} ans`
+  return null
+}
+
 /**
  * Format a `YYYY-MM-DD` date string as a human French date (e.g. "12 août 2026").
  * Parsed at UTC midnight and formatted in UTC so a date-only value never shifts

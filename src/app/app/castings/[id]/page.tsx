@@ -4,27 +4,8 @@ import { getCastingDetail } from "@/actions/castings"
 import { ApplicationForm } from "@/components/castings/application-form"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { formatAgeRangeFr, formatDateRangeShortFr, formatDateShortFr } from "@/lib/utils"
 import { ROLE_TYPE_LABELS } from "@/schemas/casting"
-import type { RoleType } from "@/types/enums"
-
-/** Format a `YYYY-MM-DD` string as `DD/MM/YYYY` without Date/timezone conversion. */
-function formatDate(isoDate: string): string {
-  const [year, month, day] = isoDate.split("-")
-  return `${day}/${month}/${year}`
-}
-
-function formatDateRange(start: string | null, end: string | null): string | null {
-  if (!start && !end) return null
-  if (start && end) return `${formatDate(start)} – ${formatDate(end)}`
-  return formatDate(start ?? (end as string))
-}
-
-function formatAgeRange(ageMin: number | null, ageMax: number | null): string | null {
-  if (ageMin != null && ageMax != null) return `${ageMin}–${ageMax} ans`
-  if (ageMin != null) return `${ageMin}+ ans`
-  if (ageMax != null) return `≤ ${ageMax} ans`
-  return null
-}
 
 export default async function CastingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -34,8 +15,11 @@ export default async function CastingDetailPage({ params }: { params: Promise<{ 
   }
 
   const existingApplication = await getMyApplication(id)
-  const ageRange = formatAgeRange(casting.ageMin, casting.ageMax)
-  const projectDates = formatDateRange(casting.project.shootDateStart, casting.project.shootDateEnd)
+  const ageRange = formatAgeRangeFr(casting.ageMin, casting.ageMax)
+  const projectDates = formatDateRangeShortFr(
+    casting.project.shootDateStart,
+    casting.project.shootDateEnd
+  )
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -44,7 +28,7 @@ export default async function CastingDetailPage({ params }: { params: Promise<{ 
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-2xl font-semibold tracking-tight">{casting.title}</h1>
           {casting.roleType && (
-            <Badge variant="secondary">{ROLE_TYPE_LABELS[casting.roleType as RoleType]}</Badge>
+            <Badge variant="secondary">{ROLE_TYPE_LABELS[casting.roleType]}</Badge>
           )}
         </div>
       </div>
@@ -65,7 +49,7 @@ export default async function CastingDetailPage({ params }: { params: Promise<{ 
             {casting.shootDate && (
               <div>
                 <dt className="font-medium text-foreground">Date de tournage</dt>
-                <dd>{formatDate(casting.shootDate)}</dd>
+                <dd>{formatDateShortFr(casting.shootDate)}</dd>
               </div>
             )}
             {ageRange && (

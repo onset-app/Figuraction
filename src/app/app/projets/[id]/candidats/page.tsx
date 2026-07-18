@@ -11,7 +11,7 @@ import { CandidateList } from "@/components/projets/candidate-list"
 import { ConvocationDialog } from "@/components/projets/convocation-dialog"
 import { EmptyState } from "@/components/shared/empty-state"
 import { Button } from "@/components/ui/button"
-import { useProjectCandidates, useReviewApplications } from "@/hooks/use-applications"
+import { useProjectCandidates, useReviewApplications } from "@/hooks/use-candidates"
 import { useProject } from "@/hooks/use-projects"
 
 type CastingGroup = { id: string; title: string; candidates: ProjectCandidate[] }
