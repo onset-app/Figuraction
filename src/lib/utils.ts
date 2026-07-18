@@ -16,6 +16,16 @@ export function toDateString(date: Date): string {
   return date.toISOString().slice(0, 10)
 }
 
+/**
+ * Validate a user-supplied post-login destination (e.g. the `?next=` param).
+ * Only in-app paths are allowed — anything else (external URLs, `//host`
+ * tricks, arbitrary internal pages) falls back to the dashboard, so the value
+ * can never become an open redirect.
+ */
+export function safeAppPath(path: string | null | undefined): string {
+  return path === "/app" || path?.startsWith("/app/") ? path : "/app/dashboard"
+}
+
 const FR_DATE_FORMAT = new Intl.DateTimeFormat("fr-BE", {
   day: "numeric",
   month: "long",

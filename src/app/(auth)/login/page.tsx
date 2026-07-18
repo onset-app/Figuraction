@@ -2,7 +2,8 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import Link from "next/link"
-import { useState } from "react"
+import { useSearchParams } from "next/navigation"
+import { Suspense, useState } from "react"
 import { useForm } from "react-hook-form"
 import { login } from "@/actions/auth"
 import { Button } from "@/components/ui/button"
@@ -18,8 +19,20 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { type LoginInput, loginSchema } from "@/schemas/auth"
 
+// useSearchParams needs a Suspense boundary for static prerendering.
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  )
+}
+
+function LoginForm() {
   const [formError, setFormError] = useState<string | null>(null)
+  // Deep-link destination set by the proxy when an unauthenticated visitor
+  // hits an /app page; validated server-side by the login action.
+  const next = useSearchParams().get("next")
   const {
     register,
     handleSubmit,
@@ -28,9 +41,10 @@ export default function LoginPage() {
 
   async function onSubmit(values: LoginInput) {
     setFormError(null)
-    // On success the action redirects, so control only returns here on failure.
-    const result = await login(values)
-    if (!result.success) {
+    // On success the action redirects; depending on Next internals the awaited
+    // promise then never yields a result — hence the optional access.
+    const result = await login(values, next)
+    if (result && !result.success) {
       setFormError(result.error)
     }
   }

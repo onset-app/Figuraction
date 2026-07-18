@@ -1,12 +1,15 @@
 "use server"
 
+import * as Sentry from "@sentry/nextjs"
 import type { AuthError } from "@supabase/supabase-js"
 import { redirect } from "next/navigation"
 import { db } from "@/db"
 import { profiles } from "@/db/schema"
+import { getAppUrl } from "@/lib/env"
 import { sendWelcomeEmail } from "@/lib/resend/send"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { safeAppPath } from "@/lib/utils"
 import {
   type LoginInput,
   loginSchema,
@@ -38,6 +41,19 @@ function mapSignupError(error: AuthError): string {
 }
 
 /**
+ * Whether an unknown error is (or wraps) a Postgres unique violation (23505).
+ * Walks the `cause` chain because Drizzle may wrap the driver error.
+ */
+function isUniqueViolation(err: unknown): boolean {
+  for (let e = err; typeof e === "object" && e !== null; e = (e as { cause?: unknown }).cause) {
+    if ((e as { code?: unknown }).code === "23505") {
+      return true
+    }
+  }
+  return false
+}
+
+/**
  * Register a new figurant or production account.
  *
  * Creates the Supabase auth user, then inserts the matching profile row. The
@@ -45,8 +61,9 @@ function mapSignupError(error: AuthError): string {
  * bypasses RLS) because, when email confirmation is enabled, signUp returns no
  * session — an RLS-gated insert as `authenticated` would be rejected.
  *
- * If the profile insert fails, the freshly created auth user is deleted so we
- * never leave an orphaned account behind.
+ * If the profile insert fails for any reason OTHER than "profile already
+ * exists", the freshly created auth user is deleted so we never leave an
+ * orphaned account behind.
  */
 export async function signup(input: SignupInput): Promise<AuthActionResult> {
   // Re-validate server-side: the client validates for UX, but the action is a
@@ -66,7 +83,7 @@ export async function signup(input: SignupInput): Promise<AuthActionResult> {
     email,
     password,
     options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+      emailRedirectTo: `${getAppUrl()}/auth/callback`,
       data: { first_name: firstName, last_name: lastName, role },
     },
   })
@@ -94,10 +111,33 @@ export async function signup(input: SignupInput): Promise<AuthActionResult> {
       firstName,
       lastName,
     })
-  } catch {
-    // Roll back the auth user so a retry with the same email can succeed.
-    const admin = createAdminClient()
-    await admin.auth.admin.deleteUser(user.id)
+  } catch (err) {
+    // A duplicate profile means this auth user already completed a signup —
+    // typically a re-submit before confirming the email, where Supabase
+    // returns the ORIGINAL user (same id) and re-sends the confirmation.
+    // Deleting the auth user here would destroy that pending account and dead-
+    // link the confirmation email, so point the user back at their inbox.
+    if (isUniqueViolation(err)) {
+      return {
+        success: false,
+        error:
+          "Un compte existe déjà avec cet email. Vérifiez votre boîte mail pour le lien de confirmation.",
+      }
+    }
+
+    // Anything else: roll back the auth user so a retry with the same email
+    // can succeed. The rollback itself is best-effort — if it also fails, keep
+    // the friendly error and let Sentry carry the details.
+    try {
+      const admin = createAdminClient()
+      await admin.auth.admin.deleteUser(user.id)
+    } catch (rollbackErr) {
+      Sentry.captureException(rollbackErr, {
+        tags: { feature: "auth" },
+        extra: { step: "signup-rollback", userId: user.id },
+      })
+    }
+    Sentry.captureException(err, { tags: { feature: "auth" }, extra: { step: "signup-profile" } })
     return { success: false, error: "Une erreur est survenue lors de l'inscription. Réessayez." }
   }
 
@@ -128,11 +168,12 @@ function mapLoginError(error: AuthError): string {
  * Sign in with email and password.
  *
  * On success the session cookies are written by the server client and the user
- * is redirected to the dashboard. On failure a typed error is returned so the
- * form can render it inline. Errors are kept generic (never distinguishing a
- * wrong password from an unknown email) to avoid account enumeration.
+ * is redirected to `next` (validated — in-app paths only) or the dashboard. On
+ * failure a typed error is returned so the form can render it inline. Errors
+ * are kept generic (never distinguishing a wrong password from an unknown
+ * email) to avoid account enumeration.
  */
-export async function login(input: LoginInput): Promise<AuthActionResult> {
+export async function login(input: LoginInput, next?: string | null): Promise<AuthActionResult> {
   const parsed = loginSchema.safeParse(input)
   if (!parsed.success) {
     return {
@@ -152,7 +193,7 @@ export async function login(input: LoginInput): Promise<AuthActionResult> {
 
   // redirect() throws internally, so it must sit outside any try/catch. The
   // return type below is never reached on success.
-  redirect("/app/dashboard")
+  redirect(safeAppPath(next))
 }
 
 /** Sign out the current user and return to the login page. */
@@ -189,7 +230,7 @@ export async function resetPassword(input: ResetPasswordInput): Promise<AuthActi
 
   const supabase = await createClient()
   const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/update-password`,
+    redirectTo: `${getAppUrl()}/auth/callback?next=/update-password`,
   })
 
   if (error) {

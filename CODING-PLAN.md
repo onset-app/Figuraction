@@ -857,10 +857,12 @@ Objectif : flows critiques couverts par des tests, prêt pour les premiers utili
 - **Quoi faire :**
   - `tests/e2e/auth.spec.ts` :
     - Signup → message email
+    - Signup 2x avec le même email non confirmé → le compte pendant n'est PAS détruit (régression revue Sprint 2)
     - Login valide → redirect dashboard
     - Login invalide → erreur
+    - Login avec `?next=/app/...` → redirect vers la destination demandée
     - Logout → redirect login
-    - Accès /app/* sans auth → redirect login
+    - Accès /app/* sans auth → redirect login (avec `?next=` préservé)
 - **Livrable :** Tests auth verts
 
 ---

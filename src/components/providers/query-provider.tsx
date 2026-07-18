@@ -1,8 +1,31 @@
 "use client"
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { CURRENT_USER_QUERY_KEY } from "@/hooks/use-current-user"
+import { createClient } from "@/lib/supabase/client"
+
+/**
+ * Single app-wide Supabase auth listener: invalidates the current-user query
+ * on every sign-in/sign-out. Mounted once here rather than inside
+ * useCurrentUser, which would register one listener per consuming component.
+ */
+function AuthInvalidationListener() {
+  const queryClient = useQueryClient()
+
+  useEffect(() => {
+    const supabase = createClient()
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      queryClient.invalidateQueries({ queryKey: CURRENT_USER_QUERY_KEY })
+    })
+    return () => subscription.unsubscribe()
+  }, [queryClient])
+
+  return null
+}
 
 /**
  * Provides a single TanStack Query client to the React tree.
@@ -26,6 +49,7 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <AuthInvalidationListener />
       {children}
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
