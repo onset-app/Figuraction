@@ -1,6 +1,6 @@
 # Progress — FigurAction
 
-Last updated: 2026-07-17 (ticket #43 — covoiturage, clôture Sprint 5)
+Last updated: 2026-07-18 (ticket #44 — landing page, début Sprint 6)
 
 ```
 Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncompleted ticket.
@@ -75,7 +75,7 @@ Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncom
 
 ## Sprint 6 — Landing + SEO + PWA (/clear avant ce sprint)
 
-- [ ] #44 — Landing page 〔opus〕
+- [x] #44 — Landing page 〔opus〕 (la page "coming soon" de `src/app/page.tsx` est REMPLACÉE par une vraie landing déplacée dans `src/app/(public)/page.tsx` (résout toujours `/`, option prévue par le plan) pour hériter du nouveau `(public)/layout.tsx` : `SiteHeader`/`SiteFooter` partagés (components/layout/) — réutilisables tels quels par #45/#46, et la page `/castings` de #34 gagne au passage le chrome public (elle n'avait AUCUNE nav pour revenir à l'accueil). Sections : hero (badge, headline, 2 CTA figurant→/signup + production→/pour-les-productions, lien /castings), problème/solution (2 colonnes X/Check), 4 features (icônes lucide), comment ça marche (3 étapes + lien productions), 3 témoignages PLACEHOLDERS (personas fictifs — à remplacer par de vrais retours), CTA final (bande primary), footer 4 colonnes (liens, contact mailto, mentions légales). Animation subtile : `animate-in fade-in slide-in-from-bottom-4` (tw-animate-css, déjà importé) sur le hero uniquement — pas de scroll-triggered (aurait exigé du JS client, page 100% Server Component/SSG). Liens forward vers `/devenir-figurant` + `/pour-les-productions` (livrées #45/#46 — même pattern que #34→#36) ; `/mentions-legales` créée en page minimale (noindex, éditeur/contact/hébergement/RGPD à compléter avec l'identité légale avant lancement) pour ne pas laisser un lien footer mort non planifié ailleurs. FIX au passage : `globals.css` hardcodait `font-family: Arial` (reliquat scaffold) alors que Geist était chargé et exposé en variables depuis #01 sans jamais être appliqué — mapping `--font-sans`/`--font-mono` ajouté au `@theme inline` + body sur `var(--font-sans)` (typo app-wide passe Arial→Geist). Metadata title/description/OG propres sur la landing (le gros œuvre SEO reste #47). Vérifié : build + tsc + `pnpm check` propres, `/` désormais ○ statique (SSG) dans l'output de build, serveur `next start` → 200 sur `/`, `/castings`, `/mentions-legales`, toutes les sections + title/OG présents dans le HTML servi, header/footer bien rendus sur /castings)
 - [ ] #45 — Page B2B: Pour les productions 〔sonnet〕
 - [ ] #46 — Page SEO: Devenir figurant 〔sonnet〕
 - [ ] #47 — Meta tags + Open Graph + sitemap 〔sonnet〕
