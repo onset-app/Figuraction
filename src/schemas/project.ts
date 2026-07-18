@@ -4,8 +4,8 @@ import { optionalDate } from "./shared"
 export const projectSchema = z
   .object({
     title: z.string().trim().min(1, "Le titre est requis").max(200),
-    description: z.string().trim().max(5000).optional().or(z.literal("")),
-    shootLocation: z.string().trim().max(200).optional().or(z.literal("")),
+    description: z.string().trim().max(5000).optional(),
+    shootLocation: z.string().trim().max(200).optional(),
     shootDateStart: optionalDate,
     shootDateEnd: optionalDate,
   })

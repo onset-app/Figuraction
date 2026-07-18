@@ -166,9 +166,14 @@ async function main() {
   // Imported dynamically: ./index reads DATABASE_URL at module load, so the
   // env must be loaded (above) before this runs.
   const { db } = await import("./index")
-  const { applications, carpools, castings, profiles, projects } = await import("./schema")
+  const { applications, carpools, castings, contracts, profiles, projects } = await import(
+    "./schema"
+  )
 
   // 1. Wipe app tables (FK-safe order). Dev DB only — no real data.
+  // contracts first: it references applications/profiles/projects without
+  // cascade, so any contract row would otherwise block the deletes below.
+  await db.delete(contracts)
   await db.delete(carpools)
   await db.delete(applications)
   await db.delete(castings)

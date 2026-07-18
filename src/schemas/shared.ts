@@ -23,3 +23,14 @@ export const optionalDate = z.preprocess(
 export function optionalNumber<T extends z.ZodTypeAny>(schema: T) {
   return z.preprocess((val) => (val === "" ? undefined : val), schema.optional())
 }
+
+/**
+ * Same blank-input normalisation for a REQUIRED coerced number: without it an
+ * empty number input submits `""`, which `z.coerce.number()` silently turns
+ * into `0` — accepted whenever the field's lower bound is 0 (e.g. a carpool
+ * with 0 seats). Mapping `""` to `undefined` makes the field fail as missing
+ * instead; give the inner schema a `message` for a French error.
+ */
+export function requiredNumber<T extends z.ZodTypeAny>(schema: T) {
+  return z.preprocess((val) => (val === "" ? undefined : val), schema)
+}

@@ -1,18 +1,19 @@
 import { z } from "zod"
+import { type ExperienceLevel, experienceLevels } from "@/types/enums"
 import { optionalNumber } from "./shared"
 
-export const experienceLevels = ["debutant", "premiere_fois", "confirme"] as const
+// Re-exported so form components can keep importing the list alongside the
+// schema; the canonical definition lives in @/types/enums.
+export { experienceLevels }
 
-export const EXPERIENCE_LABELS: Record<(typeof experienceLevels)[number], string> = {
+export const EXPERIENCE_LABELS: Record<ExperienceLevel, string> = {
   debutant: "Débutant",
   premiere_fois: "Première fois",
   confirme: "Confirmé",
 }
 
 /** Narrow a DB value (nullable free-form text) to a known experience level. */
-export function isExperienceLevel(
-  value: string | null | undefined
-): value is (typeof experienceLevels)[number] {
+export function isExperienceLevel(value: string | null | undefined): value is ExperienceLevel {
   return !!value && (experienceLevels as readonly string[]).includes(value)
 }
 
@@ -25,7 +26,7 @@ export const profileSchema = z.object({
     .regex(/^[+0-9\s.()-]{6,20}$/, "Numéro de téléphone invalide")
     .optional()
     .or(z.literal("")),
-  city: z.string().trim().max(100).optional().or(z.literal("")),
+  city: z.string().trim().max(100).optional(),
   age: optionalNumber(
     z.coerce
       .number()

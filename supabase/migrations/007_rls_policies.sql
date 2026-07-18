@@ -92,18 +92,46 @@ grant execute on function public.owns_casting(uuid) to authenticated;
 --
 -- RLS filters rows, but a role still needs the underlying table grant to touch
 -- the table at all. anon may only read the public catalogue (open projects and
--- castings); authenticated gets full DML, gated per-row by the policies below.
+-- castings); authenticated gets DML gated per-row by the policies below.
+--
+-- RLS policies constrain ROWS, not COLUMNS: a WITH CHECK like
+-- `auth.uid() = id` would happily accept an update that flips the row's own
+-- `role` to 'admin'. Column-level grants are the guard for that, so the
+-- sensitive tables get column-scoped update/insert grants:
+--   - profiles: `role` and `email` are immutable from the client API (and
+--     inserts are service-role only — signup inserts the profile server-side).
+--     Consequently, role/email changes are a service-role operation, including
+--     for admins; the future back-office must go through the server.
+--   - applications: `casting_id`/`figurant_id` are immutable once created, so
+--     a figurant can't move an application to another (e.g. closed) casting
+--     and a production can't reassign an application to another figurant.
+--
+-- Grants are revoked before being re-issued so re-running this file always
+-- converges to exactly these privileges (older, broader grants don't linger).
 -- ---------------------------------------------------------------------------
+
+revoke all privileges on public.profiles, public.projects, public.castings,
+  public.applications, public.carpools, public.contracts from anon, authenticated;
 
 grant select on public.projects to anon;
 grant select on public.castings to anon;
 
-grant select, insert, update, delete on public.profiles to authenticated;
+grant select, delete on public.profiles to authenticated;
+grant update (first_name, last_name, phone, city, age, bio, experience,
+  photo_url, available, updated_at) on public.profiles to authenticated;
+
 grant select, insert, update, delete on public.projects to authenticated;
 grant select, insert, update, delete on public.castings to authenticated;
-grant select, insert, update, delete on public.applications to authenticated;
+
+grant select, delete on public.applications to authenticated;
+grant insert (casting_id, figurant_id, status, message) on public.applications to authenticated;
+grant update (status, message, reviewed_at, reviewed_by, updated_at)
+  on public.applications to authenticated;
+
 grant select, insert, update, delete on public.carpools to authenticated;
-grant select, insert, update, delete on public.contracts to authenticated;
+
+-- Contracts are written exclusively with the service role; clients only read.
+grant select on public.contracts to authenticated;
 
 -- ---------------------------------------------------------------------------
 -- profiles
@@ -122,10 +150,11 @@ create policy "profiles_select_figurants_by_staff" on public.profiles
   for select to authenticated
   using (role = 'figurant' and (select public.current_user_role()) in ('production', 'admin'));
 
+-- No insert policy: profiles are created server-side with the service role
+-- during signup (there is no insert grant for authenticated either). A
+-- client-side insert policy would let a user who signed up directly against
+-- the auth API create their own profile with an arbitrary role.
 drop policy if exists "profiles_insert_own" on public.profiles;
-create policy "profiles_insert_own" on public.profiles
-  for insert to authenticated
-  with check ((select auth.uid()) = id);
 
 drop policy if exists "profiles_update_own" on public.profiles;
 create policy "profiles_update_own" on public.profiles
@@ -219,10 +248,13 @@ create policy "applications_insert_own_figurant" on public.applications
 
 -- A figurant may only move their own application to pending/withdrawn — they
 -- can never self-confirm. Confirm/reject is the production's decision below.
+-- The USING clause also pins the CURRENT status to pending/withdrawn, so a
+-- decided (confirmed/rejected) application can't be reverted by the figurant;
+-- withdrawn stays updatable so re-applying can resurrect it (see Sprint 4).
 drop policy if exists "applications_update_own_figurant" on public.applications;
 create policy "applications_update_own_figurant" on public.applications
   for update to authenticated
-  using (figurant_id = (select auth.uid()))
+  using (figurant_id = (select auth.uid()) and status in ('pending', 'withdrawn'))
   with check (figurant_id = (select auth.uid()) and status in ('pending', 'withdrawn'));
 
 -- The production owning the casting sees and reviews (confirm/reject) applications.
@@ -231,11 +263,17 @@ create policy "applications_select_production" on public.applications
   for select to authenticated
   using ((select public.owns_casting(casting_id)));
 
+-- A production reviews toward pending/confirmed/rejected — never withdrawn,
+-- which is the figurant's own act ('pending' stays allowed so a decision can
+-- be fully un-reviewed if needed).
 drop policy if exists "applications_update_production" on public.applications;
 create policy "applications_update_production" on public.applications
   for update to authenticated
   using ((select public.owns_casting(casting_id)))
-  with check ((select public.owns_casting(casting_id)));
+  with check (
+    (select public.owns_casting(casting_id))
+    and status in ('pending', 'confirmed', 'rejected')
+  );
 
 drop policy if exists "applications_admin_all" on public.applications;
 create policy "applications_admin_all" on public.applications
@@ -301,3 +339,30 @@ create policy "contracts_admin_all" on public.contracts
   for all to authenticated
   using ((select public.is_admin()))
   with check ((select public.is_admin()));
+
+-- ---------------------------------------------------------------------------
+-- updated_at triggers
+--
+-- Keep updated_at accurate at the database level instead of relying on every
+-- code path remembering to bump it (which was already forgotten twice, see
+-- tickets #30/#31). moddatetime ships with Supabase; it overwrites the column
+-- with now() on every UPDATE, so explicit bumps in app code stay harmless.
+-- ---------------------------------------------------------------------------
+
+create extension if not exists moddatetime with schema extensions;
+
+drop trigger if exists set_updated_at on public.profiles;
+create trigger set_updated_at before update on public.profiles
+  for each row execute function extensions.moddatetime(updated_at);
+
+drop trigger if exists set_updated_at on public.projects;
+create trigger set_updated_at before update on public.projects
+  for each row execute function extensions.moddatetime(updated_at);
+
+drop trigger if exists set_updated_at on public.castings;
+create trigger set_updated_at before update on public.castings
+  for each row execute function extensions.moddatetime(updated_at);
+
+drop trigger if exists set_updated_at on public.applications;
+create trigger set_updated_at before update on public.applications
+  for each row execute function extensions.moddatetime(updated_at);

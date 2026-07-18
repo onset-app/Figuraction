@@ -3,6 +3,7 @@ import {
   boolean,
   check,
   date,
+  index,
   integer,
   pgTable,
   text,
@@ -10,6 +11,8 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core"
+import { contactMethods } from "@/types/enums"
+import { inEnum } from "./helpers"
 import { profiles } from "./profiles"
 import { projects } from "./projects"
 
@@ -26,14 +29,16 @@ export const carpools = pgTable(
     departureDate: date("departure_date").notNull(),
     departureTime: time("departure_time").notNull(),
     seatsAvailable: integer("seats_available").notNull(),
-    contactMethod: text("contact_method"),
+    contactMethod: text("contact_method", { enum: contactMethods }).notNull(),
     contactValue: text("contact_value").notNull(),
-    isFull: boolean("is_full").default(false),
+    isFull: boolean("is_full").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
     check("carpools_seats_available_check", sql`${table.seatsAvailable} >= 0`),
-    check("carpools_contact_method_check", sql`${table.contactMethod} in ('email', 'phone')`),
+    check("carpools_contact_method_check", inEnum(table.contactMethod, contactMethods)),
+    // Unindexed FK: ownership checks and driver-scoped lookups hit driver_id.
+    index("carpools_driver_id_idx").on(table.driverId),
   ]
 )
 

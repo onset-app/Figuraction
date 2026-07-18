@@ -6,7 +6,7 @@ import { z } from "zod"
  * client-supplied), so this schema only covers the shoot logistics.
  */
 export const convocationSchema = z.object({
-  projectId: z.string().uuid(),
+  projectId: z.uuid(),
   location: z.string().trim().min(1, "Le lieu est requis").max(200),
   address: z.string().trim().min(1, "L'adresse est requise").max(300),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide"),

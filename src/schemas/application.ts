@@ -1,7 +1,7 @@
 import { z } from "zod"
 
 export const applicationSchema = z.object({
-  castingId: z.string().uuid("Casting invalide"),
+  castingId: z.uuid("Casting invalide"),
   message: z
     .string()
     .trim()
