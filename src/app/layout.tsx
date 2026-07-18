@@ -1,7 +1,9 @@
-import type { Metadata } from "next"
+import { SerwistProvider } from "@serwist/next/react"
+import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { PostHogProvider } from "@/components/providers/posthog-provider"
 import { QueryProvider } from "@/components/providers/query-provider"
+import { InstallBanner } from "@/components/shared/install-banner"
 import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
 
@@ -36,6 +38,10 @@ export const metadata: Metadata = {
   },
 }
 
+export const viewport: Viewport = {
+  themeColor: "#0a0a0a",
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -44,9 +50,14 @@ export default function RootLayout({
   return (
     <html lang="fr" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        <PostHogProvider>
-          <QueryProvider>{children}</QueryProvider>
-        </PostHogProvider>
+        {/* Registers /sw.js (built by `serwist build`); disabled in dev where
+            the service worker isn't generated and would poison hot reloads. */}
+        <SerwistProvider swUrl="/sw.js" disable={process.env.NODE_ENV !== "production"}>
+          <PostHogProvider>
+            <QueryProvider>{children}</QueryProvider>
+          </PostHogProvider>
+        </SerwistProvider>
+        <InstallBanner />
         <Toaster />
       </body>
     </html>

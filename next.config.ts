@@ -10,6 +10,9 @@ const nextConfig: NextConfig = {
   },
 }
 
+// The service worker is built by the Serwist CLI in configurator mode (see
+// serwist.config.mjs), not by a bundler plugin: @serwist/next's webpack plugin
+// is a no-op under Turbopack, which Next 16 uses for builds.
 export default withSentryConfig(nextConfig, {
   silent: true,
 })
