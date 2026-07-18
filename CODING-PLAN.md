@@ -886,6 +886,8 @@ Objectif : flows critiques couverts par des tests, prêt pour les premiers utili
 - **Quoi faire :**
   - `tests/e2e/production.spec.ts` :
     - Login production → créer projet → ajouter casting → voir candidatures → confirmer → vérifier status
+    - Créer projet → PUBLIER (draft→open) → le casting apparaît dans /castings public (indépendant du seed — régression revue Sprint 3 : aucun chemin UI ne publiait un projet)
+    - Photo de profil > 1 Mo → upload OK (bodySizeLimit ; régression revue Sprint 3)
 - **Livrable :** Tests production verts
 
 ---

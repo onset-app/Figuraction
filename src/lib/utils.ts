@@ -33,6 +33,19 @@ const FR_DATE_FORMAT = new Intl.DateTimeFormat("fr-BE", {
   timeZone: "UTC",
 })
 
+/** Format a `YYYY-MM-DD` string as `DD/MM/YYYY` without Date/timezone conversion. */
+export function formatDateShortFr(isoDate: string): string {
+  const [year, month, day] = isoDate.split("-")
+  return `${day}/${month}/${year}`
+}
+
+/** Format a start/end `YYYY-MM-DD` pair as a short range; either side optional. */
+export function formatDateRangeShortFr(start: string | null, end: string | null): string | null {
+  if (!start && !end) return null
+  if (start && end) return `${formatDateShortFr(start)} – ${formatDateShortFr(end)}`
+  return formatDateShortFr(start ?? (end as string))
+}
+
 /**
  * Format a `YYYY-MM-DD` date string as a human French date (e.g. "12 août 2026").
  * Parsed at UTC midnight and formatted in UTC so a date-only value never shifts

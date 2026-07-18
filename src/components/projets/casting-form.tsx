@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm } from "react-hook-form"
 import { toast } from "sonner"
 import type { z } from "zod"
-import { createCasting } from "@/actions/castings"
+import { type CastingRow, createCasting, updateCasting } from "@/actions/castings"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -25,9 +25,12 @@ type CastingFormValues = z.input<typeof castingSchema>
 
 export function CastingForm({
   projectId,
+  casting,
   onSuccess,
 }: {
   projectId: string
+  /** When set, the form edits this casting instead of creating a new one. */
+  casting?: CastingRow
   onSuccess: () => void
 }) {
   const {
@@ -37,13 +40,28 @@ export function CastingForm({
     formState: { errors, isSubmitting },
   } = useForm<CastingFormValues, unknown, CastingInput>({
     resolver: zodResolver(castingSchema),
-    defaultValues: { spotsAvailable: 1 },
+    // "" renders empty number/date inputs; the shared optional* preprocessors
+    // normalise it back to undefined on submit.
+    defaultValues: casting
+      ? {
+          title: casting.title,
+          description: casting.description ?? "",
+          roleType: casting.roleType ?? undefined,
+          ageMin: casting.ageMin ?? "",
+          ageMax: casting.ageMax ?? "",
+          location: casting.location ?? "",
+          shootDate: casting.shootDate ?? "",
+          spotsAvailable: casting.spotsAvailable,
+        }
+      : { spotsAvailable: 1 },
   })
 
   async function onSubmit(values: CastingInput) {
-    const result = await createCasting(projectId, values)
+    const result = casting
+      ? await updateCasting(casting.id, values)
+      : await createCasting(projectId, values)
     if (result.success) {
-      toast.success("Casting ajouté.")
+      toast.success(casting ? "Casting mis à jour." : "Casting ajouté.")
       onSuccess()
     } else {
       toast.error(result.error)
@@ -134,7 +152,13 @@ export function CastingForm({
       </div>
 
       <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? "Ajout…" : "Ajouter le casting"}
+        {isSubmitting
+          ? casting
+            ? "Enregistrement…"
+            : "Ajout…"
+          : casting
+            ? "Enregistrer"
+            : "Ajouter le casting"}
       </Button>
     </form>
   )

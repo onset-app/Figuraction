@@ -8,6 +8,15 @@ const nextConfig: NextConfig = {
   env: {
     SENTRY_DSN: process.env.SENTRY_DSN,
   },
+  experimental: {
+    serverActions: {
+      // Photo uploads travel through a server action; Next's default cap is
+      // 1 MB, which would reject 1–5 MB phone photos before uploadPhoto's own
+      // 5 MB validation ever runs. Slightly above 5 MB so the app-level check
+      // (with its French error message) stays the authority.
+      bodySizeLimit: "6mb",
+    },
+  },
 }
 
 // The service worker is built by the Serwist CLI in configurator mode (see

@@ -7,25 +7,21 @@ import { closeCasting } from "@/actions/castings"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { formatDateShortFr } from "@/lib/utils"
 import { ROLE_TYPE_LABELS } from "@/schemas/casting"
-import type { CastingStatus, RoleType } from "@/types/enums"
-
-/** Format a `YYYY-MM-DD` string as `DD/MM/YYYY` without Date/timezone conversion. */
-function formatDate(isoDate: string): string {
-  const [year, month, day] = isoDate.split("-")
-  return `${day}/${month}/${year}`
-}
 
 export function CastingCard({
   casting,
   onChanged,
+  onEdit,
 }: {
   casting: CastingRow
   onChanged: () => void
+  /** Opens the edit dialog owned by the parent page. */
+  onEdit: () => void
 }) {
   const [isClosing, setIsClosing] = useState(false)
-  const status = casting.status as CastingStatus
-  const isOpen = status === "open"
+  const isOpen = casting.status === "open"
 
   const ageRange =
     casting.ageMin != null && casting.ageMax != null
@@ -56,19 +52,24 @@ export function CastingCard({
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="space-y-1 text-muted-foreground text-sm">
-          {casting.roleType && <p>{ROLE_TYPE_LABELS[casting.roleType as RoleType]}</p>}
+          {casting.roleType && <p>{ROLE_TYPE_LABELS[casting.roleType]}</p>}
           <p>
             {casting.spotsAvailable} place{casting.spotsAvailable !== 1 ? "s" : ""}
           </p>
           {ageRange && <p>{ageRange}</p>}
           {casting.location && <p>{casting.location}</p>}
-          {casting.shootDate && <p>{formatDate(casting.shootDate)}</p>}
+          {casting.shootDate && <p>{formatDateShortFr(casting.shootDate)}</p>}
         </div>
-        {isOpen && (
-          <Button variant="outline" size="sm" onClick={handleClose} disabled={isClosing}>
-            {isClosing ? "Fermeture…" : "Fermer le casting"}
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={onEdit}>
+            Modifier
           </Button>
-        )}
+          {isOpen && (
+            <Button variant="outline" size="sm" onClick={handleClose} disabled={isClosing}>
+              {isClosing ? "Fermeture…" : "Fermer le casting"}
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   )

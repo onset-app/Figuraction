@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { getCastingsByProject, getPublicCastings } from "@/actions/castings"
-import type { CastingFilters } from "@/stores/filters-store"
+import type { CastingFilterState } from "@/stores/filters-store"
 
 /** Query key for the castings belonging to a given project. */
 export const projectCastingsQueryKey = (projectId: string) =>
@@ -24,7 +24,7 @@ export const CASTINGS_QUERY_KEY = "public-castings"
  * optional ones (null → omitted). Filters are part of the query key, so the
  * list refetches whenever they change; TanStack caches each filter combination.
  */
-export function useCastings(filters: CastingFilters) {
+export function useCastings(filters: CastingFilterState) {
   return useQuery({
     queryKey: [CASTINGS_QUERY_KEY, filters] as const,
     queryFn: () =>

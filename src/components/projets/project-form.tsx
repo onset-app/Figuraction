@@ -6,12 +6,12 @@ import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import type { z } from "zod"
-import { createProject } from "@/actions/projects"
+import { createProject, type ProjectRow, updateProject } from "@/actions/projects"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { MY_PROJECTS_QUERY_KEY } from "@/hooks/use-projects"
+import { MY_PROJECTS_QUERY_KEY, projectQueryKey } from "@/hooks/use-projects"
 import { type ProjectInput, projectSchema } from "@/schemas/project"
 
 // shootDateStart/shootDateEnd use z.coerce.date(), so the pre-parse (input)
@@ -19,7 +19,14 @@ import { type ProjectInput, projectSchema } from "@/schemas/project"
 // ProfileForm's `age` field.
 type ProjectFormValues = z.input<typeof projectSchema>
 
-export function ProjectForm() {
+type ProjectFormProps = {
+  /** When set, the form edits this project instead of creating a new one. */
+  project?: ProjectRow
+  /** Called after a successful update (edit mode only). */
+  onUpdated?: () => void
+}
+
+export function ProjectForm({ project, onUpdated }: ProjectFormProps) {
   const router = useRouter()
   const queryClient = useQueryClient()
   const {
@@ -28,9 +35,33 @@ export function ProjectForm() {
     formState: { errors, isSubmitting },
   } = useForm<ProjectFormValues, unknown, ProjectInput>({
     resolver: zodResolver(projectSchema),
+    // Date columns arrive as YYYY-MM-DD strings, which is exactly what native
+    // date inputs consume; "" renders an empty field (normalised by optionalDate).
+    defaultValues: project
+      ? {
+          title: project.title,
+          description: project.description ?? "",
+          shootLocation: project.shootLocation ?? "",
+          shootDateStart: project.shootDateStart ?? "",
+          shootDateEnd: project.shootDateEnd ?? "",
+        }
+      : undefined,
   })
 
   async function onSubmit(values: ProjectInput) {
+    if (project) {
+      const result = await updateProject(project.id, values)
+      if (result.success) {
+        queryClient.invalidateQueries({ queryKey: projectQueryKey(project.id) })
+        queryClient.invalidateQueries({ queryKey: MY_PROJECTS_QUERY_KEY })
+        toast.success("Projet mis à jour.")
+        onUpdated?.()
+      } else {
+        toast.error(result.error)
+      }
+      return
+    }
+
     const result = await createProject(values)
     if (result.success) {
       // The list page reads from the client query cache, which revalidatePath
@@ -86,7 +117,13 @@ export function ProjectForm() {
       </div>
 
       <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Création…" : "Créer le projet"}
+        {isSubmitting
+          ? project
+            ? "Enregistrement…"
+            : "Création…"
+          : project
+            ? "Enregistrer"
+            : "Créer le projet"}
       </Button>
     </form>
   )

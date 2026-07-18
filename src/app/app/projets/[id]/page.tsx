@@ -1,14 +1,18 @@
 "use client"
 
 import { useQueryClient } from "@tanstack/react-query"
-import { ArrowLeft, Loader2, Plus, Users } from "lucide-react"
+import { ArrowLeft, Loader2, Pencil, Plus, Users } from "lucide-react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useState } from "react"
+import { toast } from "sonner"
+import type { CastingRow } from "@/actions/castings"
+import { updateProjectStatus } from "@/actions/projects"
 import { RoleGuard } from "@/components/layout/role-guard"
 import { CastingCard } from "@/components/projets/casting-card"
 import { CastingForm } from "@/components/projets/casting-form"
-import { Badge } from "@/components/ui/badge"
+import { ProjectForm } from "@/components/projets/project-form"
+import { ProjectStatusBadge } from "@/components/projets/project-status-badge"
 import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Dialog,
@@ -18,45 +22,57 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { projectCastingsQueryKey, useProjectCastings } from "@/hooks/use-castings"
-import { MY_PROJECTS_QUERY_KEY, useProject } from "@/hooks/use-projects"
+import { MY_PROJECTS_QUERY_KEY, projectQueryKey, useProject } from "@/hooks/use-projects"
+import { formatDateRangeShortFr } from "@/lib/utils"
 import type { ProjectStatus } from "@/types/enums"
 
-const STATUS_LABELS: Record<ProjectStatus, string> = {
-  draft: "Brouillon",
-  open: "Ouvert",
-  closed: "Fermé",
-  archived: "Archivé",
-}
-
-const STATUS_VARIANTS: Record<ProjectStatus, "default" | "outline" | "secondary" | "ghost"> = {
-  draft: "outline",
-  open: "default",
-  closed: "secondary",
-  archived: "ghost",
-}
-
-/** Format a `YYYY-MM-DD` string as `DD/MM/YYYY` without Date/timezone conversion. */
-function formatDate(isoDate: string): string {
-  const [year, month, day] = isoDate.split("-")
-  return `${day}/${month}/${year}`
-}
-
-function formatDateRange(start: string | null, end: string | null): string | null {
-  if (!start && !end) return null
-  if (start && end) return `${formatDate(start)} – ${formatDate(end)}`
-  return formatDate(start ?? (end as string))
-}
+/**
+ * Buttons offered per current status. Each pair must be an allowed edge in
+ * PROJECT_STATUS_TRANSITIONS (schemas/project.ts) — the server re-validates,
+ * so a drift here surfaces as a rejected action, never a bad write.
+ */
+const STATUS_ACTIONS: ReadonlyArray<{
+  from: ProjectStatus
+  to: ProjectStatus
+  label: string
+  variant: "default" | "outline"
+}> = [
+  { from: "draft", to: "open", label: "Publier le projet", variant: "default" },
+  { from: "open", to: "closed", label: "Fermer le projet", variant: "outline" },
+  { from: "closed", to: "open", label: "Réouvrir", variant: "outline" },
+  { from: "closed", to: "archived", label: "Archiver", variant: "outline" },
+]
 
 function ProjectDetail({ projectId }: { projectId: string }) {
   const queryClient = useQueryClient()
   const { data: project, isLoading } = useProject(projectId)
   const { data: castings, isLoading: castingsLoading } = useProjectCastings(projectId)
-  const [dialogOpen, setDialogOpen] = useState(false)
+  const [addCastingOpen, setAddCastingOpen] = useState(false)
+  const [editProjectOpen, setEditProjectOpen] = useState(false)
+  const [editingCasting, setEditingCasting] = useState<CastingRow | null>(null)
+  const [pendingStatus, setPendingStatus] = useState<ProjectStatus | null>(null)
+
+  function invalidateProject() {
+    queryClient.invalidateQueries({ queryKey: projectQueryKey(projectId) })
+    queryClient.invalidateQueries({ queryKey: MY_PROJECTS_QUERY_KEY })
+  }
 
   function invalidateAfterCastingChange() {
     queryClient.invalidateQueries({ queryKey: projectCastingsQueryKey(projectId) })
     // The project list shows a per-project casting count.
     queryClient.invalidateQueries({ queryKey: MY_PROJECTS_QUERY_KEY })
+  }
+
+  async function handleStatusChange(to: ProjectStatus) {
+    setPendingStatus(to)
+    const result = await updateProjectStatus(projectId, to)
+    setPendingStatus(null)
+    if (result.success) {
+      toast.success("Statut mis à jour.")
+      invalidateProject()
+    } else {
+      toast.error(result.error)
+    }
   }
 
   if (isLoading) {
@@ -81,8 +97,8 @@ function ProjectDetail({ projectId }: { projectId: string }) {
     )
   }
 
-  const status = (project.status as ProjectStatus) ?? "draft"
-  const dateRange = formatDateRange(project.shootDateStart, project.shootDateEnd)
+  const dateRange = formatDateRangeShortFr(project.shootDateStart, project.shootDateEnd)
+  const statusActions = STATUS_ACTIONS.filter(({ from }) => from === project.status)
 
   return (
     <div className="space-y-6">
@@ -96,24 +112,58 @@ function ProjectDetail({ projectId }: { projectId: string }) {
       <div className="space-y-2">
         <div className="flex items-center gap-3">
           <h1 className="font-bold text-2xl">{project.title}</h1>
-          <Badge variant={STATUS_VARIANTS[status]}>{STATUS_LABELS[status]}</Badge>
+          <ProjectStatusBadge status={project.status} />
         </div>
         {project.description && <p className="text-muted-foreground">{project.description}</p>}
         <div className="flex flex-wrap gap-x-4 text-muted-foreground text-sm">
           {project.shootLocation && <span>{project.shootLocation}</span>}
           {dateRange && <span>{dateRange}</span>}
         </div>
-        <Link
-          href={`/app/projets/${projectId}/candidats`}
-          className={buttonVariants({ variant: "outline", size: "sm" })}
-        >
-          <Users className="size-4" /> Voir les candidats
-        </Link>
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          {statusActions.map(({ to, label, variant }) => (
+            <Button
+              key={to}
+              size="sm"
+              variant={variant}
+              disabled={pendingStatus !== null}
+              onClick={() => handleStatusChange(to)}
+            >
+              {pendingStatus === to ? "Mise à jour…" : label}
+            </Button>
+          ))}
+          <Dialog open={editProjectOpen} onOpenChange={setEditProjectOpen}>
+            <DialogTrigger
+              render={
+                <Button size="sm" variant="outline">
+                  <Pencil className="size-4" /> Modifier
+                </Button>
+              }
+            />
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Modifier le projet</DialogTitle>
+              </DialogHeader>
+              <ProjectForm project={project} onUpdated={() => setEditProjectOpen(false)} />
+            </DialogContent>
+          </Dialog>
+          <Link
+            href={`/app/projets/${projectId}/candidats`}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+          >
+            <Users className="size-4" /> Voir les candidats
+          </Link>
+        </div>
+        {project.status === "draft" && (
+          <p className="text-muted-foreground text-sm">
+            Ce projet est en brouillon : ses castings ne sont pas visibles des figurants tant qu'il
+            n'est pas publié.
+          </p>
+        )}
       </div>
 
       <div className="flex items-center justify-between">
         <h2 className="font-semibold text-lg">Castings</h2>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <Dialog open={addCastingOpen} onOpenChange={setAddCastingOpen}>
           <DialogTrigger
             render={
               <Button size="sm">
@@ -129,7 +179,7 @@ function ProjectDetail({ projectId }: { projectId: string }) {
               projectId={projectId}
               onSuccess={() => {
                 invalidateAfterCastingChange()
-                setDialogOpen(false)
+                setAddCastingOpen(false)
               }}
             />
           </DialogContent>
@@ -149,10 +199,34 @@ function ProjectDetail({ projectId }: { projectId: string }) {
               key={casting.id}
               casting={casting}
               onChanged={invalidateAfterCastingChange}
+              onEdit={() => setEditingCasting(casting)}
             />
           ))}
         </div>
       )}
+
+      <Dialog
+        open={editingCasting !== null}
+        onOpenChange={(open) => {
+          if (!open) setEditingCasting(null)
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifier le casting</DialogTitle>
+          </DialogHeader>
+          {editingCasting && (
+            <CastingForm
+              projectId={projectId}
+              casting={editingCasting}
+              onSuccess={() => {
+                invalidateAfterCastingChange()
+                setEditingCasting(null)
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

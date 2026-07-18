@@ -35,9 +35,11 @@ export const profileSchema = z.object({
       .max(120, "Âge invalide")
   ),
   bio: z.string().trim().max(2000, "La bio ne peut pas dépasser 2000 caractères").optional(),
-  experience: z.enum(experienceLevels, {
-    message: "Veuillez choisir un niveau d'expérience",
-  }),
+  // Optional: the profile form only shows this to figurants — a production
+  // must be able to save its profile without picking an acting-experience level.
+  experience: z
+    .enum(experienceLevels, { message: "Veuillez choisir un niveau d'expérience" })
+    .optional(),
 })
 
 export type ProfileInput = z.infer<typeof profileSchema>

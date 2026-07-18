@@ -5,8 +5,12 @@ import type { RoleType } from "@/types/enums"
  * Filters applied to the casting catalogue (ticket #35) and, later, the
  * candidate browser. Kept in a client store so filter UI and result lists can
  * stay in sync without prop drilling.
+ *
+ * Named CastingFilterState (nullable fields, store-side) to avoid colliding
+ * with the action's CastingFilters input type (optional fields) and the
+ * CastingFilters component.
  */
-export interface CastingFilters {
+export interface CastingFilterState {
   location: string | null
   roleType: RoleType | null
   /**
@@ -18,7 +22,7 @@ export interface CastingFilters {
   date: string | null
 }
 
-const emptyFilters: CastingFilters = {
+const emptyFilters: CastingFilterState = {
   location: null,
   roleType: null,
   age: null,
@@ -26,8 +30,11 @@ const emptyFilters: CastingFilters = {
 }
 
 interface FiltersState {
-  castingFilters: CastingFilters
-  setCastingFilter: <K extends keyof CastingFilters>(key: K, value: CastingFilters[K]) => void
+  castingFilters: CastingFilterState
+  setCastingFilter: <K extends keyof CastingFilterState>(
+    key: K,
+    value: CastingFilterState[K]
+  ) => void
   resetCastingFilters: () => void
 }
 

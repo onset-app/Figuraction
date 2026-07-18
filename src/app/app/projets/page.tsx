@@ -7,14 +7,12 @@ import { RoleGuard } from "@/components/layout/role-guard"
 import { ProjectCard } from "@/components/projets/project-card"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { useProjects } from "@/hooks/use-projects"
-import type { ProjectStatus } from "@/types/enums"
+import { PROJECT_STATUS_LABELS } from "@/schemas/project"
+import { type ProjectStatus, projectStatuses } from "@/types/enums"
 
 const STATUS_FILTERS: ReadonlyArray<{ value: ProjectStatus | "all"; label: string }> = [
   { value: "all", label: "Tous" },
-  { value: "draft", label: "Brouillon" },
-  { value: "open", label: "Ouvert" },
-  { value: "closed", label: "Fermé" },
-  { value: "archived", label: "Archivé" },
+  ...projectStatuses.map((value) => ({ value, label: PROJECT_STATUS_LABELS[value] })),
 ]
 
 function ProjetsList() {

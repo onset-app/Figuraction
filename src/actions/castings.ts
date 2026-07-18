@@ -1,5 +1,6 @@
 "use server"
 
+import * as Sentry from "@sentry/nextjs"
 import { revalidatePath } from "next/cache"
 import { getUserRole } from "@/lib/supabase/roles"
 import { createClient } from "@/lib/supabase/server"
@@ -94,7 +95,10 @@ export async function createCasting(
 
   if (error) {
     // 42501 = RLS WITH CHECK violation, i.e. inserting under a project the
-    // caller doesn't own. Anything else is a genuine failure.
+    // caller doesn't own — expected, not reported. Anything else is a genuine failure.
+    if (error.code !== "42501") {
+      Sentry.captureException(error, { tags: { feature: "castings" }, extra: { step: "create" } })
+    }
     return { success: false, error: error.code === "42501" ? OWNERSHIP_ERROR : GENERIC_ERROR }
   }
   if (!data) {
@@ -131,6 +135,7 @@ export async function updateCasting(id: string, input: CastingInput): Promise<Ca
     .select(CASTING_SELECT)
 
   if (error) {
+    Sentry.captureException(error, { tags: { feature: "castings" }, extra: { step: "update" } })
     return { success: false, error: GENERIC_ERROR }
   }
   const casting = data?.[0]
@@ -159,6 +164,7 @@ export async function closeCasting(id: string): Promise<CastingMutationResult> {
     .select("projectId:project_id")
 
   if (error) {
+    Sentry.captureException(error, { tags: { feature: "castings" }, extra: { step: "close" } })
     return { success: false, error: GENERIC_ERROR }
   }
   const casting = data?.[0] as { projectId: string } | undefined
@@ -205,7 +211,10 @@ export async function getPublicCastings(filters?: CastingFilters): Promise<Casti
     query = query.or(`age_min.is.null,age_min.lte.${age}`).or(`age_max.is.null,age_max.gte.${age}`)
   }
 
-  const { data } = await query.order("shoot_date", { ascending: true })
+  const { data, error } = await query.order("shoot_date", { ascending: true })
+  if (error) {
+    Sentry.captureException(error, { tags: { feature: "castings" }, extra: { step: "public" } })
+  }
   return ((data ?? []) as Array<CastingRow & { projects: unknown }>).map(
     ({ projects: _projects, ...casting }) => casting
   )
@@ -214,12 +223,15 @@ export async function getPublicCastings(filters?: CastingFilters): Promise<Casti
 /** Castings belonging to a project, for the project detail page. */
 export async function getCastingsByProject(projectId: string): Promise<CastingRow[]> {
   const supabase = await createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("castings")
     .select(CASTING_SELECT)
     .eq("project_id", projectId)
     .order("created_at", { ascending: false })
 
+  if (error) {
+    Sentry.captureException(error, { tags: { feature: "castings" }, extra: { step: "by-project" } })
+  }
   return (data as CastingRow[] | null) ?? []
 }
 

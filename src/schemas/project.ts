@@ -1,5 +1,27 @@
 import { z } from "zod"
+import type { ProjectStatus } from "@/types/enums"
 import { optionalDate } from "./shared"
+
+/** French labels for each project status, shared by badges, filters and lists. */
+export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
+  draft: "Brouillon",
+  open: "Ouvert",
+  closed: "Fermé",
+  archived: "Archivé",
+}
+
+/**
+ * Allowed manual status transitions (publish / close / reopen / archive).
+ * Single source of truth for the `updateProjectStatus` action's validation
+ * and the buttons offered on the project detail page. Archiving replaces
+ * hard deletion; archived is terminal.
+ */
+export const PROJECT_STATUS_TRANSITIONS: Record<ProjectStatus, ReadonlyArray<ProjectStatus>> = {
+  draft: ["open"],
+  open: ["closed"],
+  closed: ["open", "archived"],
+  archived: [],
+}
 
 export const projectSchema = z
   .object({

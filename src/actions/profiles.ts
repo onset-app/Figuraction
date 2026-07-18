@@ -1,5 +1,6 @@
 "use server"
 
+import * as Sentry from "@sentry/nextjs"
 import { revalidatePath } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
@@ -52,12 +53,15 @@ export async function updateProfile(input: ProfileInput): Promise<ProfileActionR
       city: nullableText(city),
       age: age ?? null,
       bio: nullableText(bio),
-      experience,
+      // Optional since the role-aware form doesn't show it to productions;
+      // explicit null (not undefined/omitted) so the column reflects the input.
+      experience: experience ?? null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", user.id)
 
   if (error) {
+    Sentry.captureException(error, { tags: { feature: "profiles" }, extra: { step: "update" } })
     return {
       success: false,
       error: "Une erreur est survenue lors de l'enregistrement du profil. Réessayez.",
@@ -106,6 +110,10 @@ export async function uploadPhoto(file: File): Promise<PhotoUploadResult> {
     upsert: true,
   })
   if (uploadError) {
+    Sentry.captureException(uploadError, {
+      tags: { feature: "profiles" },
+      extra: { step: "photo-upload" },
+    })
     return {
       success: false,
       error: "Une erreur est survenue lors de l'envoi de la photo. Réessayez.",
@@ -122,6 +130,10 @@ export async function uploadPhoto(file: File): Promise<PhotoUploadResult> {
     .update({ photo_url: photoUrl, updated_at: new Date().toISOString() })
     .eq("id", user.id)
   if (dbError) {
+    Sentry.captureException(dbError, {
+      tags: { feature: "profiles" },
+      extra: { step: "photo-persist" },
+    })
     return {
       success: false,
       error: "La photo a été envoyée mais n'a pas pu être enregistrée. Réessayez.",

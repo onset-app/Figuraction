@@ -1,12 +1,13 @@
 "use server"
 
+import * as Sentry from "@sentry/nextjs"
 import { revalidatePath } from "next/cache"
 import { getUserRole } from "@/lib/supabase/roles"
 import { createClient } from "@/lib/supabase/server"
 import { nullableText, toDateString } from "@/lib/utils"
-import { type ProjectInput, projectSchema } from "@/schemas/project"
+import { PROJECT_STATUS_TRANSITIONS, type ProjectInput, projectSchema } from "@/schemas/project"
 import type { Project } from "@/types/database"
-import type { ApplicationStatus } from "@/types/enums"
+import { type ApplicationStatus, type ProjectStatus, projectStatuses } from "@/types/enums"
 
 /**
  * A project as returned through the supabase-js client: column names aliased
@@ -76,6 +77,7 @@ export async function createProject(input: ProjectInput): Promise<ProjectActionR
     .single()
 
   if (error || !data) {
+    Sentry.captureException(error, { tags: { feature: "projects" }, extra: { step: "create" } })
     return { success: false, error: GENERIC_ERROR }
   }
 
@@ -109,6 +111,7 @@ export async function updateProject(id: string, input: ProjectInput): Promise<Pr
     .select(PROJECT_SELECT)
 
   if (error) {
+    Sentry.captureException(error, { tags: { feature: "projects" }, extra: { step: "update" } })
     return { success: false, error: GENERIC_ERROR }
   }
   const project = data?.[0]
@@ -121,8 +124,21 @@ export async function updateProject(id: string, input: ProjectInput): Promise<Pr
   return { success: true, project: project as ProjectRow }
 }
 
-/** Archive a project (soft-delete — projects are never hard-deleted). */
-export async function deleteProject(id: string): Promise<ProjectMutationResult> {
+/**
+ * Move a project along its status lifecycle: draft → open → closed →
+ * (open | archived). This is how a production publishes a project — castings
+ * only ever appear in the public/authenticated catalogues once the parent
+ * project is open. Archiving is the soft-delete (projects are never hard-
+ * deleted); archived is terminal.
+ *
+ * The action is a trust boundary, so both the target status value and the
+ * transition itself are validated server-side against
+ * PROJECT_STATUS_TRANSITIONS. Reads and writes are owner-scoped on top of RLS.
+ */
+export async function updateProjectStatus(
+  id: string,
+  status: ProjectStatus
+): Promise<ProjectMutationResult> {
   const supabase = await createClient()
   const {
     data: { user },
@@ -131,13 +147,32 @@ export async function deleteProject(id: string): Promise<ProjectMutationResult> 
     return { success: false, error: "Vous devez être connecté." }
   }
 
+  if (!(projectStatuses as readonly string[]).includes(status)) {
+    return { success: false, error: "Statut invalide." }
+  }
+
+  const { data: current } = await supabase
+    .from("projects")
+    .select("status")
+    .eq("id", id)
+    .eq("production_id", user.id)
+    .maybeSingle()
+  if (!current) {
+    return { success: false, error: OWNERSHIP_ERROR }
+  }
+  if (!PROJECT_STATUS_TRANSITIONS[current.status as ProjectStatus]?.includes(status)) {
+    return { success: false, error: "Ce changement de statut n'est pas autorisé." }
+  }
+
   const { data, error } = await supabase
     .from("projects")
-    .update({ status: "archived", updated_at: new Date().toISOString() })
+    .update({ status, updated_at: new Date().toISOString() })
     .eq("id", id)
-    .select()
+    .eq("production_id", user.id)
+    .select("id")
 
   if (error) {
+    Sentry.captureException(error, { tags: { feature: "projects" }, extra: { step: "status" } })
     return { success: false, error: GENERIC_ERROR }
   }
   if (!data || data.length === 0) {
@@ -145,6 +180,7 @@ export async function deleteProject(id: string): Promise<ProjectMutationResult> 
   }
 
   revalidatePath("/app/projets")
+  revalidatePath(`/app/projets/${id}`)
   return { success: true }
 }
 
@@ -165,13 +201,16 @@ export async function getProject(id: string): Promise<ProjectRow | null> {
     return null
   }
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("projects")
     .select(PROJECT_SELECT)
     .eq("id", id)
     .eq("production_id", user.id)
     .maybeSingle()
 
+  if (error) {
+    Sentry.captureException(error, { tags: { feature: "projects" }, extra: { step: "get" } })
+  }
   return (data as ProjectRow | null) ?? null
 }
 
@@ -192,12 +231,15 @@ export async function getMyProjects(): Promise<ProjectListItem[]> {
     return []
   }
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("projects")
     .select(`${PROJECT_SELECT}, castings(count)`)
     .eq("production_id", user.id)
     .order("created_at", { ascending: false })
 
+  if (error) {
+    Sentry.captureException(error, { tags: { feature: "projects" }, extra: { step: "list" } })
+  }
   return ((data ?? []) as Array<ProjectRow & { castings: Array<{ count: number }> }>).map(
     ({ castings, ...project }) => ({
       ...project,
@@ -244,7 +286,7 @@ export async function getProjectCandidates(projectId: string): Promise<ProjectCa
     return []
   }
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("applications")
     .select(
       "id, status, message, createdAt:created_at, castings!inner(id, title, project_id), figurant:profiles!figurant_id(id, firstName:first_name, lastName:last_name, age, city, photoUrl:photo_url)"
@@ -252,6 +294,10 @@ export async function getProjectCandidates(projectId: string): Promise<ProjectCa
     .eq("castings.project_id", projectId)
     .neq("status", "withdrawn")
     .order("created_at", { ascending: false })
+
+  if (error) {
+    Sentry.captureException(error, { tags: { feature: "projects" }, extra: { step: "candidates" } })
+  }
 
   // supabase-js infers the to-one embeds as arrays; both are single objects at
   // runtime (figurant may be null if the profile row was removed).

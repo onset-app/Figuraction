@@ -8,7 +8,7 @@ import { ProfileForm } from "@/components/profil/profile-form"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CURRENT_USER_QUERY_KEY, useCurrentUser } from "@/hooks/use-current-user"
-import { EXPERIENCE_LABELS, isExperienceLevel } from "@/schemas/profile"
+import { EXPERIENCE_LABELS } from "@/schemas/profile"
 
 /** A labeled row in the read-only profile view. */
 function InfoRow({ label, value }: { label: string; value: string }) {
@@ -59,6 +59,7 @@ export default function ProfilPage() {
           </CardHeader>
           <CardContent>
             <ProfileForm
+              showFigurantFields={profile.role === "figurant"}
               defaultValues={{
                 firstName: profile.firstName,
                 lastName: profile.lastName,
@@ -66,7 +67,7 @@ export default function ProfilPage() {
                 city: profile.city ?? "",
                 age: profile.age ?? undefined,
                 bio: profile.bio ?? "",
-                experience: isExperienceLevel(profile.experience) ? profile.experience : undefined,
+                experience: profile.experience ?? undefined,
               }}
               onSuccess={() => {
                 invalidateProfile()
@@ -87,14 +88,16 @@ export default function ProfilPage() {
           </CardHeader>
           <CardContent className="space-y-2">
             <InfoRow label="Ville" value={profile.city || "—"} />
-            <InfoRow label="Âge" value={profile.age ? String(profile.age) : "—"} />
-            <InfoRow
-              label="Expérience"
-              value={
-                isExperienceLevel(profile.experience) ? EXPERIENCE_LABELS[profile.experience] : "—"
-              }
-            />
-            <InfoRow label="Bio" value={profile.bio || "—"} />
+            {profile.role === "figurant" && (
+              <>
+                <InfoRow label="Âge" value={profile.age ? String(profile.age) : "—"} />
+                <InfoRow
+                  label="Expérience"
+                  value={profile.experience ? EXPERIENCE_LABELS[profile.experience] : "—"}
+                />
+                <InfoRow label="Bio" value={profile.bio || "—"} />
+              </>
+            )}
           </CardContent>
         </Card>
       )}

@@ -31,10 +31,16 @@ type ProfileFormValues = z.input<typeof profileSchema>
 
 type ProfileFormProps = {
   defaultValues?: Partial<ProfileFormValues>
+  /**
+   * Whether to show the casting-specific fields (age, experience, bio).
+   * Productions edit only their contact identity — forcing them to pick an
+   * acting-experience level would mandate nonsense data.
+   */
+  showFigurantFields: boolean
   onSuccess?: () => void
 }
 
-export function ProfileForm({ defaultValues, onSuccess }: ProfileFormProps) {
+export function ProfileForm({ defaultValues, showFigurantFields, onSuccess }: ProfileFormProps) {
   const {
     register,
     handleSubmit,
@@ -85,52 +91,58 @@ export function ProfileForm({ defaultValues, onSuccess }: ProfileFormProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-2">
-          <Label htmlFor="age">Âge</Label>
-          <Input id="age" type="number" min={16} max={120} {...register("age")} />
-          {errors.age && <p className="text-destructive text-sm">{errors.age.message}</p>}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="experience">Expérience</Label>
-          <Controller
-            control={control}
-            name="experience"
-            render={({ field }) => (
-              // value ?? null keeps the Select controlled even when the profile
-              // has no experience yet (undefined), avoiding Base UI's
-              // uncontrolled→controlled warning.
-              <Select onValueChange={field.onChange} value={field.value ?? null}>
-                <SelectTrigger id="experience" className="w-full">
-                  {/* Base UI's SelectValue renders the raw value as text unless
+      {showFigurantFields && (
+        <>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="age">Âge</Label>
+              <Input id="age" type="number" min={16} max={120} {...register("age")} />
+              {errors.age && <p className="text-destructive text-sm">{errors.age.message}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="experience">Expérience</Label>
+              <Controller
+                control={control}
+                name="experience"
+                render={({ field }) => (
+                  // value ?? null keeps the Select controlled even when the profile
+                  // has no experience yet (undefined), avoiding Base UI's
+                  // uncontrolled→controlled warning.
+                  <Select onValueChange={field.onChange} value={field.value ?? null}>
+                    <SelectTrigger id="experience" className="w-full">
+                      {/* Base UI's SelectValue renders the raw value as text unless
                       given a render-prop, so map it to the French label here. */}
-                  <SelectValue placeholder="Choisir un niveau">
-                    {(value: string | null) =>
-                      value ? EXPERIENCE_LABELS[value as (typeof experienceLevels)[number]] : null
-                    }
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {experienceLevels.map((level) => (
-                    <SelectItem key={level} value={level}>
-                      {EXPERIENCE_LABELS[level]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
-          {errors.experience && (
-            <p className="text-destructive text-sm">{errors.experience.message}</p>
-          )}
-        </div>
-      </div>
+                      <SelectValue placeholder="Choisir un niveau">
+                        {(value: string | null) =>
+                          value
+                            ? EXPERIENCE_LABELS[value as (typeof experienceLevels)[number]]
+                            : null
+                        }
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {experienceLevels.map((level) => (
+                        <SelectItem key={level} value={level}>
+                          {EXPERIENCE_LABELS[level]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.experience && (
+                <p className="text-destructive text-sm">{errors.experience.message}</p>
+              )}
+            </div>
+          </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="bio">Bio</Label>
-        <Textarea id="bio" rows={4} {...register("bio")} />
-        {errors.bio && <p className="text-destructive text-sm">{errors.bio.message}</p>}
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="bio">Bio</Label>
+            <Textarea id="bio" rows={4} {...register("bio")} />
+            {errors.bio && <p className="text-destructive text-sm">{errors.bio.message}</p>}
+          </div>
+        </>
+      )}
 
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? "Enregistrement…" : "Enregistrer"}
