@@ -29,6 +29,12 @@ Scope: Zod schemas, Drizzle schemas + inferred types, RLS policies, seed data.
 Verdict then: schema content production-grade, **not shippable** until RLS provisioning
 automated. Post-fix: 17/17 RLS assertions pass.
 
+**Manual verification remaining:**
+- Browser click-through of profile edit → apply → review (write payloads were checked
+  statically against the new column grants; PostgREST-level paths pass, UI untested).
+- Run `pnpm db:rls` after every deploy's `db:push` on staging/prod; add DB secrets to
+  CI if `db:verify-rls` should run in the pipeline.
+
 ---
 
 ## Sprint 2 — Auth (tickets #19–#26) — score 8/10
@@ -46,6 +52,13 @@ auth pages, `useCurrentUser`, app shell, dashboard.
 
 Notes: enumeration protection, cookie carryover, and open-redirect guarding were
 already correct. Regression scenarios added to the #51 e2e spec.
+
+**Manual verification remaining:**
+- Full recovery flow in a browser: reset email → callback → `/update-password` →
+  new password → dashboard (states verified by construction, not visually).
+- Re-signup repro with >60s gap once the dev project's hourly email quota resets:
+  expect "vérifiez votre boîte mail" and the pending account still present (the
+  quota blocked the live repro; the fix is correct for any 23505 regardless).
 
 ---
 
@@ -66,6 +79,14 @@ list/detail pages.
 Recurring insight recorded: ticket-complete ≠ journey-complete; seed data hides
 missing lifecycle steps.
 
+**Manual verification remaining:**
+- Browser pass: create project → **Publier** → casting visible on `/castings` as
+  anonymous (DB path live-verified; UI not driven end-to-end).
+- Project and casting edit dialogs; a production-role profile save (no experience
+  field shown, saves cleanly).
+- One real >1 MB photo upload through the UI — the raised `bodySizeLimit` is
+  accepted by the build, but only a real request proves the path.
+
 ---
 
 ## Sprint 4 — Candidatures (tickets #34–#40) — score 7.5/10
@@ -82,6 +103,16 @@ review had already fixed withdraw-resurrection, filter trim, `?application=` gua
 | MED | Realtime status updates (CLAUDE.md MVP §5) silently dropped from the plan | Implemented: `applications` added to the `supabase_realtime` publication (idempotent, in 007), `useMyApplicationsRealtime` (filtered `postgres_changes`, RLS-bounded) on `/app/candidatures`. Live-verified end-to-end (noted: ~1 min worker pickup delay after publication changes) |
 | LOW | Formatter/label duplication continued into new files; vestigial casts; `FigurantProfile.experience` untyped; hooks split by ticket not domain; unbounded email `Promise.all` | All fixed (`formatAgeRangeFr`, `APPLICATION_STATUS_LABELS` export, hooks reorganized figurant/production, fan-out chunked ×5) |
 
+**Manual verification remaining:**
+- Browser pass as production: nav → Candidats → grid → candidate detail.
+- Realtime visual check: keep `/app/candidatures` open as a figurant while a
+  production confirms in another window — badge should flip without refresh (the
+  transport was live-tested with the exact hook config; the React wiring wasn't
+  driven visually).
+- After deploying: run `pnpm db:rls` on staging/prod so the realtime publication
+  exists there; expect up to ~1 min of event pickup delay right after the
+  publication change.
+
 ---
 
 ## Sprint 5 — Emails + Covoiturage (tickets #41–#43) — score 8/10
@@ -97,6 +128,15 @@ convocation), carpool CRUD. No High findings.
 | LOW | `EMAIL_FROM` fallback pointed at an **unverified domain** (with a docstring claiming otherwise); third divergent APP_URL fallback in email layout; dead `href="#"` unsubscribe link; OnSet/ONSET branding split; welcome email on the signup response path; stale past carpools shown; 0-seat offers creatable | All fixed (`getEmailFrom()` fail-loud inside dispatch's try/catch, `getAppUrl()` in templates, unsubscribe removed, ONSET everywhere, `after()` for welcome, board date filter defaults to today, seats `min(1)` at creation) |
 
 Backlog recorded: convocation history not persisted (Phase 2 call-sheets).
+
+**Manual verification remaining:**
+- **Set `RESEND_FROM` on Vercel** — with the fail-loud change, a deployment without
+  it sends no email at all (loud in Sentry, invisible to users); verify the Resend
+  domain and point `RESEND_FROM` at it.
+- Browser pass of the carpool form: the project select shows "Aucun projet"/titles
+  (not the raw sentinel/UUID), then full → reopen → delete through the UI.
+- One real email send after deploy: ONSET branding and `getAppUrl()` CTA links
+  resolve to the production domain.
 
 ---
 
@@ -115,6 +155,21 @@ findings were launch-readiness, not defects.
 
 Smoke-verified on the served build: fake names absent, new section + mobile menu
 button rendered, sitemap 200/valid, manifest without `orientation`.
+
+**Post-review addendum (2026-07-19):** the sitemap `getAppUrl()` fix broke the
+Vercel build — Next prerenders `/sitemap.xml`, and the throw fired before the
+`cookies()` call could mark the route dynamic (masked locally by `.env.local`,
+fatal on Vercel where `NEXT_PUBLIC_APP_URL` isn't set yet). Fixed with
+`export const dynamic = "force-dynamic"` on the route; env-less build and served
+sitemap both re-verified.
+
+**Manual verification remaining:**
+- Phone-width browser pass of the public pages: open the mobile menu, navigate,
+  confirm it closes on click.
+- The entire "Pré-lancement — checklist bloquante" in PROGRESS.md (legal identity,
+  privacy policy, `NEXT_PUBLIC_APP_URL` + `RESEND_FROM` on Vercel, Resend domain,
+  db:rls discipline, real-device PWA install/offline test, Lighthouse pass, real
+  testimonials, Supabase auth redirect allowlist) — every line is inherently manual.
 
 ---
 
