@@ -4,12 +4,10 @@ import { useQueryClient } from "@tanstack/react-query"
 import { LogOut } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState } from "react"
 import { logout } from "@/actions/auth"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { useCurrentUser } from "@/hooks/use-current-user"
-import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
 import { useUiStore } from "@/stores/ui-store"
 import { isNavItemActive, type NavItem, navItemsForRole } from "./nav-config"
@@ -48,21 +46,9 @@ export function AppNav({ items, onNavigate }: { items: NavItem[]; onNavigate?: (
 export function UserBlock() {
   const { profile, role } = useCurrentUser()
   const queryClient = useQueryClient()
-  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const initials =
     `${profile?.firstName?.[0] ?? ""}${profile?.lastName?.[0] ?? ""}`.toUpperCase() || "?"
   const fullName = profile ? `${profile.firstName} ${profile.lastName}` : "…"
-
-  async function handleLogout() {
-    setIsLoggingOut(true)
-    // Sign out on the browser client first so the session is gone before any
-    // query can refetch, then drop all cached data so the next user (after a
-    // re-login) never sees the previous user's profile or lists. The server
-    // action then clears the cookies and redirects.
-    await createClient().auth.signOut()
-    queryClient.clear()
-    await logout()
-  }
 
   return (
     <div className="mt-auto flex items-center gap-3 border-t p-3">
@@ -74,16 +60,16 @@ export function UserBlock() {
         <p className="truncate text-sm font-medium">{fullName}</p>
         {role && <p className="text-muted-foreground truncate text-xs capitalize">{role}</p>}
       </div>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        aria-label="Se déconnecter"
-        disabled={isLoggingOut}
-        onClick={handleLogout}
-      >
-        <LogOut className="size-4" />
-      </Button>
+      {/* Native form action so logout()'s server-side redirect drives the
+          navigation. Clearing the cache in onSubmit (before the action
+          dispatches) drops the previous user's cached profile/lists, so a
+          re-login can't show stale data — the browser's onAuthStateChange
+          never fires for the server-side login/logout. */}
+      <form action={logout} onSubmit={() => queryClient.clear()}>
+        <Button type="submit" variant="ghost" size="icon" aria-label="Se déconnecter">
+          <LogOut className="size-4" />
+        </Button>
+      </form>
     </div>
   )
 }
