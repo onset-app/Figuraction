@@ -7,13 +7,20 @@ import { getAppUrl } from "@/lib/env"
  * casting. Served at /sitemap.xml, regenerated on demand (dynamic route) so
  * newly opened castings appear without a redeploy.
  *
- * Uses getAppUrl() (throws when unset) rather than a localhost fallback: this
- * route runs at REQUEST time, so a misconfigured deployment would otherwise
- * silently feed localhost URLs to crawlers. A loud 500 on /sitemap.xml is
- * diagnosable in minutes; poisoned URLs in a search index take weeks. The
- * build-time consumers (robots.ts, layout metadataBase) keep their fallback
- * since CI builds run without env vars.
+ * Uses getAppUrl() (throws when unset) rather than a localhost fallback: a
+ * misconfigured deployment would otherwise silently feed localhost URLs to
+ * crawlers. A loud 500 on /sitemap.xml is diagnosable in minutes; poisoned
+ * URLs in a search index take weeks. The build-time consumers (robots.ts,
+ * layout metadataBase) keep their fallback since CI builds run without env.
+ *
+ * force-dynamic is REQUIRED with that choice: without it, Next prerenders the
+ * sitemap during build, and getAppUrl() throws before the casting fetch's
+ * cookies() call can mark the route dynamic — failing every env-less build
+ * (Vercel without NEXT_PUBLIC_APP_URL, CI). Dynamic rendering also keeps
+ * newly opened castings appearing without a redeploy.
  */
+export const dynamic = "force-dynamic"
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const APP_URL = getAppUrl()
   const staticRoutes: MetadataRoute.Sitemap = [
