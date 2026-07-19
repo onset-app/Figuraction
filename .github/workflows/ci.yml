@@ -41,3 +41,16 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      # Live security regression suite (17 assertions: no role escalation,
+      # cross-tenant isolation, status forgery blocked…) against the SEEDED dev
+      # database. Skipped automatically when the Supabase secrets are absent.
+      # Requirements: the dev DB must stay seeded (pnpm db:seed) — never point
+      # this at a production database.
+      - name: RLS security assertions
+        if: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY != '' }}
+        run: pnpm db:verify-rls
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

@@ -1,5 +1,6 @@
 "use client"
 
+import { useQueryClient } from "@tanstack/react-query"
 import { type FormEvent, useState } from "react"
 import { toast } from "sonner"
 import { createApplication } from "@/actions/applications"
@@ -7,6 +8,7 @@ import { APPLICATION_STATUS_LABELS } from "@/components/shared/status-badge"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { MY_APPLICATIONS_QUERY_KEY } from "@/hooks/use-applications"
 import { useCurrentUser } from "@/hooks/use-current-user"
 import { EXPERIENCE_LABELS } from "@/schemas/profile"
 import type { ApplicationStatus } from "@/types/enums"
@@ -19,6 +21,7 @@ export function ApplicationForm({
   existingStatus: ApplicationStatus | null
 }) {
   const { profile, role, isLoading } = useCurrentUser()
+  const queryClient = useQueryClient()
   const [message, setMessage] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   // Locally tracked so the form flips to "applied" without a reload after submit.
@@ -55,6 +58,10 @@ export function ApplicationForm({
     const result = await createApplication({ castingId, message: message.trim() || undefined })
     setIsSubmitting(false)
     if (result.success) {
+      // revalidatePath only refreshes the server cache; the Candidatures page
+      // reads the client query cache, so invalidate it here — otherwise a
+      // reapply (withdrawn → pending) shows a stale badge until a refresh.
+      queryClient.invalidateQueries({ queryKey: MY_APPLICATIONS_QUERY_KEY })
       toast.success("Candidature envoyée !")
       setAppliedStatus("pending")
     } else {

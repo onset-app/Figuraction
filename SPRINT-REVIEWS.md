@@ -30,10 +30,15 @@ Verdict then: schema content production-grade, **not shippable** until RLS provi
 automated. Post-fix: 17/17 RLS assertions pass.
 
 **Manual verification remaining:**
-- Browser click-through of profile edit → apply → review (write payloads were checked
+- [x] Browser click-through of profile edit → apply → review (write payloads were checked
   statically against the new column grants; PostgREST-level paths pass, UI untested).
-- Run `pnpm db:rls` after every deploy's `db:push` on staging/prod; add DB secrets to
-  CI if `db:verify-rls` should run in the pipeline.
+- [x] Run `pnpm db:rls` after every `db:push` — now **enforced by tooling** (2026-07-19):
+  the `db:push` script chains `apply-rls` automatically (`db:push:raw` for a bare push);
+  verified live: push → policies dropped by drizzle-kit → restored → 17/17 assertions.
+- [x] Optional: `db:verify-rls` in CI — done (2026-07-19): the 3 Supabase secrets are
+  set in GitHub Actions and ci.yml runs the 17 assertions after Build (step is
+  conditional on the secrets, so forks/secret-less runs skip it). Constraint: the
+  dev DB must stay seeded; never point this at prod.
 
 ---
 

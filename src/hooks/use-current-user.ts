@@ -54,6 +54,12 @@ export function useCurrentUser() {
     queryKey: CURRENT_USER_QUERY_KEY,
     queryFn: fetchCurrentUser,
     staleTime: 5 * 60 * 1000, // identity rarely changes within a session
+    // Login/logout run server-side (cookies), so the browser client's
+    // onAuthStateChange never fires for them and the cache would otherwise
+    // survive a logout→login. The (app) shell unmounts on the way to /login
+    // and remounts after the login redirect, so refetching on every mount
+    // guarantees the new user's identity loads without a full page refresh.
+    refetchOnMount: "always",
   })
 
   const user = query.data?.user ?? null

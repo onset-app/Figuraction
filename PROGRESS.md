@@ -109,7 +109,7 @@ Prompt: Read CLAUDE.md, CODING-PLAN.md and PROGRESS.md. Implement the next uncom
 - [ ] **Politique de confidentialité** : page dédiée détaillée (RGPD — la plateforme collecte photos, téléphones, âges) + lien footer
 - [ ] **Env vars Vercel** : `NEXT_PUBLIC_APP_URL` (sinon : throw sitemap/emails/auth links) et `RESEND_FROM` (sinon : aucun email envoyé, échecs visibles uniquement dans Sentry)
 - [ ] **Resend** : vérifier le domaine d'envoi puis pointer `RESEND_FROM` dessus (tant que non fait, seul l'owner du compte reçoit les emails)
-- [ ] **DB prod/staging** : `pnpm db:rls` après chaque `db:push` (drizzle-kit DROP les policies !) ; vérifier la publication realtime ; `pnpm db:verify-rls` en post-deploy
+- [x] **DB : `db:push` enchaîne désormais `db:rls` automatiquement** (drizzle-kit DROP les policies à chaque push — le script les restaure et vérifie ; `db:push:raw` pour un push nu). Reste : `pnpm db:verify-rls` en post-deploy sur une base seedée (jamais `db:seed` sur prod)
 - [ ] **PWA** : test d'installation + mode offline sur un appareil Android réel (⚠️ MANUAL hérité de #48)
 - [ ] **Lighthouse** : passe PWA + SEO + a11y sur `/`, `/castings`, `/devenir-figurant`
 - [ ] **Témoignages** : remplacer la section « Pensé pour le terrain » par de vrais témoignages consentis quand ils existent
