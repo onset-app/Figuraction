@@ -1,14 +1,4 @@
-import {
-  Body,
-  Container,
-  Head,
-  Hr,
-  Html,
-  Link,
-  Preview,
-  Section,
-  Text,
-} from "@react-email/components"
+import { Body, Container, Head, Hr, Html, Preview, Section, Text } from "@react-email/components"
 import type { ReactNode } from "react"
 
 interface EmailLayoutProps {
@@ -30,21 +20,18 @@ export function EmailLayout({ preview, children }: EmailLayoutProps) {
       <Body style={main}>
         <Container style={container}>
           <Section style={header}>
-            <Text style={logo}>OnSet</Text>
+            <Text style={logo}>ONSET</Text>
           </Section>
 
           <Section style={card}>{children}</Section>
 
           <Hr style={divider} />
 
+          {/* Transactional emails: no unsubscribe link required (and a dead
+              "#" link is worse than none). */}
           <Section style={footer}>
-            <Text style={footerText}>OnSet — La plateforme des figurants</Text>
-            <Text style={footerMuted}>
-              Vous recevez cet email car vous avez un compte OnSet.{" "}
-              <Link href="#" style={footerLink}>
-                Se désabonner
-              </Link>
-            </Text>
+            <Text style={footerText}>ONSET — La plateforme des figurants</Text>
+            <Text style={footerMuted}>Vous recevez cet email car vous avez un compte ONSET.</Text>
           </Section>
         </Container>
       </Body>
@@ -105,11 +92,6 @@ const footerMuted = {
   margin: "0",
 }
 
-const footerLink = {
-  color: "#a1a1aa",
-  textDecoration: "underline",
-}
-
 /**
  * Shared text/element styles exported for use inside templates, so every
  * email renders headings, paragraphs and buttons the same way.
@@ -158,9 +140,3 @@ export const styles = {
     color: "#18181b",
   },
 } as const
-
-/**
- * Base URL of the app, used to build links (CTA buttons) inside emails.
- * Falls back to the production domain when the env var is not set.
- */
-export const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://onset.app"

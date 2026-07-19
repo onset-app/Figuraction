@@ -81,7 +81,15 @@ export function CarpoolForm({
                 value={field.value ?? NO_PROJECT}
               >
                 <SelectTrigger id="project" className="w-full">
-                  <SelectValue />
+                  {/* Base UI's SelectValue renders the raw value (the sentinel
+                      or a project UUID) unless mapped via a render-prop. */}
+                  <SelectValue>
+                    {(value: string | null) =>
+                      !value || value === NO_PROJECT
+                        ? "Aucun projet"
+                        : (projects.find((p) => p.id === value)?.title ?? "Projet")
+                    }
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NO_PROJECT}>Aucun projet</SelectItem>
@@ -126,7 +134,7 @@ export function CarpoolForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="seatsAvailable">Places</Label>
-          <Input id="seatsAvailable" type="number" min={0} {...register("seatsAvailable")} />
+          <Input id="seatsAvailable" type="number" min={1} {...register("seatsAvailable")} />
           {errors.seatsAvailable && (
             <p className="text-destructive text-sm">{errors.seatsAvailable.message}</p>
           )}

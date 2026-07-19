@@ -14,8 +14,18 @@ export function getResendApiKey() {
 }
 
 /**
- * The verified sender address used for all transactional emails.
- * Falls back to Resend's shared onboarding domain when no custom domain
- * is configured (useful in development).
+ * The sender address for all transactional emails, from RESEND_FROM.
+ *
+ * Throws when unset instead of falling back: a hardcoded default would either
+ * point at an unverified domain (every send rejected by Resend, visible only
+ * in Sentry) or silently use the shared onboarding sender (which only delivers
+ * to the Resend account owner). The senders call this inside their try/catch,
+ * so a missing variable degrades to a reported send failure, never a crash.
  */
-export const EMAIL_FROM = process.env.RESEND_FROM ?? "OnSet <noreply@onset.app>"
+export function getEmailFrom(): string {
+  const from = process.env.RESEND_FROM
+  if (!from) {
+    throw new Error("Missing Resend env var: RESEND_FROM must be set (e.g. 'ONSET <noreply@…>').")
+  }
+  return from
+}

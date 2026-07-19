@@ -1,5 +1,6 @@
 import { Button, Heading, Section, Text } from "@react-email/components"
-import { APP_URL, EmailLayout, styles } from "./layout"
+import { getAppUrl } from "@/lib/env"
+import { EmailLayout, styles } from "./layout"
 
 interface ApplicationConfirmedEmailProps {
   firstName: string
@@ -47,7 +48,7 @@ export function ApplicationConfirmedEmail({
       </Text>
 
       <Section style={styles.buttonSection}>
-        <Button href={`${APP_URL}/app/candidatures`} style={styles.button}>
+        <Button href={`${getAppUrl()}/app/candidatures`} style={styles.button}>
           Voir ma candidature
         </Button>
       </Section>
@@ -55,7 +56,7 @@ export function ApplicationConfirmedEmail({
       <Text style={styles.paragraph}>
         Bon tournage,
         <br />
-        L'équipe OnSet
+        L'équipe ONSET
       </Text>
     </EmailLayout>
   )

@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { Loader2 } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
-import { deleteCarpool, markCarpoolFull } from "@/actions/carpools"
+import { deleteCarpool, setCarpoolFull } from "@/actions/carpools"
 import { CarpoolForm } from "@/components/covoiturage/carpool-form"
 import { CarpoolList } from "@/components/covoiturage/carpool-list"
 import { RoleGuard } from "@/components/layout/role-guard"
@@ -23,12 +23,12 @@ function Covoiturage() {
     queryClient.invalidateQueries({ queryKey: CARPOOLS_QUERY_KEY })
   }
 
-  async function handleMarkFull(id: string) {
+  async function handleSetFull(id: string, isFull: boolean) {
     setPendingId(id)
-    const result = await markCarpoolFull(id)
+    const result = await setCarpoolFull(id, isFull)
     setPendingId(null)
     if (result.success) {
-      toast.success("Trajet marqué complet.")
+      toast.success(isFull ? "Trajet marqué complet." : "Trajet rouvert.")
       invalidateCarpools()
     } else {
       toast.error(result.error)
@@ -72,7 +72,7 @@ function Covoiturage() {
         <CarpoolList
           carpools={carpools ?? []}
           currentUserId={user?.id ?? null}
-          onMarkFull={handleMarkFull}
+          onSetFull={handleSetFull}
           onDelete={handleDelete}
           pendingId={pendingId}
         />

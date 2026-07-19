@@ -1,5 +1,6 @@
 "use server"
 
+import * as Sentry from "@sentry/nextjs"
 import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
 import { toDateString } from "@/lib/utils"
@@ -22,7 +23,8 @@ export type CarpoolListItem = {
   departureDate: string
   departureTime: string
   seatsAvailable: number
-  contactMethod: ContactMethod | null
+  // NOT NULL in the DB since the Sprint 1 hardening pass.
+  contactMethod: ContactMethod
   contactValue: string
   isFull: boolean
   createdAt: string
@@ -47,11 +49,15 @@ export async function getCarpools(): Promise<CarpoolListItem[]> {
     return []
   }
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("carpools")
     .select(CARPOOL_SELECT)
     .order("departure_date", { ascending: true })
     .order("departure_time", { ascending: true })
+
+  if (error) {
+    Sentry.captureException(error, { tags: { feature: "carpools" }, extra: { step: "list" } })
+  }
 
   // supabase-js infers the to-one `project` embed as an array; it's an object
   // at runtime (or null when there's no project / it isn't visible).
@@ -72,12 +78,18 @@ export async function getOpenProjects(): Promise<Array<{ id: string; title: stri
     return []
   }
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("projects")
     .select("id, title")
     .eq("status", "open")
     .order("title", { ascending: true })
 
+  if (error) {
+    Sentry.captureException(error, {
+      tags: { feature: "carpools" },
+      extra: { step: "open-projects" },
+    })
+  }
   return (data ?? []) as Array<{ id: string; title: string }>
 }
 
@@ -115,6 +127,7 @@ export async function createCarpool(input: CarpoolInput): Promise<CarpoolActionR
   })
 
   if (error) {
+    Sentry.captureException(error, { tags: { feature: "carpools" }, extra: { step: "create" } })
     return { success: false, error: GENERIC_ERROR }
   }
 
@@ -123,10 +136,12 @@ export async function createCarpool(input: CarpoolInput): Promise<CarpoolActionR
 }
 
 /**
- * Mark a carpool as full. RLS's `carpools_update_own` scopes the update to the
+ * Set whether a carpool is full. A toggle rather than a one-way flag: when a
+ * passenger cancels, the driver reopens the offer instead of deleting and
+ * re-creating it. RLS's `carpools_update_own` scopes the update to the
  * caller's own offers, so a zero-row result means it wasn't theirs.
  */
-export async function markCarpoolFull(id: string): Promise<CarpoolActionResult> {
+export async function setCarpoolFull(id: string, isFull: boolean): Promise<CarpoolActionResult> {
   const supabase = await createClient()
   const {
     data: { user },
@@ -137,11 +152,12 @@ export async function markCarpoolFull(id: string): Promise<CarpoolActionResult> 
 
   const { data, error } = await supabase
     .from("carpools")
-    .update({ is_full: true })
+    .update({ is_full: isFull === true })
     .eq("id", id)
     .select("id")
 
   if (error) {
+    Sentry.captureException(error, { tags: { feature: "carpools" }, extra: { step: "set-full" } })
     return { success: false, error: GENERIC_ERROR }
   }
   if (!data || data.length === 0) {
@@ -168,6 +184,7 @@ export async function deleteCarpool(id: string): Promise<CarpoolActionResult> {
   const { data, error } = await supabase.from("carpools").delete().eq("id", id).select("id")
 
   if (error) {
+    Sentry.captureException(error, { tags: { feature: "carpools" }, extra: { step: "delete" } })
     return { success: false, error: GENERIC_ERROR }
   }
   if (!data || data.length === 0) {

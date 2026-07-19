@@ -5,6 +5,15 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+/** Split an array into consecutive chunks of at most `size` items. */
+export function chunk<T>(items: readonly T[], size: number): T[][] {
+  const chunks: T[][] = []
+  for (let i = 0; i < items.length; i += size) {
+    chunks.push(items.slice(i, i + size) as T[])
+  }
+  return chunks
+}
+
 /** Normalise an optional free-text field: blank/whitespace becomes null. */
 export function nullableText(value: string | undefined): string | null {
   const trimmed = value?.trim()

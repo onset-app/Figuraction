@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { formatDateFr } from "@/lib/utils"
+import { formatDateFr, toDateString } from "@/lib/utils"
 
 const ALL_PROJECTS = "all"
 
@@ -33,18 +33,21 @@ function contactHref(method: CarpoolListItem["contactMethod"], value: string): s
 export function CarpoolList({
   carpools,
   currentUserId,
-  onMarkFull,
+  onSetFull,
   onDelete,
   pendingId,
 }: {
   carpools: CarpoolListItem[]
   currentUserId: string | null
-  onMarkFull: (id: string) => void
+  onSetFull: (id: string, isFull: boolean) => void
   onDelete: (id: string) => void
   pendingId: string | null
 }) {
-  const [dateFrom, setDateFrom] = useState("")
+  // Defaults to today so stale (past) trips don't clutter the board; clearing
+  // the date input shows the full history.
+  const [dateFrom, setDateFrom] = useState(() => toDateString(new Date()))
   const [projectId, setProjectId] = useState<string>(ALL_PROJECTS)
+  const today = toDateString(new Date())
 
   // Filter options: the distinct projects actually attached to a carpool.
   const projectOptions = useMemo(() => {
@@ -67,7 +70,7 @@ export function CarpoolList({
     [carpools, dateFrom, projectId]
   )
 
-  const hasFilters = dateFrom !== "" || projectId !== ALL_PROJECTS
+  const hasFilters = dateFrom !== today || projectId !== ALL_PROJECTS
 
   return (
     <div className="space-y-4">
@@ -108,7 +111,7 @@ export function CarpoolList({
           <Button
             variant="ghost"
             onClick={() => {
-              setDateFrom("")
+              setDateFrom(today)
               setProjectId(ALL_PROJECTS)
             }}
           >
@@ -178,14 +181,14 @@ export function CarpoolList({
                       Contacter
                     </a>
 
-                    {isOwner && !carpool.isFull && (
+                    {isOwner && (
                       <Button
                         variant="outline"
                         size="sm"
                         disabled={isPending}
-                        onClick={() => onMarkFull(carpool.id)}
+                        onClick={() => onSetFull(carpool.id, !carpool.isFull)}
                       >
-                        Marquer complet
+                        {carpool.isFull ? "Rouvrir" : "Marquer complet"}
                       </Button>
                     )}
                     {isOwner && (

@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache"
 import { sendApplicationConfirmedEmail, sendApplicationRejectedEmail } from "@/lib/resend/send"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
-import { formatDateFr, nullableText } from "@/lib/utils"
+import { chunk, formatDateFr, nullableText } from "@/lib/utils"
 import { type ApplicationInput, applicationSchema } from "@/schemas/application"
 import type { ApplicationStatus, CastingStatus } from "@/types/enums"
 
@@ -154,10 +154,9 @@ async function notifyReviewOutcome(
 
     // Chunked so a large bulk review doesn't fire an unbounded burst of
     // concurrent Resend calls (their rate limit would silently eat some).
-    const CHUNK_SIZE = 5
-    for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
+    for (const batch of chunk(rows, 5)) {
       await Promise.all(
-        rows.slice(i, i + CHUNK_SIZE).map((row) => {
+        batch.map((row) => {
           if (!row.figurant?.email) {
             return undefined
           }

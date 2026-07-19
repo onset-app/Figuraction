@@ -1,6 +1,7 @@
 import { Button, Heading, Section, Text } from "@react-email/components"
+import { getAppUrl } from "@/lib/env"
 import type { UserRole } from "@/types/enums"
-import { APP_URL, EmailLayout, styles } from "./layout"
+import { EmailLayout, styles } from "./layout"
 
 interface WelcomeEmailProps {
   firstName: string
@@ -25,11 +26,11 @@ export function WelcomeEmail({ firstName, role }: WelcomeEmailProps) {
   const ctaLabel = role === "figurant" ? "Découvrir les castings" : "Créer un projet"
 
   return (
-    <EmailLayout preview="Bienvenue sur OnSet 🎬">
+    <EmailLayout preview="Bienvenue sur ONSET 🎬">
       <Heading style={styles.heading}>Bienvenue {firstName} 👋</Heading>
 
       <Text style={styles.paragraph}>
-        Votre compte OnSet est prêt. Nous sommes ravis de vous compter parmi
+        Votre compte ONSET est prêt. Nous sommes ravis de vous compter parmi
         {role === "figurant" ? " nos figurants" : " les productions"}.
       </Text>
 
@@ -44,7 +45,7 @@ export function WelcomeEmail({ firstName, role }: WelcomeEmailProps) {
       </Section>
 
       <Section style={styles.buttonSection}>
-        <Button href={`${APP_URL}/app/dashboard`} style={styles.button}>
+        <Button href={`${getAppUrl()}/app/dashboard`} style={styles.button}>
           {ctaLabel}
         </Button>
       </Section>
@@ -52,7 +53,7 @@ export function WelcomeEmail({ firstName, role }: WelcomeEmailProps) {
       <Text style={styles.paragraph}>
         À très vite sur les plateaux,
         <br />
-        L'équipe OnSet
+        L'équipe ONSET
       </Text>
     </EmailLayout>
   )

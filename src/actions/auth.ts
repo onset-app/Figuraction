@@ -3,6 +3,7 @@
 import * as Sentry from "@sentry/nextjs"
 import type { AuthError } from "@supabase/supabase-js"
 import { redirect } from "next/navigation"
+import { after } from "next/server"
 import { db } from "@/db"
 import { profiles } from "@/db/schema"
 import { getAppUrl } from "@/lib/env"
@@ -143,7 +144,9 @@ export async function signup(input: SignupInput): Promise<AuthActionResult> {
 
   // Best-effort welcome email — never block or fail signup on a mail error
   // (sendWelcomeEmail swallows its own failures and reports them to Sentry).
-  await sendWelcomeEmail({ to: email, firstName, role })
+  // Scheduled with after() so the render + Resend round-trip doesn't sit on
+  // the signup response path, while still surviving the serverless response.
+  after(() => sendWelcomeEmail({ to: email, firstName, role }))
 
   return { success: true }
 }

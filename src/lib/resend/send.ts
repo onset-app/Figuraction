@@ -7,7 +7,7 @@ import { ConvocationEmail } from "@/emails/convocation"
 import { WelcomeEmail } from "@/emails/welcome"
 import type { UserRole } from "@/types/enums"
 import { getResendClient } from "./client"
-import { EMAIL_FROM } from "./env"
+import { getEmailFrom } from "./env"
 
 /**
  * Low-level email dispatch. SERVER-ONLY (never a Server Action): every sender
@@ -26,7 +26,7 @@ async function dispatch(to: string, subject: string, template: ReactElement): Pr
   try {
     const html = await render(template)
     const { error } = await getResendClient().emails.send({
-      from: EMAIL_FROM,
+      from: getEmailFrom(),
       to,
       subject,
       html,
@@ -49,7 +49,7 @@ export function sendWelcomeEmail(params: {
 }): Promise<SendResult> {
   return dispatch(
     params.to,
-    "Bienvenue sur OnSet 🎬",
+    "Bienvenue sur ONSET 🎬",
     WelcomeEmail({ firstName: params.firstName, role: params.role })
   )
 }

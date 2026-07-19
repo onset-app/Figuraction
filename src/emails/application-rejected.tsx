@@ -1,5 +1,6 @@
 import { Button, Heading, Section, Text } from "@react-email/components"
-import { APP_URL, EmailLayout, styles } from "./layout"
+import { getAppUrl } from "@/lib/env"
+import { EmailLayout, styles } from "./layout"
 
 interface ApplicationRejectedEmailProps {
   firstName: string
@@ -31,15 +32,15 @@ export function ApplicationRejectedEmail({
       </Text>
 
       <Section style={styles.buttonSection}>
-        <Button href={`${APP_URL}/app/castings`} style={styles.button}>
+        <Button href={`${getAppUrl()}/app/castings`} style={styles.button}>
           Voir les castings ouverts
         </Button>
       </Section>
 
       <Text style={styles.paragraph}>
-        À bientôt sur OnSet,
+        À bientôt sur ONSET,
         <br />
-        L'équipe OnSet
+        L'équipe ONSET
       </Text>
     </EmailLayout>
   )

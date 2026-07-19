@@ -1,8 +1,9 @@
 "use server"
 
+import * as Sentry from "@sentry/nextjs"
 import { sendConvocationEmail } from "@/lib/resend/send"
 import { createClient } from "@/lib/supabase/server"
-import { formatDateFr } from "@/lib/utils"
+import { chunk, formatDateFr } from "@/lib/utils"
 import { type ConvocationInput, convocationSchema } from "@/schemas/convocation"
 
 const GENERIC_ERROR = "Une erreur est survenue. Réessayez."
@@ -56,6 +57,7 @@ export async function sendConvocation(input: ConvocationInput): Promise<Convocat
     .eq("status", "confirmed")
     .eq("castings.project_id", parsed.data.projectId)
   if (error) {
+    Sentry.captureException(error, { tags: { feature: "emails" }, extra: { step: "recipients" } })
     return { success: false, error: GENERIC_ERROR }
   }
 
@@ -73,22 +75,28 @@ export async function sendConvocation(input: ConvocationInput): Promise<Convocat
   }
 
   const date = formatDateFr(parsed.data.date)
-  const results = await Promise.all(
-    [...recipients].map(([email, firstName]) =>
-      sendConvocationEmail({
-        to: email,
-        firstName,
-        projectTitle,
-        location: parsed.data.location,
-        address: parsed.data.address,
-        date,
-        time: parsed.data.time,
-        instructions: parsed.data.instructions,
-        contactName: parsed.data.contactName,
-        contactPhone: parsed.data.contactPhone,
-      })
+  // Chunked so convoking a large confirmed list doesn't fire an unbounded
+  // burst of concurrent Resend calls (their rate limit would eat some).
+  let sent = 0
+  for (const batch of chunk([...recipients], 5)) {
+    const results = await Promise.all(
+      batch.map(([email, firstName]) =>
+        sendConvocationEmail({
+          to: email,
+          firstName,
+          projectTitle,
+          location: parsed.data.location,
+          address: parsed.data.address,
+          date,
+          time: parsed.data.time,
+          instructions: parsed.data.instructions,
+          contactName: parsed.data.contactName,
+          contactPhone: parsed.data.contactPhone,
+        })
+      )
     )
-  )
+    sent += results.filter((r) => r.success).length
+  }
 
-  return { success: true, sent: results.filter((r) => r.success).length }
+  return { success: true, sent }
 }

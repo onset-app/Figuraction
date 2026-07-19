@@ -70,7 +70,7 @@ export function ConvocationEmail({
       <Text style={styles.paragraph}>
         Bon tournage,
         <br />
-        L'équipe OnSet
+        L'équipe ONSET
       </Text>
     </EmailLayout>
   )

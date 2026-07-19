@@ -19,11 +19,13 @@ export const carpoolSchema = z
     departureArea: z.string().trim().min(1, "La zone de départ est requise").max(200),
     departureDate: z.coerce.date({ message: "Date de départ invalide" }),
     departureTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Heure invalide (format HH:MM)"),
+    // min(1): offering a trip with zero seats makes no sense at creation
+    // (the DB check stays >= 0, which the mark-full lifecycle relies on).
     seatsAvailable: requiredNumber(
       z.coerce
         .number({ message: "Le nombre de places est requis" })
         .int("Le nombre de places doit être un nombre entier")
-        .min(0, "Le nombre de places ne peut pas être négatif")
+        .min(1, "Au moins 1 place est requise")
     ),
     contactMethod: z.enum(contactMethods, { message: "Veuillez choisir un mode de contact" }),
     contactValue: z.string().trim().min(1, "Le contact est requis"),
