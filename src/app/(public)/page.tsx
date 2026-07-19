@@ -83,24 +83,24 @@ const STEPS = [
   },
 ] as const
 
-const TESTIMONIALS = [
+// Honest field scenarios — NOT testimonials: the platform has no public users
+// yet, so no quotes are attributed to invented people. Replace with real,
+// consented quotes once they exist.
+const FIELD_NOTES = [
   {
-    quote:
-      "Avant, je ratais des castings parce que l'info circulait dans trois groupes WhatsApp différents. Maintenant tout est au même endroit.",
-    name: "Marie L.",
-    role: "Figurante — Liège",
+    title: "Pour ne plus rater un casting",
+    description:
+      "L'information ne circule plus dans trois groupes WhatsApp : tous les castings ouverts sont au même endroit, filtrables par ville, date et type de rôle.",
   },
   {
-    quote:
-      "Gérer 80 figurants sur un tournage avec des fichiers Excel, c'était l'enfer. ONSET nous a fait gagner des journées entières.",
-    name: "Thomas V.",
-    role: "Régisseur — Bruxelles",
+    title: "Pour les tournages à 80 figurants",
+    description:
+      "Confirmer, refuser et convoquer se fait en quelques clics — plus de listes Excel copiées-collées à la main la veille du tournage.",
   },
   {
-    quote:
-      "J'ai su en temps réel que ma candidature était confirmée, et j'ai trouvé un covoiturage pour le tournage dans la foulée.",
-    name: "Sofia D.",
-    role: "Figurante — Namur",
+    title: "Pour la route vers le plateau",
+    description:
+      "Les figurants confirmés voient les covoiturages proposés pour le tournage et publient le leur en une minute.",
   },
 ] as const
 
@@ -256,33 +256,26 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Témoignages */}
+      {/* Scénarios terrain — pas de faux témoignages tant qu'il n'y a pas de vrais retours */}
       <section className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl font-semibold tracking-tight text-balance">
-            Ils sont déjà sur le plateau
+            Pensé pour le terrain
           </h2>
+          <p className="text-muted-foreground mt-3 leading-relaxed">
+            ONSET répond aux problèmes concrets des plateaux belges — côté figurants comme côté
+            production.
+          </p>
         </div>
 
         <div className="mt-12 grid gap-6 sm:grid-cols-3">
-          {TESTIMONIALS.map((testimonial) => (
-            <figure key={testimonial.name} className="flex flex-col rounded-xl border p-6">
-              <blockquote className="flex-1 text-sm leading-relaxed">
-                «&nbsp;{testimonial.quote}&nbsp;»
-              </blockquote>
-              <figcaption className="mt-4 flex items-center gap-3">
-                <span className="bg-muted flex size-9 items-center justify-center rounded-full text-xs font-semibold">
-                  {testimonial.name
-                    .split(" ")
-                    .map((part) => part[0])
-                    .join("")}
-                </span>
-                <span>
-                  <span className="block text-sm font-medium">{testimonial.name}</span>
-                  <span className="text-muted-foreground block text-xs">{testimonial.role}</span>
-                </span>
-              </figcaption>
-            </figure>
+          {FIELD_NOTES.map((note) => (
+            <div key={note.title} className="flex flex-col rounded-xl border p-6">
+              <h3 className="text-sm font-semibold">{note.title}</h3>
+              <p className="text-muted-foreground mt-3 flex-1 text-sm leading-relaxed">
+                {note.description}
+              </p>
+            </div>
           ))}
         </div>
       </section>

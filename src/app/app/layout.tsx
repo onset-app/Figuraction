@@ -1,6 +1,7 @@
 import { MobileNav } from "@/components/layout/mobile-nav"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Topbar } from "@/components/layout/topbar"
+import { InstallBanner } from "@/components/shared/install-banner"
 
 /**
  * Shell for all authenticated app pages: persistent sidebar (desktop),
@@ -17,6 +18,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <main className="flex-1 p-4 pb-20 md:p-6 md:pb-6">{children}</main>
       </div>
       <MobileNav />
+      {/* Mounted in the app shell (not the root layout) so only signed-in,
+          engaged users get the install prompt — not first-time visitors. */}
+      <InstallBanner />
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { SiteNavMobile } from "@/components/layout/site-nav-mobile"
 import { buttonVariants } from "@/components/ui/button"
 
 const NAV_LINKS = [
@@ -35,6 +36,7 @@ export function SiteHeader() {
           <Link href="/signup" className={buttonVariants()}>
             Créer un compte
           </Link>
+          <SiteNavMobile links={NAV_LINKS} />
         </div>
       </div>
     </header>

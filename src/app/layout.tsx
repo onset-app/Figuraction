@@ -3,7 +3,6 @@ import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { PostHogProvider } from "@/components/providers/posthog-provider"
 import { QueryProvider } from "@/components/providers/query-provider"
-import { InstallBanner } from "@/components/shared/install-banner"
 import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
 
@@ -57,7 +56,6 @@ export default function RootLayout({
             <QueryProvider>{children}</QueryProvider>
           </PostHogProvider>
         </SerwistProvider>
-        <InstallBanner />
         <Toaster />
       </body>
     </html>
