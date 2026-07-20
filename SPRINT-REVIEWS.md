@@ -60,7 +60,11 @@ already correct. Regression scenarios added to the #51 e2e spec.
 
 **Manual verification remaining:**
 - Full recovery flow in a browser: reset email → callback → `/update-password` →
-  new password → dashboard (states verified by construction, not visually).
+  new password → dashboard. **Bug found & fixed live (2026-07-20):** the callback
+  only handled a PKCE `code`, so recovery emails carrying `token_hash`+`type=recovery`
+  fell through to `/login?error=auth`. Callback now accepts both shapes (`verifyOtp`
+  for token_hash), routes recovery → `/update-password`, and reports failures to
+  Sentry. Re-test the happy path end-to-end to confirm.
 - Re-signup repro with >60s gap once the dev project's hourly email quota resets:
   expect "vérifiez votre boîte mail" and the pending account still present (the
   quota blocked the live repro; the fix is correct for any 23505 regardless).
