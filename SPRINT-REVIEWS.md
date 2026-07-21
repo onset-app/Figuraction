@@ -59,13 +59,13 @@ Notes: enumeration protection, cookie carryover, and open-redirect guarding were
 already correct. Regression scenarios added to the #51 e2e spec.
 
 **Manual verification remaining:**
-- Full recovery flow in a browser: reset email → callback → `/update-password` →
+- [x] Full recovery flow in a browser: reset email → callback → `/update-password` →
   new password → dashboard. **Bug found & fixed live (2026-07-20):** the callback
   only handled a PKCE `code`, so recovery emails carrying `token_hash`+`type=recovery`
   fell through to `/login?error=auth`. Callback now accepts both shapes (`verifyOtp`
   for token_hash), routes recovery → `/update-password`, and reports failures to
   Sentry. Re-test the happy path end-to-end to confirm.
-- Re-signup repro with >60s gap once the dev project's hourly email quota resets:
+- [x] Re-signup repro with >60s gap once the dev project's hourly email quota resets:
   expect "vérifiez votre boîte mail" and the pending account still present (the
   quota blocked the live repro; the fix is correct for any 23505 regardless).
 
@@ -89,11 +89,11 @@ Recurring insight recorded: ticket-complete ≠ journey-complete; seed data hide
 missing lifecycle steps.
 
 **Manual verification remaining:**
-- Browser pass: create project → **Publier** → casting visible on `/castings` as
+- [x] Browser pass: create project → **Publier** → casting visible on `/castings` as
   anonymous (DB path live-verified; UI not driven end-to-end).
-- Project and casting edit dialogs; a production-role profile save (no experience
+- [x] Project and casting edit dialogs; a production-role profile save (no experience
   field shown, saves cleanly).
-- One real >1 MB photo upload through the UI — the raised `bodySizeLimit` is
+- [x] One real >1 MB photo upload through the UI — the raised `bodySizeLimit` is
   accepted by the build, but only a real request proves the path.
 
 ---
@@ -113,8 +113,8 @@ review had already fixed withdraw-resurrection, filter trim, `?application=` gua
 | LOW | Formatter/label duplication continued into new files; vestigial casts; `FigurantProfile.experience` untyped; hooks split by ticket not domain; unbounded email `Promise.all` | All fixed (`formatAgeRangeFr`, `APPLICATION_STATUS_LABELS` export, hooks reorganized figurant/production, fan-out chunked ×5) |
 
 **Manual verification remaining:**
-- Browser pass as production: nav → Candidats → grid → candidate detail.
-- Realtime visual check: keep `/app/candidatures` open as a figurant while a
+- [x] Browser pass as production: nav → Candidats → grid → candidate detail.
+- [x] Realtime visual check: keep `/app/candidatures` open as a figurant while a
   production confirms in another window — badge should flip without refresh (the
   transport was live-tested with the exact hook config; the React wiring wasn't
   driven visually).
@@ -142,7 +142,7 @@ Backlog recorded: convocation history not persisted (Phase 2 call-sheets).
 - **Set `RESEND_FROM` on Vercel** — with the fail-loud change, a deployment without
   it sends no email at all (loud in Sentry, invisible to users); verify the Resend
   domain and point `RESEND_FROM` at it.
-- Browser pass of the carpool form: the project select shows "Aucun projet"/titles
+- [x]  Browser pass of the carpool form: the project select shows "Aucun projet"/titles
   (not the raw sentinel/UUID), then full → reopen → delete through the UI.
 - One real email send after deploy: ONSET branding and `getAppUrl()` CTA links
   resolve to the production domain.
@@ -173,7 +173,7 @@ fatal on Vercel where `NEXT_PUBLIC_APP_URL` isn't set yet). Fixed with
 sitemap both re-verified.
 
 **Manual verification remaining:**
-- Phone-width browser pass of the public pages: open the mobile menu, navigate,
+- [x] Phone-width browser pass of the public pages: open the mobile menu, navigate,
   confirm it closes on click.
 - The entire "Pré-lancement — checklist bloquante" in PROGRESS.md (legal identity,
   privacy policy, `NEXT_PUBLIC_APP_URL` + `RESEND_FROM` on Vercel, Resend domain,
