@@ -1,376 +1,376 @@
-# ONSET — Go-to-Market Strategy for Belgium
+# ONSET — Stratégie Go-to-Market pour la Belgique
 
-**Date:** 2026-07-21
-**Basis:** Full codebase analysis of the ONSET repository (source code, `PROGRESS.md` ticket log, `SPRINT-REVIEWS.md` production-readiness reviews, `CLAUDE.md` architecture brief, live page copy) plus targeted market research. Every product claim in this document is traceable to the codebase; market claims cite sources or are explicitly labeled **[ASSUMPTION]**.
-
----
-
-## Executive Summary
-
-ONSET is a two-sided (B2B2C) casting platform for film/TV extras ("figurants") in Belgium. The codebase reveals a **genuinely complete, security-hardened MVP** — not a prototype: full auth with role routing, figurant profiles with photo upload, project/casting lifecycle management, one-click applications with realtime status updates, bulk candidate review with automated transactional emails, group convocations, carpooling, an SEO-ready public catalog with per-casting indexable pages, and an installable PWA. Six sprints of formal code review (scores 7–8/10, all findings resolved) and a 17-assertion live RLS security suite put this well above typical pre-launch quality.
-
-The strategic picture that emerges from the code:
-
-1. **The product is production-side-led.** The hardest, most differentiated features (bulk review, convocations, RLS-isolated multi-production tenancy, realtime status) all serve the production/régisseur workflow. Competitors in Belgium (becasting.be, figuratie.be, figurants.com) are **listing boards or paid agencies for the talent side** — none of them is a workflow SaaS for the production side. That is the gap.
-2. **Supply (figurants) is the cheap side; demand (productions) is the scarce side.** The Belgian production market is small and dense (~tens of active production companies concentrated around Brussels, Liège, and Flanders, fuelled by a ~€200M/year Tax Shelter). GTM must be founder-led B2B sales to régisseurs and production managers, with figurant acquisition driven by each production's own casting calls (the "bring your own network" loop already implicit in the product's public casting pages).
-3. **The single biggest go-to-market blocker is in the code, not the market:** the UI is 100% hardcoded French (i18n formally deferred in Sprint 2 review). This locks out Flanders — roughly half of Belgian production volume (VRT alone runs a permanent extras pipeline). Belgium-wide ambition requires NL before scale-up; the recommended path is to win French-speaking Belgium first (Brussels + Wallonia) and treat NL as the Series-A-of-features.
-4. **Monetize the production side, keep figurants free forever.** The pricing page already promises "free during launch, prices announced before any billing" — an honest wedge. Phase-2 features already scoped in code (call-sheets, e-signature, advanced search) are exactly the right paid-tier gates.
-
-Realistic 12-month goal: **8–15 paying production companies, 3,000–6,000 registered figurants, €2–5K MRR**, and category ownership of "casting figurants Belgique" in French-language search.
+**Date :** 2026-07-21
+**Base :** Analyse complète du codebase ONSET (code source, journal de tickets `PROGRESS.md`, revues de production-readiness `SPRINT-REVIEWS.md`, brief d'architecture `CLAUDE.md`, textes des pages en ligne) plus une étude de marché ciblée. Chaque affirmation produit de ce document est traçable dans le codebase ; les affirmations marché citent leurs sources ou sont explicitement étiquetées **[HYPOTHÈSE]**.
 
 ---
 
-# Phase 1 — Product Understanding (from the codebase)
+## Résumé exécutif
 
-## 1.1 The problem it solves
+ONSET est une plateforme de casting bifaces (B2B2C) pour les figurants de cinéma/TV en Belgique. Le codebase révèle un **MVP réellement complet et durci côté sécurité** — pas un prototype : authentification complète avec routage par rôle, profils figurants avec upload de photo, gestion du cycle de vie projets/castings, candidatures en un clic avec mises à jour de statut en temps réel, revue de candidats en masse avec emails transactionnels automatiques, convocations groupées, covoiturage, catalogue public prêt pour le SEO avec pages indexables par casting, et une PWA installable. Six sprints de revue de code formelle (scores 7–8/10, tous les constats résolus) et une suite de 17 assertions de sécurité RLS en live placent ce produit bien au-dessus de la qualité pré-lancement habituelle.
 
-Stated in `README.md` and verified by the feature set: extras casting in Belgium runs on WhatsApp groups, Facebook posts, lost emails, and hand-copied Excel sheets. Productions lose hours; figurants get no application status visibility; no-shows hurt shoot days. The B2B page copy (`src/app/(public)/pour-les-productions/page.tsx`) frames it precisely: *"Des appels à figurants postés dans dix groupes Facebook… Des heures à recopier des listes dans Excel."*
+Le tableau stratégique qui ressort du code :
 
-## 1.2 Target users (three roles, enforced in code)
+1. **Le produit est tiré par le côté production.** Les fonctionnalités les plus difficiles et les plus différenciantes (revue en masse, convocations, multi-tenance isolée par RLS entre productions, statut temps réel) servent toutes le workflow production/régisseur. Les concurrents en Belgique (becasting.be, figuratie.be, figurants.com) sont **des tableaux d'annonces ou des agences payantes côté talents** — aucun n'est un SaaS de workflow pour le côté production. C'est là qu'est la brèche.
+2. **L'offre (figurants) est le côté bon marché ; la demande (productions) est le côté rare.** Le marché belge de la production est petit et dense (~quelques dizaines de sociétés de production actives concentrées autour de Bruxelles, Liège et la Flandre, alimentées par un Tax Shelter d'environ 200 M€/an). Le GTM doit être une vente B2B menée par le fondateur auprès des régisseurs et directeurs de production, l'acquisition de figurants étant tirée par les appels à casting de chaque production (la boucle « apportez votre propre réseau » déjà implicite dans les pages de casting publiques du produit).
+3. **Le plus gros bloqueur go-to-market est dans le code, pas dans le marché :** l'UI est 100 % en français en dur (i18n formellement différée dans la revue du Sprint 2). Cela exclut la Flandre — environ la moitié du volume de production belge (la VRT à elle seule fait tourner un pipeline permanent de figurants). Une ambition pan-belge exige le NL avant le passage à l'échelle ; le chemin recommandé est de gagner d'abord la Belgique francophone (Bruxelles + Wallonie) et de traiter le NL comme la « Series A des fonctionnalités ».
+4. **Monétiser le côté production, garder les figurants gratuits pour toujours.** La page tarifs promet déjà « gratuit pendant le lancement, tarifs annoncés avant toute facturation » — un angle d'attaque honnête. Les fonctionnalités de phase 2 déjà cadrées dans le code (feuilles de service, signature électronique, recherche avancée) sont exactement les bonnes barrières de palier payant.
 
-`src/types/enums.ts` defines exactly three roles — `figurant`, `production`, `admin` — enforced at four layers: proxy route guards (`src/proxy.ts` gates `/app/projets` and `/app/candidats` to production/admin), client `RoleGuard`, Postgres RLS policies (`supabase/migrations/007_rls_policies.sql`, 390 lines), and column-scoped grants (role/email immutable from the client API — a privilege-escalation fix from the Sprint 1 review).
+Objectif réaliste à 12 mois : **8–15 sociétés de production payantes, 3 000–6 000 figurants inscrits, 2–5 K€ de MRR**, et la propriété de la catégorie « casting figurants Belgique » dans la recherche francophone.
 
-- **Figurants:** profile (photo, city, age 16–120 per `profileSchema`, experience level, bio), browse/filter castings, one-click apply, track status in realtime, carpool.
-- **Productions:** projects → castings (role type figurant/acteur/doublure, age range, location, date, spots), publish lifecycle (draft→open→closed→archived with server-validated transitions), candidate review (single + bulk, capped at 200 ids), browse all figurants, group convocations.
-- **Admins:** placeholder page only (`/app/admin`) — back-office is genuinely Phase 2.
+---
 
-## 1.3 Current feature set — what is actually shipped
+# Phase 1 — Compréhension du produit (depuis le codebase)
 
-Verified against `PROGRESS.md` (48/53 tickets done) and the file tree:
+## 1.1 Le problème résolu
 
-| Domain | Shipped | Evidence |
+Énoncé dans `README.md` et vérifié par l'ensemble des fonctionnalités : le casting de figurants en Belgique tourne sur des groupes WhatsApp, des posts Facebook, des emails perdus et des tableurs Excel recopiés à la main. Les productions perdent des heures ; les figurants n'ont aucune visibilité sur le statut de leur candidature ; les no-shows plombent les journées de tournage. Le texte de la page B2B (`src/app/(public)/pour-les-productions/page.tsx`) le formule précisément : *« Des appels à figurants postés dans dix groupes Facebook… Des heures à recopier des listes dans Excel. »*
+
+## 1.2 Utilisateurs cibles (trois rôles, imposés par le code)
+
+`src/types/enums.ts` définit exactement trois rôles — `figurant`, `production`, `admin` — imposés à quatre niveaux : gardes de routes du proxy (`src/proxy.ts` restreint `/app/projets` et `/app/candidats` à production/admin), `RoleGuard` côté client, policies RLS Postgres (`supabase/migrations/007_rls_policies.sql`, 390 lignes), et grants limités par colonne (role/email immuables depuis l'API cliente — un correctif d'escalade de privilèges issu de la revue du Sprint 1).
+
+- **Figurants :** profil (photo, ville, âge 16–120 selon `profileSchema`, niveau d'expérience, bio), parcours/filtrage des castings, candidature en un clic, suivi du statut en temps réel, covoiturage.
+- **Productions :** projets → castings (type de rôle figurant/acteur/doublure, tranche d'âge, lieu, date, places), cycle de publication (draft→open→closed→archived avec transitions validées côté serveur), revue des candidats (unitaire + en masse, plafonnée à 200 ids), parcours de tous les figurants, convocations groupées.
+- **Admins :** page placeholder uniquement (`/app/admin`) — le back-office est réellement en Phase 2.
+
+## 1.3 Périmètre fonctionnel actuel — ce qui est réellement livré
+
+Vérifié contre `PROGRESS.md` (48/53 tickets terminés) et l'arborescence des fichiers :
+
+| Domaine | Livré | Preuve |
 |---|---|---|
-| Auth | Signup w/ role choice, login, logout, forgot/update password, email confirmation callback (PKCE + token_hash recovery), `?next=` deep-link preservation, open-redirect guard | `src/actions/auth.ts`, `src/app/auth/callback/route.ts`, Sprint 2 review |
-| Profiles | Full CRUD, photo upload to Supabase Storage (path derived from session, 6MB action body limit fix), role-aware form | `src/actions/profiles.ts`, `src/components/profil/*` |
-| Projects/Castings | CRUD + status transitions server-allow-listed, edit dialogs, casting counts | `src/actions/projects.ts`, `castings.ts`, `PROJECT_STATUS_TRANSITIONS` |
-| Applications | Apply (duplicate-safe via UNIQUE constraint, withdraw→re-apply resurrection), my-applications with **Supabase Realtime** status flips, production review single/bulk with optimistic UI | `src/actions/applications.ts`, `useMyApplicationsRealtime` |
-| Emails | Welcome, confirmation, rejection, convocation — React Email templates, Resend, chunked fan-out (×5, rate-limit aware), best-effort (failures → Sentry, never break the action) | `src/emails/*`, `src/lib/resend/send.ts` |
-| Carpooling | Create/list/filter, mark full + reopen, delete, contact via mailto/tel | `src/actions/carpools.ts` |
-| Public/SEO | Landing, B2B page, "devenir figurant" SEO guide with JSON-LD FAQPage, public casting catalog **with per-casting indexable pages + dynamic metadata + canonical**, sitemap (castings included dynamically), robots, OG image generated at build | `src/app/(public)/*`, `src/app/sitemap.ts` |
-| PWA | Manifest, Serwist service worker (66 precached URLs), offline page, install banner (app shell only) | `src/sw.ts`, `serwist.config.mjs` |
-| Observability | Sentry on every action error branch (feature/step tags), PostHog provider | `sentry.*.config.ts`, `posthog-provider.tsx` |
-| Security | RLS on all tables, 17 live assertions replayed by `pnpm db:verify-rls` (in CI), column-scoped grants, service-role usage documented per-case | `src/db/verify-rls.ts`, `007_rls_policies.sql` |
+| Auth | Inscription avec choix de rôle, connexion, déconnexion, mot de passe oublié/mise à jour, callback de confirmation email (PKCE + token_hash recovery), préservation du deep-link `?next=`, garde anti open-redirect | `src/actions/auth.ts`, `src/app/auth/callback/route.ts`, revue Sprint 2 |
+| Profils | CRUD complet, upload photo vers Supabase Storage (chemin dérivé de la session, correctif de limite body 6 Mo), formulaire adapté au rôle | `src/actions/profiles.ts`, `src/components/profil/*` |
+| Projets/Castings | CRUD + transitions de statut allow-listées côté serveur, dialogs d'édition, compteurs de castings | `src/actions/projects.ts`, `castings.ts`, `PROJECT_STATUS_TRANSITIONS` |
+| Candidatures | Postuler (anti-doublon via contrainte UNIQUE, résurrection retrait→re-candidature), mes-candidatures avec bascules de statut en **Supabase Realtime**, revue production unitaire/en masse avec UI optimiste | `src/actions/applications.ts`, `useMyApplicationsRealtime` |
+| Emails | Bienvenue, confirmation, refus, convocation — templates React Email, Resend, fan-out chunké (×5, conscient du rate-limit), best-effort (échecs → Sentry, ne cassent jamais l'action) | `src/emails/*`, `src/lib/resend/send.ts` |
+| Covoiturage | Créer/lister/filtrer, marquer complet + rouvrir, supprimer, contact via mailto/tel | `src/actions/carpools.ts` |
+| Public/SEO | Landing, page B2B, guide SEO « devenir figurant » avec JSON-LD FAQPage, catalogue de castings public **avec pages indexables par casting + metadata dynamiques + canonical**, sitemap (castings inclus dynamiquement), robots, image OG générée au build | `src/app/(public)/*`, `src/app/sitemap.ts` |
+| PWA | Manifest, service worker Serwist (66 URLs précachées), page offline, bannière d'installation (shell app uniquement) | `src/sw.ts`, `serwist.config.mjs` |
+| Observabilité | Sentry sur chaque branche d'erreur des actions (tags feature/step), provider PostHog | `sentry.*.config.ts`, `posthog-provider.tsx` |
+| Sécurité | RLS sur toutes les tables, 17 assertions live rejouées par `pnpm db:verify-rls` (en CI), grants limités par colonne, usage du service-role documenté cas par cas | `src/db/verify-rls.ts`, `007_rls_policies.sql` |
 
-## 1.4 Maturity level
+## 1.4 Niveau de maturité
 
-**Late MVP / pre-launch.** The distinguishing signal is process quality: every sprint got a formal review with severity-ranked findings, and *all* were resolved and re-verified (SPRINT-REVIEWS.md). High-severity bugs that would have killed launch — productions could never publish a project (S3), re-signup destroyed pending accounts (S2), `/app/candidats` 404 from primary nav (S4), fabricated testimonials on the landing (S6) — were caught and fixed. This is more launch-ready than its "0.1.0" version number suggests.
+**MVP tardif / pré-lancement.** Le signal distinctif est la qualité du process : chaque sprint a eu une revue formelle avec constats classés par sévérité, et *tous* ont été résolus et re-vérifiés (SPRINT-REVIEWS.md). Des bugs de haute sévérité qui auraient tué le lancement — les productions ne pouvaient jamais publier un projet (S3), un re-signup détruisait les comptes en attente (S2), `/app/candidats` en 404 depuis la nav principale (S4), témoignages fabriqués sur la landing (S6) — ont été détectés et corrigés. C'est plus prêt au lancement que ne le suggère son numéro de version « 0.1.0 ».
 
-**Not yet done (from the pre-launch checklist in PROGRESS.md):** legal notice with real company identity, privacy policy, Vercel env vars (`NEXT_PUBLIC_APP_URL`, `RESEND_FROM`), Resend domain verification (currently only the account owner receives emails), real-device PWA test, Lighthouse pass, Supabase auth redirect allowlist, real testimonials. **Sprint 7 (all tests: Vitest + 3 Playwright e2e specs) is entirely unstarted** — tickets #49–#53 unchecked; the `tests/` directory doesn't exist in the repo.
+**Pas encore fait (checklist pré-lancement dans PROGRESS.md) :** mentions légales avec identité réelle de l'entreprise, politique de confidentialité, variables d'environnement Vercel (`NEXT_PUBLIC_APP_URL`, `RESEND_FROM`), vérification du domaine Resend (actuellement seul le propriétaire du compte reçoit les emails), test PWA sur appareil réel, passe Lighthouse, allowlist des redirect URLs Supabase Auth, vrais témoignages. **Le Sprint 7 (tous les tests : Vitest + 3 specs e2e Playwright) est entièrement non démarré** — tickets #49–#53 non cochés ; le répertoire `tests/` n'existe pas dans le dépôt.
 
-## 1.5 Missing features (relative to plan and market)
+## 1.5 Fonctionnalités manquantes (par rapport au plan et au marché)
 
-- **No monetization**: no Stripe code anywhere (`package.json` has no stripe dependency); pricing page shows "Lancement 0€" + grayed "Pro — Bientôt".
-- **No i18n**: next-intl is in CLAUDE.md's plan but absent from `package.json`; all UI text hardcoded French (deferral formally recorded in Sprint 2 review). **No Dutch = no Flanders.**
-- **No contracts/e-signature, no call-sheets, no push notifications, no admin back-office** (all scoped Phase 2; `contracts` table exists in the Drizzle schema but has zero UI/actions).
-- **No pagination** on any list (accepted decision, "launch-scale OK" — Sprint 3 review).
-- **No advanced candidate search/filters** for productions (`getFigurants()` returns a minimal unfiltered list — Sprint 4 bis).
-- **No convocation history** (a production can't see it already convoked — recorded backlog).
-- **No in-app messaging** — contact is mailto/tel only (carpools, candidate pages).
-- **No availability calendar, no CSV/Excel export** (productions coming from Excel will ask for export almost immediately).
+- **Pas de monétisation** : aucun code Stripe nulle part (`package.json` n'a pas de dépendance stripe) ; la page tarifs affiche « Lancement 0€ » + un « Pro — Bientôt » grisé.
+- **Pas d'i18n** : next-intl est dans le plan de CLAUDE.md mais absent de `package.json` ; tous les textes UI en français en dur (report formellement acté dans la revue du Sprint 2). **Pas de néerlandais = pas de Flandre.**
+- **Pas de contrats/signature électronique, pas de feuilles de service, pas de notifications push, pas de back-office admin** (tout cadré Phase 2 ; la table `contracts` existe dans le schéma Drizzle mais n'a zéro UI/actions).
+- **Pas de pagination** sur aucune liste (décision acceptée, « échelle lancement OK » — revue Sprint 3).
+- **Pas de recherche/filtres avancés de candidats** pour les productions (`getFigurants()` renvoie une liste minimale non filtrée — Sprint 4 bis).
+- **Pas d'historique des convocations** (une production ne peut pas voir qu'elle a déjà convoqué — backlog acté).
+- **Pas de messagerie in-app** — le contact est mailto/tel uniquement (covoiturages, pages candidats).
+- **Pas de calendrier de disponibilités, pas d'export CSV/Excel** (les productions venant d'Excel demanderont l'export presque immédiatement).
 
-## 1.6 Competitive advantages visible in the code
+## 1.6 Avantages compétitifs visibles dans le code
 
-1. **Production-side workflow depth** — bulk review with optimistic UI, group convocations deduplicated per figurant, status lifecycle enforcement. No Belgian competitor has this (see Phase 2).
-2. **Realtime status for figurants** — the #1 talent-side pain (silence after applying) is structurally solved (`supabase_realtime` publication on `applications`).
-3. **SEO machine already built** — every open casting is an indexable public page with dynamic metadata, sitemap inclusion, and JSON-LD; the "devenir figurant" guide targets the exact head terms. Competitors' listing pages are technically weak. This is a compounding, zero-cost acquisition asset.
-4. **Trust/compliance posture** — RLS verified by live assertions in CI, honest pricing copy, fake testimonials proactively removed for EU consumer-law reasons. For selling to broadcasters (RTBF-tier), this discipline is a sales asset.
-5. **Mobile-first PWA** — figurants are a mobile audience; installable app without app-store friction or fees.
-6. **Anti-no-show story** — carpooling is uniquely framed on the B2B page as a production benefit ("Moins de no-shows"), a differentiator no listing site can copy structurally.
+1. **Profondeur du workflow côté production** — revue en masse avec UI optimiste, convocations groupées dédupliquées par figurant, cycle de statut imposé. Aucun concurrent belge n'a cela (voir Phase 2).
+2. **Statut temps réel pour les figurants** — la douleur n°1 côté talents (le silence après avoir postulé) est structurellement résolue (publication `supabase_realtime` sur `applications`).
+3. **Machine SEO déjà construite** — chaque casting ouvert est une page publique indexable avec metadata dynamiques, inclusion dans le sitemap et JSON-LD ; le guide « devenir figurant » cible exactement les termes de tête. Les pages d'annonces des concurrents sont techniquement faibles. C'est un actif d'acquisition composé, à coût nul.
+4. **Posture confiance/conformité** — RLS vérifiée par assertions live en CI, texte de tarifs honnête, faux témoignages retirés proactivement pour raisons de droit de la consommation UE. Pour vendre à des diffuseurs (niveau RTBF), cette discipline est un atout commercial.
+5. **PWA mobile-first** — les figurants sont une audience mobile ; app installable sans friction ni frais d'app store.
+6. **Histoire anti-no-show** — le covoiturage est présenté de manière unique sur la page B2B comme un bénéfice production (« Moins de no-shows »), un différenciateur qu'aucun site d'annonces ne peut copier structurellement.
 
-## 1.7 Weaknesses
+## 1.7 Faiblesses
 
-- **French-only UI** (biggest market limiter — excludes ~60% of Belgian population and the VRT/Flemish production cluster).
-- **Zero automated test coverage** — every regression so far was caught by manual review passes; this doesn't scale past launch.
-- **Cold-start dependency**: catalog value = live castings; the seed data masking bugs (a recurring review theme) is a metaphor for the market risk — an empty catalog kills figurant retention.
-- **GDPR exposure explicitly accepted in code review** (Sprint 4): *any* production account can read *any* figurant's full profile including email + phone, even non-applicants (`profiles_select_figurants_by_staff`), and the avatars bucket is public-read (unguessable URLs). Both are recorded as "to harden later." For a platform holding photos, ages, and phone numbers of (16+, possibly minor-adjacent) individuals in the EU, this is a pre-revenue liability, and production signup is unverified — anyone can self-declare as a production and harvest contact data.
-- **No verification of production accounts** — related to the above; also a spam/fraud vector (fake castings are a known scourge in this market; the "devenir figurant" page even warns against scam agencies).
-- **Convocation is fire-and-forget** (no history, no read receipts) — weakens the "replaces WhatsApp" claim for the highest-stakes communication.
+- **UI en français uniquement** (le plus gros limiteur de marché — exclut ~60 % de la population belge et le cluster de production VRT/flamand).
+- **Zéro couverture de tests automatisés** — chaque régression jusqu'ici a été attrapée par des passes de revue manuelle ; ça ne passe pas l'échelle après le lancement.
+- **Dépendance au cold-start** : la valeur du catalogue = des castings actifs ; les données seed qui masquaient des bugs (thème récurrent des revues) sont une métaphore du risque marché — un catalogue vide tue la rétention des figurants.
+- **Exposition RGPD explicitement acceptée en revue de code** (Sprint 4) : *n'importe quel* compte production peut lire le profil complet de *n'importe quel* figurant, y compris email + téléphone, même non-candidat (`profiles_select_figurants_by_staff`), et le bucket avatars est en lecture publique (URLs non devinables). Les deux sont actés comme « à durcir plus tard ». Pour une plateforme détenant des photos, âges et numéros de téléphone d'individus (16+, potentiellement proches de la minorité) dans l'UE, c'est un passif pré-revenu, et l'inscription production n'est pas vérifiée — n'importe qui peut s'auto-déclarer production et moissonner des coordonnées.
+- **Aucune vérification des comptes production** — lié au point précédent ; aussi un vecteur de spam/fraude (les faux castings sont un fléau connu de ce marché ; la page « devenir figurant » met elle-même en garde contre les agences arnaqueuses).
+- **La convocation est en mode « tire et oublie »** (pas d'historique, pas d'accusés de lecture) — affaiblit la promesse « remplace WhatsApp » pour la communication aux enjeux les plus élevés.
 
-## 1.8 Technical limitations affecting growth
+## 1.8 Limitations techniques affectant la croissance
 
-- **Role lookup is a DB query per proxied request** (`getUserRole` in `src/proxy.ts`; the JWT-claims optimization is recorded backlog). Fine at launch scale, adds latency + Supabase load as traffic grows.
-- **`db:push` drops all RLS policies** (drizzle-kit behavior) — mitigated by the chained `db:rls` script, but schema management is fragile-by-discipline; a mistake in production would be a data-exposure incident, not downtime.
-- **Unpaginated lists + unfiltered `getFigurants()`** — the production-side browse dies at a few thousand figurants; this collides with success, not failure.
-- **Serverless Postgres client pinned to `max: 1` connection** — correct for now, but heavy dashboard usage by a big production will surface latency.
-- **Email deliverability is single-provider (Resend) and currently unverified-domain** — convocations are shoot-critical communications; a bounce is a no-show.
-- **Scalability verdict:** the Vercel + Supabase architecture comfortably serves the realistic Belgian ceiling (low tens of thousands of users). Scaling risk is *feature* scaling (pagination, search) not infrastructure.
+- **La résolution du rôle est une requête DB par requête proxifiée** (`getUserRole` dans `src/proxy.ts` ; l'optimisation via claims JWT est un backlog acté). Correct à l'échelle du lancement, ajoute latence + charge Supabase avec le trafic.
+- **`db:push` supprime toutes les policies RLS** (comportement drizzle-kit) — mitigé par le script chaîné `db:rls`, mais la gestion du schéma est fragile-par-discipline ; une erreur en production serait un incident d'exposition de données, pas une indisponibilité.
+- **Listes non paginées + `getFigurants()` non filtré** — le parcours côté production meurt à quelques milliers de figurants ; cela entre en collision avec le succès, pas avec l'échec.
+- **Client Postgres serverless épinglé à `max: 1` connexion** — correct pour l'instant, mais un usage intensif du dashboard par une grosse production fera émerger de la latence.
+- **La délivrabilité email est mono-fournisseur (Resend) et le domaine est actuellement non vérifié** — les convocations sont des communications critiques pour le tournage ; un bounce est un no-show.
+- **Verdict scalabilité :** l'architecture Vercel + Supabase sert confortablement le plafond belge réaliste (quelques dizaines de milliers d'utilisateurs). Le risque d'échelle est le passage à l'échelle des *fonctionnalités* (pagination, recherche), pas de l'infrastructure.
 
-## 1.9 UX strengths and weaknesses
+## 1.9 Forces et faiblesses UX
 
-**Strengths (from review logs):** role-aware forms (productions aren't asked for acting experience), optimistic updates with rollback, empty states with CTAs everywhere, mobile nav on both public site and app (bottom tabs), status badges with icons, French date formatting with TZ-safe handling (a recurring, carefully solved bug class), draft-invisibility hints for productions.
+**Forces (d'après les journaux de revue) :** formulaires adaptés au rôle (on ne demande pas aux productions leur expérience d'acteur), mises à jour optimistes avec rollback, empty states avec CTA partout, nav mobile sur le site public comme dans l'app (onglets en bas), badges de statut avec icônes, formatage de dates en français avec gestion TZ-safe (une classe de bugs récurrente, soigneusement résolue), hints d'invisibilité des brouillons pour les productions.
 
-**Weaknesses:** no onboarding sequence after signup (figurants land on a dashboard, nothing pushes profile completion — and an incomplete profile is invisible value to productions); no profile-completeness indicator; no saved notification preferences; no way for figurants to be *notified of new castings* (they must return and check — the single biggest retention gap; email digest or push is Phase 2); convocation lacks confirmation loop ("I'll be there" button).
+**Faiblesses :** pas de séquence d'onboarding après l'inscription (les figurants atterrissent sur un dashboard, rien ne pousse à compléter le profil — et un profil incomplet est une valeur invisible pour les productions) ; pas d'indicateur de complétude du profil ; pas de préférences de notifications enregistrées ; aucun moyen pour les figurants d'être *notifiés des nouveaux castings* (ils doivent revenir vérifier — le plus gros trou de rétention ; digest email ou push est en Phase 2) ; la convocation n'a pas de boucle de confirmation (bouton « Je serai présent »).
 
 ---
 
-# Phase 2 — Belgian Market Analysis
+# Phase 2 — Analyse du marché belge
 
-## 2.1 Market size
+## 2.1 Taille de marché
 
-- **Production side (the paying side):** Belgium's federal Tax Shelter channels ~€200M/year into audiovisual production and has more than doubled filming volume since introduction ([FPS Finance](https://finance.belgium.be/en/enterprises/corporation-tax/tax-benefits/tax-shelter-audiovisual-production), [Cineuropa](https://cineuropa.org/en/newsdetail/219784), [Lexgo](https://www.lexgo.be/en/news-and-articles/2458-the-tax-shelter-for-audiovisual-productions-in-belgium-a-successful-tool-under-reform)). Up to 42% of Belgian spend is recoverable, which makes Belgium a European co-production hub ([Screen Flanders](https://www.screenflanders.be/en/financing/other-funds-incentives/tax-shelter), [Mbrella Films](https://mbrellafilms.com/incentives/belgium/)). **[ASSUMPTION]** From fund portfolios (Wallimage, screen.brussels, VAF/Screen Flanders slates) I estimate **60–120 organizations** that hire extras with any regularity: feature/TV production companies (Versus, Frakas, Scope, Panache, Caviar, De Mensen, Menuet…), broadcasters (RTBF, VRT, RTL Belgium), ad production houses, and a long tail of corporate/short-form. Serviceable paying market at Belgian SaaS prices: roughly **€150–400K ARR ceiling domestically** — a solid beachhead business, not the end-game (end-game = France/NL expansion or moving up the value chain into call-sheets/contracts/payroll like US comparator [Everyset](https://everyset.com/), which raised $9M and serves Netflix/HBO/Amazon — proof the category supports venture-scale outcomes in bigger markets).
-- **Talent side:** **[ASSUMPTION]** based on competitor claims and Facebook group sizes, the active Belgian extras pool is **15,000–40,000 people**, heavily concentrated around Brussels, Liège (Wallonie = big Tax Shelter shooting hub), Ghent, and Antwerp. They churn fast (figuration is episodic income/hobby).
+- **Côté production (le côté payant) :** le Tax Shelter fédéral belge canalise ~200 M€/an vers la production audiovisuelle et a plus que doublé le volume de tournages depuis son introduction ([SPF Finances](https://finance.belgium.be/en/enterprises/corporation-tax/tax-benefits/tax-shelter-audiovisual-production), [Cineuropa](https://cineuropa.org/en/newsdetail/219784), [Lexgo](https://www.lexgo.be/en/news-and-articles/2458-the-tax-shelter-for-audiovisual-productions-in-belgium-a-successful-tool-under-reform)). Jusqu'à 42 % des dépenses belges sont récupérables, ce qui fait de la Belgique un hub européen de coproduction ([Screen Flanders](https://www.screenflanders.be/en/financing/other-funds-incentives/tax-shelter), [Mbrella Films](https://mbrellafilms.com/incentives/belgium/)). **[HYPOTHÈSE]** À partir des portefeuilles des fonds (Wallimage, screen.brussels, line-ups VAF/Screen Flanders), j'estime à **60–120 organisations** celles qui embauchent des figurants avec une quelconque régularité : sociétés de production fiction/TV (Versus, Frakas, Scope, Panache, Caviar, De Mensen, Menuet…), diffuseurs (RTBF, VRT, RTL Belgium), maisons de production publicitaire, et une longue traîne de corporate/formats courts. Marché payant adressable aux prix SaaS belges : environ **150–400 K€ de plafond d'ARR domestique** — un solide business de tête de pont, pas la fin de partie (fin de partie = expansion France/NL ou montée dans la chaîne de valeur vers feuilles de service/contrats/paie comme le comparable US [Everyset](https://everyset.com/), qui a levé 9 M$ et sert Netflix/HBO/Amazon — preuve que la catégorie supporte des issues à l'échelle venture sur des marchés plus grands).
+- **Côté talents :** **[HYPOTHÈSE]** sur la base des affirmations des concurrents et des tailles de groupes Facebook, le vivier actif de figurants belges est de **15 000–40 000 personnes**, fortement concentré autour de Bruxelles, Liège (Wallonie = gros hub de tournage Tax Shelter), Gand et Anvers. Ils churnent vite (la figuration est un revenu épisodique/un hobby).
 
-## 2.2 Existing competitors
+## 2.2 Concurrents existants
 
-| Competitor | Model | What they are | What they are not |
+| Concurrent | Modèle | Ce qu'ils sont | Ce qu'ils ne sont pas |
 |---|---|---|---|
-| [becasting.be](https://www.becasting.be/) | Talent-side listing board ("N°1 des castings en Belgique") | Casting ads across figuration/mode/TV, accepts beginners | Not a production workflow tool; no application pipeline management |
-| [figurants.com](https://figurants.com/region/belgique/) | French listing site with a Belgium section | Volume of FR/BE casting ads | French-centric; Belgium is a side region; no BE production tooling |
-| [figuratie.be](https://figuratie.be/) (In The Picture) | Flemish extras database/agency | Registration → email offers matching profile | Agency-mediated, not self-serve for productions; NL-side only |
-| [figuranten-gezocht.be](https://www.figuranten-gezocht.be/) | Flemish listing/email list | Email notifications of opportunities | Same — a mailing list, not a platform |
-| [castprod.com](https://castprod.com/) | Free FR/BE casting board since 2003 | Free listings | Dated UX, no pipeline, no BE focus |
-| Casting agencies ([NK Casting](https://nkcasting.be/), [Smiling Agency](https://smiling.agency/casting-belgique/), and directors listed on [Sortlist](https://www.sortlist.be/fr/s/casting/belgique-be)) | Human-service agencies | Full-service extras casting, per-day fees | Expensive; productions doing self-casting (the WhatsApp/Excel crowd) are exactly ONSET's target |
-| Facebook groups / WhatsApp | Free, incumbent "tool" | Where the market actually lives today | The status quo ONSET's own copy attacks — this is the real competitor |
-| VRT figurantendatabank ([vrt.be](https://www.vrt.be/heb-je-een-vraag/s/article/Ik-wil-graag-figureren-in-een-programma-van-VRT)) | Broadcaster-internal | VRT's own pipeline | Closed; shows the NL side already self-organizes |
+| [becasting.be](https://www.becasting.be/) | Tableau d'annonces côté talents (« N°1 des castings en Belgique ») | Annonces de casting figuration/mode/TV, accepte les débutants | Pas un outil de workflow production ; pas de gestion de pipeline de candidatures |
+| [figurants.com](https://figurants.com/region/belgique/) | Site d'annonces français avec une section Belgique | Volume d'annonces de casting FR/BE | Franco-centré ; la Belgique est une région annexe ; pas d'outillage production BE |
+| [figuratie.be](https://figuratie.be/) (In The Picture) | Base de données/agence de figurants flamande | Inscription → offres par email correspondant au profil | Intermédiée par une agence, pas en self-service pour les productions ; côté NL uniquement |
+| [figuranten-gezocht.be](https://www.figuranten-gezocht.be/) | Annonces/liste email flamande | Notifications email d'opportunités | Idem — une mailing-list, pas une plateforme |
+| [castprod.com](https://castprod.com/) | Tableau de castings FR/BE gratuit depuis 2003 | Annonces gratuites | UX datée, pas de pipeline, pas de focus BE |
+| Agences de casting ([NK Casting](https://nkcasting.be/), [Smiling Agency](https://smiling.agency/casting-belgique/), et les directeurs listés sur [Sortlist](https://www.sortlist.be/fr/s/casting/belgique-be)) | Agences de service humain | Casting de figurants full-service, honoraires à la journée | Cher ; les productions qui s'auto-castent (la foule WhatsApp/Excel) sont exactement la cible d'ONSET |
+| Groupes Facebook / WhatsApp | « Outil » gratuit en place | Là où vit réellement le marché aujourd'hui | Le statu quo que le propre texte d'ONSET attaque — c'est ça le vrai concurrent |
+| Figurantendatabank VRT ([vrt.be](https://www.vrt.be/heb-je-een-vraag/s/article/Ik-wil-graag-figureren-in-een-programma-van-VRT)) | Interne au diffuseur | Le pipeline propre de la VRT | Fermé ; montre que le côté NL s'auto-organise déjà |
 
-**Key insight:** every Belgian competitor monetizes or serves the **talent side** (listings, subscriptions, agency fees). **Nobody sells workflow software to the production side.** ONSET's codebase is 60% production-side workflow. The positioning writes itself: *the tool for the régisseur, with the talent pool included.*
+**Insight clé :** chaque concurrent belge monétise ou sert le **côté talents** (annonces, abonnements, honoraires d'agence). **Personne ne vend du logiciel de workflow au côté production.** Le codebase d'ONSET est à 60 % du workflow côté production. Le positionnement s'écrit tout seul : *l'outil du régisseur, avec le vivier de talents inclus.*
 
-## 2.3 Market gaps & unsolved pain points
+## 2.3 Brèches de marché & douleurs non résolues
 
-1. **Application black hole** — talent applies into a void. ONSET's realtime status + automatic rejection emails structurally fix this (and rejection emails, uniquely, are a *supply-side retention feature*: rejected-but-informed figurants stay).
-2. **Mass logistics** — confirming 60 extras and convoking them with date/time/address is copy-paste hell. Bulk review + group convocation (shipped) is the killer demo.
-3. **Scam/fake casting anxiety** — paid "agencies" prey on aspiring extras (ONSET's own SEO page warns about this). A free, verified platform is a trust wedge.
-4. **No-shows** — unaddressed by anyone; ONSET's carpooling + (future) confirmation loop is a unique story.
-5. **GDPR-clean talent data** — productions passing Excel sheets of phone numbers around violate GDPR daily. "Your extras database, access-controlled and auditable" is a compliance sales angle Belgian broadcasters' legal teams will appreciate (and the RLS work in the codebase backs it up — once the browse-all-profiles policy is hardened).
+1. **Le trou noir des candidatures** — les talents postulent dans le vide. Le statut temps réel d'ONSET + les emails de refus automatiques corrigent cela structurellement (et les emails de refus, de manière unique, sont une *fonctionnalité de rétention côté offre* : les figurants refusés-mais-informés restent).
+2. **La logistique de masse** — confirmer 60 figurants et les convoquer avec date/heure/adresse est un enfer de copier-coller. Revue en masse + convocation groupée (livrées) est la démo qui tue.
+3. **L'anxiété arnaque/faux casting** — des « agences » payantes prédatent les aspirants figurants (la propre page SEO d'ONSET met en garde). Une plateforme gratuite et vérifiée est un levier de confiance.
+4. **Les no-shows** — traités par personne ; le covoiturage d'ONSET + la (future) boucle de confirmation est une histoire unique.
+5. **Des données talents propres au sens RGPD** — les productions qui font circuler des Excel de numéros de téléphone violent le RGPD au quotidien. « Votre base de figurants, à accès contrôlé et auditable » est un angle de vente conformité que les équipes juridiques des diffuseurs belges apprécieront (et le travail RLS du codebase le crédibilise — une fois durcie la policy de parcours de tous les profils).
 
-## 2.4 Belgian-specific constraints & regulations
+## 2.4 Contraintes & réglementations spécifiquement belges
 
-- **GDPR** (photos, ages, phones of individuals — some 16–17, since `profileSchema` allows age ≥16): DPO-lite duties, privacy policy (already a tracked launch blocker in PROGRESS.md), data-minimization pressure on the browse-all-figurants policy. Minors on set also implicate Belgian child-labor permit rules — worth a FAQ, not product scope.
-- **Figurant remuneration** is a gray zone (volunteer defrayment ~€41.48/day cap vs. paid via SBK/payroll agencies like Amplo/Tentoo; **[ASSUMPTION]** exact 2026 ceilings to verify). ONSET wisely stays out of payment flows for now — the SEO page already presents pay as "variable, précisé dans l'annonce." Phase 3 opportunity, not launch scope.
-- **Language law/culture:** Belgium is FR/NL/(DE) with separate media ecosystems, funds (Wallimage/screen.brussels vs VAF), and press. There is no "Belgian market" — there are two. The codebase (FR-only, `locale: fr_BE`, cities cited: Bruxelles/Liège/Namur/Charleroi/Mons/Gand/Anvers) has already implicitly chosen the francophone side first. Make it explicit strategy.
-- **eIDAS** for Phase 2 contracts — DocuSeal already scoped in CLAUDE.md; a genuine EU-compliance differentiator vs US tools.
+- **RGPD** (photos, âges, téléphones d'individus — certains de 16–17 ans, puisque `profileSchema` autorise l'âge ≥16) : obligations façon DPO-light, politique de confidentialité (déjà un bloqueur de lancement tracké dans PROGRESS.md), pression de minimisation des données sur la policy de parcours de tous les figurants. Les mineurs sur un plateau impliquent aussi les règles belges d'autorisation de travail des enfants — mérite une FAQ, pas un périmètre produit.
+- **La rémunération des figurants** est une zone grise (défraiement volontaire plafonné ~41,48 €/jour vs. paiement via SBK/agences de paie type Amplo/Tentoo ; **[HYPOTHÈSE]** plafonds 2026 exacts à vérifier). ONSET reste sagement hors des flux de paiement pour l'instant — la page SEO présente déjà la rémunération comme « variable, précisée dans l'annonce ». Opportunité de Phase 3, pas de périmètre de lancement.
+- **Loi/culture linguistique :** la Belgique est FR/NL/(DE) avec des écosystèmes médias, des fonds (Wallimage/screen.brussels vs VAF) et une presse séparés. Il n'y a pas de « marché belge » — il y en a deux. Le codebase (FR uniquement, `locale: fr_BE`, villes citées : Bruxelles/Liège/Namur/Charleroi/Mons/Gand/Anvers) a déjà implicitement choisi le côté francophone d'abord. Il faut en faire une stratégie explicite.
+- **eIDAS** pour les contrats de Phase 2 — DocuSeal déjà cadré dans CLAUDE.md ; un vrai différenciateur de conformité UE face aux outils US.
 
-## 2.5 Why Belgium is a good (enough) first market
+## 2.5 Pourquoi la Belgique est un (assez) bon premier marché
 
-**For:** dense, small, reachable production community (everyone knows everyone — 10 good customers = market-wide reputation); Tax Shelter keeps volume high and international shoots coming in needing local extras fast; incumbent "competition" is Facebook; founder proximity **[ASSUMPTION: founder is Belgium-based, given fr_BE locale, Belgian cities in copy, and .be market focus]**.
-**Against:** small revenue ceiling; two-language complexity; conservative buyers.
-**Verdict:** Belgium is the right *beachhead*, wrong *end state*. Win francophone Belgium in 12 months, then choose: NL-Belgium (adjacent, needs i18n) or Northern France (same language, 10× market, Lille/Pas-de-Calais shooting corridor and Wallonia co-productions already overlap).
-
----
-
-# Phase 3 — Ideal Customer Profiles
-
-## ICP-1 (PRIMARY): The régisseur / production manager at a Belgian fiction producer
-
-- **Industry:** Film & TV production (fiction features, series, Tax Shelter co-productions)
-- **Company size:** 5–50 permanent staff, project crews of 30–150
-- **Decision maker:** Directeur de production / régisseur général (user = buyer in small structures; at larger ones the line producer signs off)
-- **Budget:** Per-production budgets where extras coordination is a line item; €100–300/month is invisible inside a €2M+ production. **[ASSUMPTION]**
-- **Pain:** 50–200 extras per shoot, sourced via Facebook posts + email + Excel; convocations by copy-paste WhatsApp; no-shows force over-booking by 20%; GDPR-dubious spreadsheets circulating
-- **Existing alternatives:** Facebook groups (free, chaotic), casting agencies (€300–600/day human service — **[ASSUMPTION]**), interns
-- **Buying motivation:** hours saved per shoot day, fewer no-shows, defensible data handling
-- **Objections:** "Are the figurants I need actually on there?" (cold-start), "Another tool for a 6-week shoot?", "Free Facebook works"
-- **Channels:** direct founder outreach (the community is ~200 people), Wallimage/screen.brussels/Cluster TWIST networks, film-office referrals, on-set word of mouth
-- **Why #1:** matches the exact shipped feature set (projects→castings→bulk review→convocation); one fiction shoot brings 50–200 figurants onto the platform *for you* — each customer is also an acquisition channel for the supply side.
-
-## ICP-2: Broadcasters & high-volume episodic producers (RTBF, RTL Belgium, studio-based daily/weekly formats)
-
-- **Company size:** 100+; **Decision maker:** casting/audience coordinator + procurement (longer cycle, needs security/GDPR documentation — which the RLS/verify-rls work supports)
-- **Budget:** real software budgets; €500+/month plausible for enterprise features (SSO, audit, export)
-- **Pain:** *recurring* extras needs (audiences, silhouettes) — the retention dream customer
-- **Objections:** procurement, works councils, "we have an internal list" (see VRT's own databank)
-- **Channels:** warm intros via ICP-1 productions that shoot for them; industry events
-- **Why #2 not #1:** sales cycle 6–12 months; enterprise gaps (SSO, exports, admin console) not built yet. Start conversations early, close later.
-
-## ICP-3: Ad/corporate production houses & film-school productions (supply-side seeding)
-
-- **Company size:** 2–15; **Decision maker:** producer/director (same person)
-- **Budget:** near zero — these stay on the free tier
-- **Pain:** need 5–30 extras fast, no casting budget at all
-- **Motivation:** free + instant; **Objections:** none that matter
-- **Channels:** IAD/INSAS/HELB film schools, Kunstenpunt/mediarte job boards, Google (the SEO pages)
-- **Role in strategy:** not revenue — **casting-volume flywheel**. They keep the public catalog full so figurants keep coming back. The current 0€ launch plan (already live on the pricing page) is perfectly designed for them; later they stay free-tier with usage caps.
-
-**Figurants are not an ICP** — they are the supply side, acquired via SEO (already built), each production's own casting calls, and carpool/status-tracking word of mouth. They must never pay (this is also the anti-scam positioning).
-
-**Priority: ICP-1 → ICP-3 (in parallel, zero-cost) → ICP-2 (slow-burn).**
+**Pour :** communauté de production dense, petite et atteignable (tout le monde se connaît — 10 bons clients = une réputation à l'échelle du marché) ; le Tax Shelter maintient le volume élevé et fait venir des tournages internationaux ayant besoin de figurants locaux rapidement ; la « concurrence » en place, c'est Facebook ; proximité du fondateur **[HYPOTHÈSE : fondateur basé en Belgique, vu la locale fr_BE, les villes belges dans les textes et le focus marché .be]**.
+**Contre :** petit plafond de revenus ; complexité bilingue ; acheteurs conservateurs.
+**Verdict :** la Belgique est la bonne *tête de pont*, le mauvais *état final*. Gagner la Belgique francophone en 12 mois, puis choisir : la Belgique néerlandophone (adjacente, exige l'i18n) ou le nord de la France (même langue, marché ×10, corridor de tournage Lille/Pas-de-Calais et coproductions wallonnes qui se recoupent déjà).
 
 ---
 
-# Phase 4 — Positioning (francophone Belgium)
+# Phase 3 — Profils de clients idéaux (ICP)
 
-**Unique Value Proposition:**
-*« Vos figurants confirmés en quelques heures, pas en quelques semaines. »* — the hero line already shipped on `/pour-les-productions` is genuinely good; keep it as the B2B UVP. Figurant-side UVP: *« Postulez en un clic, sachez toujours où en est votre candidature. »* (the realtime status is the provable claim competitors can't make).
+## ICP-1 (PRIMAIRE) : le régisseur / directeur de production d'un producteur de fiction belge
 
-**Positioning statement:**
-For Belgian production teams that cast their own extras, ONSET is the casting platform that replaces Facebook groups, mailboxes and Excel with one pipeline — publish, sort, confirm and convoke in clicks — unlike listing boards (becasting, figurants.com) that just repost ads, and unlike agencies that charge per day for what your régisseur can now do in an afternoon.
+- **Industrie :** production cinéma & TV (longs métrages de fiction, séries, coproductions Tax Shelter)
+- **Taille d'entreprise :** 5–50 permanents, équipes de tournage de 30–150
+- **Décideur :** directeur de production / régisseur général (utilisateur = acheteur dans les petites structures ; dans les plus grandes, le producteur exécutif valide)
+- **Budget :** budgets par production où la coordination des figurants est une ligne ; 100–300 €/mois est invisible dans une production à 2 M€+. **[HYPOTHÈSE]**
+- **Douleur :** 50–200 figurants par tournage, sourcés via posts Facebook + email + Excel ; convocations par copier-coller WhatsApp ; les no-shows forcent un sur-booking de 20 % ; des tableurs douteux au sens RGPD qui circulent
+- **Alternatives existantes :** groupes Facebook (gratuit, chaotique), agences de casting (300–600 €/jour de service humain — **[HYPOTHÈSE]**), stagiaires
+- **Motivation d'achat :** heures gagnées par jour de tournage, moins de no-shows, gestion des données défendable
+- **Objections :** « Les figurants dont j'ai besoin y sont-ils vraiment ? » (cold-start), « Encore un outil pour un tournage de 6 semaines ? », « Facebook gratuit fonctionne »
+- **Canaux :** démarchage direct du fondateur (la communauté fait ~200 personnes), réseaux Wallimage/screen.brussels/Cluster TWIST, recommandations des film offices, bouche-à-oreille sur les plateaux
+- **Pourquoi n°1 :** correspond exactement au périmètre livré (projets→castings→revue en masse→convocation) ; un tournage de fiction amène 50–200 figurants sur la plateforme *à votre place* — chaque client est aussi un canal d'acquisition pour le côté offre.
 
-**Elevator pitch (20s):**
-"Extras casting in Belgium still runs on WhatsApp and Excel. ONSET gives productions one place to publish castings, receive complete profiles with photos, confirm or reject in bulk — emails go out automatically — and convoke everyone in one action. Figurants finally see their application status in real time instead of silence. Free for figurants, free for productions during launch."
+## ICP-2 : Diffuseurs & producteurs épisodiques à haut volume (RTBF, RTL Belgium, formats quotidiens/hebdomadaires en studio)
 
-**Key differentiators (each maps to shipped code):** 1) full pipeline, not a listing board (bulk review + auto emails); 2) realtime status for talent (Supabase Realtime); 3) group convocations; 4) built-in carpooling = fewer no-shows; 5) GDPR-first architecture (RLS, EU stack, no data resale); 6) 100% free for figurants (anti-scam stance).
+- **Taille d'entreprise :** 100+ ; **Décideur :** coordinateur casting/publics + achats (cycle plus long, exige documentation sécurité/RGPD — que le travail RLS/verify-rls soutient)
+- **Budget :** vrais budgets logiciels ; 500 €+/mois plausible pour des fonctionnalités enterprise (SSO, audit, export)
+- **Douleur :** besoins *récurrents* de figurants (publics, silhouettes) — le client de rêve pour la rétention
+- **Objections :** achats, organes de concertation, « on a une liste interne » (voir la databank propre de la VRT)
+- **Canaux :** intros chaleureuses via les productions ICP-1 qui tournent pour eux ; événements sectoriels
+- **Pourquoi n°2 et pas n°1 :** cycle de vente de 6–12 mois ; les manques enterprise (SSO, exports, console admin) ne sont pas encore construits. Démarrer les conversations tôt, conclure plus tard.
 
-**Messaging pillars:** *Gagnez vos journées* (time saved, production-facing) · *Zéro candidature fantôme* (status transparency, talent-facing) · *Vos données restent en règle* (GDPR, enterprise-facing) · *Tout le monde arrive sur le plateau* (no-shows/carpooling, both-facing).
+## ICP-3 : Maisons de production pub/corporate & productions d'écoles de cinéma (amorçage côté offre)
 
-**Trust signals:** real, consented testimonials (fake ones were correctly stripped in Sprint 6 — get 3 real quotes from beta productions before public launch); logos of first productions; "conforme RGPD — données hébergées dans l'UE"; complete legal notice (currently a launch blocker); later: a public security page describing the RLS model (the verify-rls suite makes this credible).
+- **Taille d'entreprise :** 2–15 ; **Décideur :** producteur/réalisateur (même personne)
+- **Budget :** quasi nul — ils restent sur le palier gratuit
+- **Douleur :** besoin de 5–30 figurants vite, sans aucun budget casting
+- **Motivation :** gratuit + instantané ; **Objections :** aucune qui compte
+- **Canaux :** écoles de cinéma IAD/INSAS/HELB, job boards Kunstenpunt/mediarte, Google (les pages SEO)
+- **Rôle dans la stratégie :** pas du revenu — **la roue d'inertie du volume de castings**. Ils gardent le catalogue public rempli pour que les figurants continuent de revenir. Le plan de lancement 0€ actuel (déjà en ligne sur la page tarifs) est parfaitement conçu pour eux ; plus tard, ils restent en palier gratuit avec plafonds d'usage.
 
-**Brand personality & tone:** the shipped copy already has it right — *terrain, concret, sans jargon* ("Le casting sauvage vous coûte des journées de production"). Voice of a régisseur who's lived the chaos, not a tech vendor. FR: professional "vous," short sentences, film-set vocabulary (plateau, convocation, feuille de service). Never promise features that aren't live (the codebase's own "Bientôt" section discipline — keep it).
+**Les figurants ne sont pas un ICP** — ils sont le côté offre, acquis via le SEO (déjà construit), les appels à casting de chaque production, et le bouche-à-oreille covoiturage/suivi de statut. Ils ne doivent jamais payer (c'est aussi le positionnement anti-arnaque).
+
+**Priorité : ICP-1 → ICP-3 (en parallèle, coût nul) → ICP-2 (feu doux).**
 
 ---
 
-# Phase 5 — Pricing Strategy
+# Phase 4 — Positionnement (Belgique francophone)
 
-**Context from code:** pricing page promises free launch + "tarifs annoncés avant toute facturation"; Stripe is Phase 2; Pro-tier gates already publicly listed (call-sheets PDF, e-signature, advanced search). Honor all of it.
+**Proposition de valeur unique :**
+*« Vos figurants confirmés en quelques heures, pas en quelques semaines. »* — la accroche hero déjà en ligne sur `/pour-les-productions` est réellement bonne ; la garder comme UVP B2B. UVP côté figurant : *« Postulez en un clic, sachez toujours où en est votre candidature. »* (le statut temps réel est la promesse prouvable que les concurrents ne peuvent pas faire).
 
-**Model: freemium on the production side, per-organization (not per-seat — production teams share logins in practice), monthly with shoot-season flexibility. Figurants: free forever, contractually and loudly.**
+**Énoncé de positionnement :**
+Pour les équipes de production belges qui castent elles-mêmes leurs figurants, ONSET est la plateforme de casting qui remplace les groupes Facebook, les boîtes mail et Excel par un seul pipeline — publier, trier, confirmer et convoquer en quelques clics — contrairement aux tableaux d'annonces (becasting, figurants.com) qui ne font que republier des annonces, et contrairement aux agences qui facturent à la journée ce que votre régisseur peut désormais faire en un après-midi.
 
-| Tier | Price (excl. VAT) | Who | Gates | Rationale |
+**Pitch d'ascenseur (20 s) :**
+« Le casting de figurants en Belgique tourne encore sur WhatsApp et Excel. ONSET donne aux productions un seul endroit pour publier leurs castings, recevoir des profils complets avec photos, confirmer ou refuser en masse — les emails partent automatiquement — et convoquer tout le monde en une seule action. Les figurants voient enfin le statut de leur candidature en temps réel au lieu du silence. Gratuit pour les figurants, gratuit pour les productions pendant le lancement. »
+
+**Différenciateurs clés (chacun mappé sur du code livré) :** 1) un pipeline complet, pas un tableau d'annonces (revue en masse + emails auto) ; 2) statut temps réel pour les talents (Supabase Realtime) ; 3) convocations groupées ; 4) covoiturage intégré = moins de no-shows ; 5) architecture RGPD-first (RLS, stack UE, pas de revente de données) ; 6) 100 % gratuit pour les figurants (posture anti-arnaque).
+
+**Piliers de message :** *Gagnez vos journées* (temps gagné, face production) · *Zéro candidature fantôme* (transparence des statuts, face talents) · *Vos données restent en règle* (RGPD, face enterprise) · *Tout le monde arrive sur le plateau* (no-shows/covoiturage, faces des deux côtés).
+
+**Signaux de confiance :** de vrais témoignages consentis (les faux ont été correctement retirés au Sprint 6 — obtenir 3 vraies citations des productions beta avant le lancement public) ; logos des premières productions ; « conforme RGPD — données hébergées dans l'UE » ; mentions légales complètes (actuellement un bloqueur de lancement) ; plus tard : une page sécurité publique décrivant le modèle RLS (la suite verify-rls la rend crédible).
+
+**Personnalité de marque & ton :** le texte déjà en ligne a le bon registre — *terrain, concret, sans jargon* (« Le casting sauvage vous coûte des journées de production »). La voix d'un régisseur qui a vécu le chaos, pas d'un vendeur de tech. FR : « vous » professionnel, phrases courtes, vocabulaire de plateau (plateau, convocation, feuille de service). Ne jamais promettre des fonctionnalités qui ne sont pas en ligne (la discipline de la section « Bientôt » du codebase — la conserver).
+
+---
+
+# Phase 5 — Stratégie de prix
+
+**Contexte issu du code :** la page tarifs promet un lancement gratuit + « tarifs annoncés avant toute facturation » ; Stripe est en Phase 2 ; les barrières du palier Pro sont déjà listées publiquement (feuilles de service PDF, signature électronique, recherche avancée). Honorer tout cela.
+
+**Modèle : freemium côté production, par organisation (pas par siège — les équipes de production partagent leurs logins en pratique), mensuel avec flexibilité selon la saison de tournage. Figurants : gratuit pour toujours, contractuellement et haut et fort.**
+
+| Palier | Prix (HTVA) | Qui | Barrières | Justification |
 |---|---|---|---|---|
-| **Figurant** | €0 forever | Talent | Everything talent-side | Supply side must be free (anti-scam trust; competitors charging talent is the wedge) |
-| **Découverte** (free) | €0 | ICP-3, trials | 1 active project, 2 open castings, 30 confirmed candidates/month, no data export | Keeps the catalog full (flywheel); caps map to real objects in the schema (`projects.status='open'`, castings count — trivially enforceable) |
-| **Studio** | €79/month or €790/yr | ICP-1 solo producers, small shoots | Unlimited projects/castings, convocations, CSV export, priority support | Under the "no approval needed" line for a production manager **[ASSUMPTION: Belgian SMB SaaS tolerance €50–150]**; anchored ~25% of one agency casting-day |
-| **Production** | €199/month | ICP-1 core, active fiction producers | + call-sheets PDF, e-signature (DocuSeal), advanced figurant search, convocation history, multi-user | Gates = exactly the Phase-2 backlog already promised as "Pro" on the live pricing page; €199 ≈ 1–2 hours of production-manager cost |
-| **Broadcast** (enterprise) | from €500/month, annual | ICP-2 | + SSO, audit exports, DPA/GDPR pack, SLA, onboarding | Priced on procurement expectations, not cost; don't build until an RTBF-tier buyer is at the table |
+| **Figurant** | 0 € pour toujours | Talents | Tout le côté talents | Le côté offre doit être gratuit (confiance anti-arnaque ; les concurrents qui font payer les talents sont le levier) |
+| **Découverte** (gratuit) | 0 € | ICP-3, essais | 1 projet actif, 2 castings ouverts, 30 candidats confirmés/mois, pas d'export de données | Garde le catalogue rempli (roue d'inertie) ; les plafonds correspondent à de vrais objets du schéma (`projects.status='open'`, compte de castings — trivialement applicables) |
+| **Studio** | 79 €/mois ou 790 €/an | Producteurs solo ICP-1, petits tournages | Projets/castings illimités, convocations, export CSV, support prioritaire | Sous la ligne « pas besoin d'approbation » pour un directeur de production **[HYPOTHÈSE : tolérance SaaS PME belge 50–150 €]** ; ancré à ~25 % d'une journée d'agence de casting |
+| **Production** | 199 €/mois | Cœur ICP-1, producteurs de fiction actifs | + feuilles de service PDF, signature électronique (DocuSeal), recherche avancée de figurants, historique des convocations, multi-utilisateur | Barrières = exactement le backlog Phase 2 déjà promis comme « Pro » sur la page tarifs en ligne ; 199 € ≈ 1–2 heures de coût d'un directeur de production |
+| **Broadcast** (enterprise) | à partir de 500 €/mois, annuel | ICP-2 | + SSO, exports d'audit, pack DPA/RGPD, SLA, onboarding | Prix basé sur les attentes des achats, pas sur le coût ; ne pas construire avant qu'un acheteur niveau RTBF soit à la table |
 
-**Sequencing:** stay 100% free until **the catalog has ~10 castings/month live and 3+ productions have completed a full shoot cycle** on the platform (metric-triggered, not date-triggered). Then grandfather beta productions 12 months free on Studio (they're your testimonials) and turn on Stripe for new signups. During free phase, show the future prices on the pricing page ("0€ pendant le lancement, ensuite 79€") — anchors value and pre-qualifies.
+**Séquencement :** rester 100 % gratuit jusqu'à ce que **le catalogue ait ~10 castings/mois actifs et que 3+ productions aient bouclé un cycle de tournage complet** sur la plateforme (déclenché par des métriques, pas par une date). Alors, offrir aux productions beta 12 mois gratuits sur Studio en droits acquis (ce sont vos témoignages) et activer Stripe pour les nouvelles inscriptions. Pendant la phase gratuite, afficher les futurs prix sur la page tarifs (« 0€ pendant le lancement, ensuite 79€ ») — ancre la valeur et pré-qualifie.
 
-**Why not commission-per-booking?** No payment rails exist in the product, figurant pay is a legal gray zone (§2.4), and commission models require payments infrastructure (the Everyset path) — a Series-A move, not a launch move.
+**Pourquoi pas de commission par réservation ?** Aucun rail de paiement n'existe dans le produit, la paie des figurants est une zone grise légale (§2.4), et les modèles à commission exigent une infrastructure de paiements (la voie Everyset) — un mouvement de Series A, pas de lancement.
 
 ---
 
-# Phase 6 — Customer Acquisition Strategy
+# Phase 6 — Stratégie d'acquisition client
 
-## Production side (ICP-1/2/3) — founder-led, near-zero budget
+## Côté production (ICP-1/2/3) — mené par le fondateur, budget quasi nul
 
-| Channel | Play | Est. cost | Expected conversion | Difficulty | Time to results |
+| Canal | Tactique | Coût est. | Conversion attendue | Difficulté | Délai de résultats |
 |---|---|---|---|---|---|
-| **Direct founder outreach** | Build the list of ~150 FR-BE production companies (Wallimage/screen.brussels/CFWB fund slates are public); personal email/LinkedIn to régisseurs: "15-min demo, your next shoot free" | Time only | 30–40% reply, 10–15% → active pilot (small community, relevant pitch) **[ASSUMPTION]** | Medium | 2–6 weeks |
-| **Shoot-cycle piggyback** | Every pilot production's casting call is published on ONSET's public pages → offer to co-write the Facebook post pointing at the ONSET casting URL | €0 | Each shoot = 50–300 figurant signups **[ASSUMPTION based on typical extras-call volumes]** | Low | Immediate per shoot |
-| **Ecosystem partnerships** | screen.brussels / Wallimage / Cluster TWIST / mediarte / film offices (Brussels, Liège, Wallonie): get listed as a local-resource; offer their portfolio companies extended free tier | €0 | Indirect — credibility + deal flow | Medium | 1–3 months |
-| **Film schools (IAD, INSAS, HELB)** | Free forever for student productions; they seed castings + become tomorrow's régisseurs | €0 | High signup, zero revenue (by design) | Low | 1 month |
-| **LinkedIn organic** | Founder posts in FR: shoot-logistics war stories, "how we cast 120 extras in 48h" case studies | €0 | Slow compounding; BE film community is present but small | Low | 3–6 months |
-| **Local events** | FIFF Namur, BRIFF, Millenium, Mons; mediarte workshops — demo at side events, not booths | €0–500/event | 2–5 qualified conversations/event | Low | Per event |
-| **Cold outreach at incoming foreign shoots** | Tax Shelter brings FR/US/NL productions needing local extras fast; film offices know the slate — be the "local extras solution" they recommend | Time | Low volume, high value | High | 3–6 months |
+| **Démarchage direct du fondateur** | Construire la liste des ~150 sociétés de production FR-BE (les line-ups de fonds Wallimage/screen.brussels/FWB sont publics) ; email/LinkedIn personnel aux régisseurs : « démo de 15 min, votre prochain tournage gratuit » | Temps uniquement | 30–40 % de réponses, 10–15 % → pilote actif (petite communauté, pitch pertinent) **[HYPOTHÈSE]** | Moyenne | 2–6 semaines |
+| **Rebond sur les cycles de tournage** | Chaque appel à casting d'une production pilote est publié sur les pages publiques d'ONSET → proposer de co-rédiger le post Facebook pointant vers l'URL de casting ONSET | 0 € | Chaque tournage = 50–300 inscriptions figurants **[HYPOTHÈSE basée sur les volumes typiques d'appels à figurants]** | Faible | Immédiat par tournage |
+| **Partenariats d'écosystème** | screen.brussels / Wallimage / Cluster TWIST / mediarte / film offices (Bruxelles, Liège, Wallonie) : se faire lister comme ressource locale ; offrir aux sociétés de leur portefeuille un palier gratuit étendu | 0 € | Indirect — crédibilité + deal flow | Moyenne | 1–3 mois |
+| **Écoles de cinéma (IAD, INSAS, HELB)** | Gratuit pour toujours pour les productions étudiantes ; elles amorcent les castings + deviennent les régisseurs de demain | 0 € | Fort taux d'inscription, zéro revenu (à dessein) | Faible | 1 mois |
+| **LinkedIn organique** | Posts du fondateur en FR : histoires de guerre de logistique de tournage, études de cas « comment nous avons casté 120 figurants en 48 h » | 0 € | Composition lente ; la communauté ciné BE y est présente mais petite | Faible | 3–6 mois |
+| **Événements locaux** | FIFF Namur, BRIFF, Millenium, Mons ; ateliers mediarte — démos en marge des événements, pas de stand | 0–500 €/événement | 2–5 conversations qualifiées/événement | Faible | Par événement |
+| **Démarchage à froid des tournages étrangers entrants** | Le Tax Shelter amène des productions FR/US/NL ayant besoin de figurants locaux vite ; les film offices connaissent le line-up — être la « solution figurants locale » qu'ils recommandent | Temps | Faible volume, forte valeur | Élevée | 3–6 mois |
 
-**Paid channels for the production side: don't.** The reachable universe is ~150 companies; LinkedIn Ads/Google Ads CAC would be absurd vs. founder emails. Estimated blended **CAC for a paying production: €200–600 in founder time-equivalent** — against €950–2,400 first-year ACV (Studio/Production tiers), that's a healthy 3–5× ratio.
+**Canaux payants côté production : non.** L'univers atteignable est de ~150 sociétés ; un CAC LinkedIn Ads/Google Ads serait absurde face aux emails du fondateur. **CAC blended estimé pour une production payante : 200–600 € en équivalent-temps fondateur** — contre 950–2 400 € d'ACV en première année (paliers Studio/Production), soit un ratio sain de 3–5×.
 
-## Figurant side (supply) — SEO + piggyback, small paid boosts
+## Côté figurants (offre) — SEO + rebond, petits coups payants
 
-| Channel | Play | Est. cost | Notes |
+| Canal | Tactique | Coût est. | Notes |
 |---|---|---|---|
-| **SEO (already built)** | The per-casting public pages + sitemap + JSON-LD are live; add 6–10 more FR guides ("casting figurant Bruxelles", "combien gagne un figurant en Belgique", "casting série RTBF", per-city pages). The competitor set is technically weak — top-3 rankings on head terms within 6–9 months is realistic | €0 (writing time) | The compounding channel; every casting page is fresh indexable content |
-| **Facebook/Instagram groups** | Don't fight the groups — *use* them: each real casting gets posted (by the production or ONSET) with the ONSET link as the only way to apply | €0 | The application funnel converts group members into accounts |
-| **Meta Ads (surgical)** | Only when a big shoot needs fast fill: geo-targeted (city ±30km) "Figurants recherchés pour [production]" → casting page | €100–300/casting; CPL €0.5–2 **[ASSUMPTION]** | Sell this later as a paid "boost" feature to productions |
-| **Word of mouth / carpool** | Carpooling is inherently social; status emails carry the brand to every applicant | €0 | Rejection emails with "voir d'autres castings" CTA = retention loop |
+| **SEO (déjà construit)** | Les pages publiques par casting + sitemap + JSON-LD sont en ligne ; ajouter 6–10 guides FR de plus (« casting figurant Bruxelles », « combien gagne un figurant en Belgique », « casting série RTBF », pages par ville). L'ensemble concurrentiel est techniquement faible — un top-3 sur les termes de tête sous 6–9 mois est réaliste | 0 € (temps de rédaction) | Le canal qui se compose ; chaque page de casting est du contenu frais indexable |
+| **Groupes Facebook/Instagram** | Ne pas combattre les groupes — *s'en servir* : chaque vrai casting y est posté (par la production ou ONSET) avec le lien ONSET comme seul moyen de postuler | 0 € | Le funnel de candidature convertit les membres des groupes en comptes |
+| **Meta Ads (chirurgical)** | Uniquement quand un gros tournage doit se remplir vite : géociblé (ville ±30 km) « Figurants recherchés pour [production] » → page de casting | 100–300 €/casting ; CPL 0,5–2 € **[HYPOTHÈSE]** | À revendre plus tard aux productions comme fonctionnalité « boost » payante |
+| **Bouche-à-oreille / covoiturage** | Le covoiturage est intrinsèquement social ; les emails de statut portent la marque auprès de chaque candidat | 0 € | Emails de refus avec CTA « voir d'autres castings » = boucle de rétention |
 
-**Reddit:** negligible for BE figurants (community lives on Facebook); skip. **Google Ads:** hold until SEO plateau; search volumes on "casting figurant belgique" are low hundreds/month **[ASSUMPTION]** — SEO can own them for free.
-
----
-
-# Phase 7 — Marketing Roadmap
-
-## Month 1 — Get legally and technically launchable
-- **Objectives:** clear the pre-launch checklist (it's already written in PROGRESS.md); recruit 3 design-partner productions.
-- **Actions:** legal notice + privacy policy (engage a lawyer or use CFWB/hub.brussels SME legal resources); Vercel env vars + Resend domain verification (without it, **no user receives any email** — hard blocker); Supabase redirect allowlist; Lighthouse + real-device PWA pass; ship Sprint 7 e2e tests; harden the browse-all-figurants RLS policy or add production-account verification (pre-GDPR-complaint, cheap now); founder outreach wave #1 (30 companies).
-- **KPIs:** checklist 100%; 3 signed pilot productions; 0 → 1 real casting live.
-- **Expected outcome:** private beta running with real shoots.
-
-## Months 2–3 — Private beta, prove the loop
-- **Objectives:** 3–5 complete shoot cycles (publish → apply → confirm → convoke → shoot day) on the platform.
-- **Actions:** white-glove each pilot (founder does data entry if needed); piggyback each casting into Facebook groups; collect 3 consented testimonials + 1 written case study with numbers ("X hours saved, Y% no-show"); publish 4 SEO guides; start founder LinkedIn cadence (1/week); fix the top-3 friction points pilots hit (expect: CSV export, notification of new castings, convocation confirmation).
-- **KPIs:** 5 productions active; 500–1,500 figurants; ≥60% of applications reviewed within 72h (the transparency promise, measurable in `reviewed_at`); testimonial count 3.
-- **Expected outcome:** provable case study; testimonials replace the "Pensé pour le terrain" placeholder section (tracked in the checklist).
-
-## Months 4–6 — Public launch (francophone)
-- **Objectives:** category visibility in FR-Belgium; 15 active productions; 3,000 figurants.
-- **Actions:** public launch (see Phase 8); press push (Cineuropa, Le Soir/L'Echo tech-culture, RTBF Vivacité regional, mediarte newsletter); event presence (BRIFF/FIFF timing); 6 more SEO pages incl. per-city; partnerships formalized (screen.brussels resource listing); begin ICP-2 conversations (RTBF coordinators); ship the retention keystone: **new-casting email alerts for figurants** (the codebase has the email infra; this is the highest-leverage missing feature).
-- **KPIs:** 15 productions with ≥1 published casting; 3,000 figurants; 20+ castings/month; organic top-10 for "casting figurant belgique"; email alert open rate >35%.
-- **Expected outcome:** the FR-BE default for self-serve extras casting.
-
-## Months 6–12 — Monetize + decide expansion
-- **Objectives:** turn on billing; €2–5K MRR; expansion decision (NL-Belgium vs Nord-France).
-- **Actions:** Stripe integration + tier gates (Phase 2 ticket exists in CLAUDE.md); build the two paid-gate features with highest willingness-to-pay from beta feedback (bet: call-sheets PDF + advanced search — both already promised on the live pricing page); grandfather betas; ICP-2 pilot with one broadcaster entity; if NL chosen: next-intl retrofit (budget 3–4 weeks — every UI string is hardcoded, Sprint 2 deferral) + NL SEO cluster + VAF/mediarte NL outreach; if France: Lille/Hauts-de-France film commission + the Wallonia co-production corridor.
-- **KPIs:** 8–15 paying; MRR €2–5K; free→paid ≥25% of active productions **[ASSUMPTION: high because free-tier caps bite exactly at real-shoot scale]**; logo churn <10%/quarter; 6,000 figurants.
+**Reddit :** négligeable pour les figurants BE (la communauté vit sur Facebook) ; à ignorer. **Google Ads :** à retenir jusqu'au plateau SEO ; les volumes de recherche sur « casting figurant belgique » sont de quelques centaines/mois **[HYPOTHÈSE]** — le SEO peut se les approprier gratuitement.
 
 ---
 
-# Phase 8 — Launch Strategy
+# Phase 7 — Feuille de route marketing
 
-- **Pre-launch (now):** checklist completion; waitlist capture on the pricing page's existing "Être prévenu du lancement" mailto → replace with a proper form (mailto leaks conversions — see Phase 9); seed 10 castings via pilots so launch-day visitors never see an empty catalog (the seed-data-masks-emptiness lesson from the sprint reviews, applied to marketing).
-- **Beta (M2–3):** 3–5 productions, white-glove, private. Exit criteria = the Phase 7 M2–3 KPIs, not a date.
-- **Early adopters:** "Membre fondateur" deal — 12 months free Studio + logo on the site + roadmap input. Scarce (10 slots), explicit, in writing.
-- **Public launch (M4–6):** anchor it to a **flagship shoot story** ("Production X cast 150 figurants for [series] on ONSET in 72h") — not to the product. Press kit in FR with the case-study numbers.
-- **Press:** Belgian angle = local-tech-fixes-local-industry + Tax Shelter hook. Targets: Cineuropa (already covers BE production), L'Echo/De Tijd startup pages, Le Soir culture-tech, RTBF/BX1 regional, mediarte + Wallimage newsletters, Cinevox. One exclusive first (L'Echo), then broad.
-- **Belgian startup ecosystem:** hub.brussels, Startups.be/Scale-ups.eu events, BeTech community, Digital Wallonia — useful for credibility and hires, **not** for customers (régisseurs don't attend startup events). Prioritize *film* ecosystem over *tech* ecosystem 4:1.
-- **Product Hunt:** skip at launch — the buyer isn't there and a FR-language BE-local B2B tool will flop by design; reconsider only if/when the product goes multi-country in EN.
-- **Referral program:** production→production referral = 2 months free on both sides (the community is tight; formalize what will happen anyway). Figurant-side referral is unnecessary — the casting calls themselves are the referral engine — and paying for supply-side referrals attracts fake profiles.
-- **Influencers:** micro, not macro — 3–5 BE "vie de figurant" TikTok/Instagram creators **[ASSUMPTION: they exist at 5–50K followers; verify]** doing "how I find castings" content, paid in early access + small fees; plus one respected régisseur as public design partner (their endorsement moves the B2B market more than any ad).
-- **Partnerships (launch-phase):** film offices (Brussels, Liège, Wallonie clusters) for the incoming-shoots referral; mediarte for training-content co-marketing; SBK/payroll agencies (Amplo) later — they touch every legally-paid figurant and could become a distribution *and* Phase-3 product partner.
+## Mois 1 — Devenir légalement et techniquement lançable
+- **Objectifs :** apurer la checklist pré-lancement (elle est déjà écrite dans PROGRESS.md) ; recruter 3 productions design partners.
+- **Actions :** mentions légales + politique de confidentialité (engager un avocat ou utiliser les ressources juridiques PME de la FWB/hub.brussels) ; env vars Vercel + vérification du domaine Resend (sans elle, **aucun utilisateur ne reçoit aucun email** — bloqueur dur) ; allowlist des redirects Supabase ; passe Lighthouse + test PWA sur appareil réel ; livrer les tests e2e du Sprint 7 ; durcir la policy RLS de parcours de tous les figurants ou ajouter la vérification des comptes production (avant toute plainte RGPD, bon marché maintenant) ; vague de démarchage n°1 du fondateur (30 sociétés).
+- **KPI :** checklist à 100 % ; 3 productions pilotes signées ; 0 → 1 vrai casting en ligne.
+- **Résultat attendu :** beta privée qui tourne avec de vrais tournages.
 
----
+## Mois 2–3 — Beta privée, prouver la boucle
+- **Objectifs :** 3–5 cycles de tournage complets (publier → postuler → confirmer → convoquer → jour de tournage) sur la plateforme.
+- **Actions :** accompagnement en gants blancs de chaque pilote (le fondateur fait la saisie si nécessaire) ; rebond de chaque casting dans les groupes Facebook ; collecter 3 témoignages consentis + 1 étude de cas écrite avec des chiffres (« X heures gagnées, Y % de no-show ») ; publier 4 guides SEO ; démarrer la cadence LinkedIn du fondateur (1/semaine) ; corriger le top 3 des frictions rencontrées par les pilotes (attendu : export CSV, notification des nouveaux castings, confirmation de convocation).
+- **KPI :** 5 productions actives ; 500–1 500 figurants ; ≥60 % des candidatures revues sous 72 h (la promesse de transparence, mesurable dans `reviewed_at`) ; 3 témoignages.
+- **Résultat attendu :** étude de cas prouvable ; les témoignages remplacent la section placeholder « Pensé pour le terrain » (tracké dans la checklist).
 
-# Phase 9 — Product Improvements (Impact × Effort)
+## Mois 4–6 — Lancement public (francophone)
+- **Objectifs :** visibilité de catégorie en Belgique FR ; 15 productions actives ; 3 000 figurants.
+- **Actions :** lancement public (voir Phase 8) ; poussée presse (Cineuropa, pages tech-culture du Soir/L'Echo, RTBF Vivacité régional, newsletter mediarte) ; présence événementielle (calage BRIFF/FIFF) ; 6 pages SEO de plus dont par-ville ; partenariats formalisés (listing ressource screen.brussels) ; démarrer les conversations ICP-2 (coordinateurs RTBF) ; livrer la clé de voûte de la rétention : **alertes email de nouveaux castings pour les figurants** (le codebase a l'infra email ; c'est la fonctionnalité manquante au plus fort levier).
+- **KPI :** 15 productions avec ≥1 casting publié ; 3 000 figurants ; 20+ castings/mois ; top-10 organique sur « casting figurant belgique » ; taux d'ouverture des alertes email >35 %.
+- **Résultat attendu :** le réflexe par défaut du casting de figurants en self-service en Belgique FR.
 
-## Build first (high impact / low–medium effort)
-1. **New-casting alerts for figurants** (email digest by city/age match) — the retention keystone; infra exists (Resend, schemas have city/age); without it figurants visit once and forget. *Impact 5/5, Effort M.*
-2. **Sprint 7 tests (#49–#53)** — three Playwright specs are already scoped with regression scenarios from every fixed bug; you are one refactor away from re-breaking "productions can't publish." *Impact 4/5 (velocity insurance), Effort M.*
-3. **Waitlist/contact form replacing `mailto:contact@onset.app`** (appears on B2B hero, pricing, footer) — mailto loses every mobile visitor without a mail client and captures zero analytics. *Impact 3/5, Effort S.*
-4. **Convocation "Je serai présent" confirmation + convocation history** — closes the no-show loop, makes the flagship feature auditable (history is already recorded backlog). *Impact 4/5, Effort M.*
-5. **CSV export of confirmed candidates** — productions live in Excel; meet them halfway; also the natural free/paid gate. *Impact 4/5, Effort S.*
-6. **Production account verification (manual approve at signup) + restrict `profiles_select_figurants_by_staff` to productions with ≥1 published casting or to applicants only** — closes the recorded GDPR exposure and the fake-casting vector in one move. *Impact 4/5 (risk kill), Effort S–M.*
-7. **Profile-completeness meter + post-signup onboarding checklist for figurants** — incomplete profiles are worthless to productions; currently nothing pushes completion. *Impact 3/5, Effort S.*
-
-## Postpone (high effort or premature)
-- **i18n/NL** — 3–4 weeks of string extraction; do it only on the explicit Flanders go-decision (M6+). Doing it "for launch" would delay revenue learning by a month for a market you can't yet serve with sales attention.
-- **Stripe billing** — until the metric trigger (Phase 5); building billing before willingness-to-pay signal is classic waste.
-- **Push notifications** — email alerts first (simpler, measurable); push is a Phase-2 multiplier once alert content is proven.
-- **Contracts/e-signature, call-sheets** — build as *paid-tier launch* features (M6–9), with a design partner committed to paying.
-- **Admin back-office** — founder can use Supabase Studio for months; build when support volume demands it.
-- **Pagination + advanced search** — the recorded "launch-scale OK" decision is correct; schedule when figurants >2,000.
-
-## Remove / de-scope
-- **Nothing significant.** The codebase is unusually free of speculative features (blog scaffold already deleted in Sprint 6). Keep the discipline. Candidate for demotion if data disagrees: role types `acteur`/`doublure` in `roleTypes` — if 95% of castings are `figurant`, hiding the selector simplifies the form (measure via PostHog first).
-
-## Technical debt to address
-- Resend domain verification (M1, blocking — no emails otherwise); role in JWT claims (recorded backlog — do when traffic makes the per-request role query visible in latency); the `db:push`-drops-RLS footgun (mitigated by script, but move to migration-based flow (`drizzle-kit generate`) before there is production data you can't re-provision); second email provider fallback for convocations (shoot-critical) — later.
-
-## Revenue & retention opportunities beyond tiers
-- **Casting "boost"** (the Meta-ads-as-a-service play, Phase 6) — per-casting €50–150 one-off, no subscription needed: monetizes ICP-3 without breaking free tier.
-- **Rejection-email cross-sell** ("3 autres castings près de chez vous") — turns the highest-volume email (rejections) into the retention channel. Infra fully exists.
+## Mois 6–12 — Monétiser + décider l'expansion
+- **Objectifs :** activer la facturation ; 2–5 K€ de MRR ; décision d'expansion (Belgique NL vs Nord de la France).
+- **Actions :** intégration Stripe + barrières de paliers (le ticket Phase 2 existe dans CLAUDE.md) ; construire les deux fonctionnalités de palier payant à la plus forte disposition à payer d'après les retours beta (pari : feuilles de service PDF + recherche avancée — toutes deux déjà promises sur la page tarifs en ligne) ; droits acquis pour les betas ; pilote ICP-2 avec une entité de diffuseur ; si le NL est choisi : rétrofit next-intl (budgéter 3–4 semaines — chaque chaîne UI est en dur, report du Sprint 2) + cluster SEO NL + démarchage VAF/mediarte NL ; si la France : commission du film Lille/Hauts-de-France + le corridor de coproduction wallon.
+- **KPI :** 8–15 payants ; MRR 2–5 K€ ; gratuit→payant ≥25 % des productions actives **[HYPOTHÈSE : élevé parce que les plafonds du palier gratuit mordent exactement à l'échelle d'un vrai tournage]** ; churn de logos <10 %/trimestre ; 6 000 figurants.
 
 ---
 
-# Phase 10 — Risks & Mitigations
+# Phase 8 — Stratégie de lancement
 
-| Risk | Severity | Evidence / Mitigation |
+- **Pré-lancement (maintenant) :** compléter la checklist ; capture de liste d'attente sur le « Être prévenu du lancement » en mailto de la page tarifs → le remplacer par un vrai formulaire (le mailto fait fuir les conversions — voir Phase 9) ; amorcer 10 castings via les pilotes pour que les visiteurs du jour du lancement ne voient jamais un catalogue vide (la leçon « les données seed masquent le vide » des revues de sprint, appliquée au marketing).
+- **Beta (M2–3) :** 3–5 productions, gants blancs, privée. Critères de sortie = les KPI M2–3 de la Phase 7, pas une date.
+- **Early adopters :** offre « Membre fondateur » — 12 mois gratuits sur Studio + logo sur le site + voix au chapitre sur la roadmap. Rare (10 places), explicite, par écrit.
+- **Lancement public (M4–6) :** l'ancrer sur une **histoire de tournage phare** (« La production X a casté 150 figurants pour [série] sur ONSET en 72 h ») — pas sur le produit. Dossier de presse en FR avec les chiffres de l'étude de cas.
+- **Presse :** angle belge = la tech locale répare l'industrie locale + le crochet Tax Shelter. Cibles : Cineuropa (couvre déjà la production BE), pages startups de L'Echo/De Tijd, culture-tech du Soir, RTBF/BX1 régional, newsletters mediarte + Wallimage, Cinevox. Une exclusivité d'abord (L'Echo), puis large.
+- **Écosystème startup belge :** hub.brussels, événements Startups.be/Scale-ups.eu, communauté BeTech, Digital Wallonia — utiles pour la crédibilité et les recrutements, **pas** pour les clients (les régisseurs ne vont pas aux événements startup). Prioriser l'écosystème *cinéma* sur l'écosystème *tech* à 4 contre 1.
+- **Product Hunt :** à sauter au lancement — l'acheteur n'y est pas et un outil B2B local BE en français y fera un flop par construction ; à reconsidérer seulement si/quand le produit devient multi-pays en EN.
+- **Programme de parrainage :** parrainage production→production = 2 mois gratuits des deux côtés (la communauté est soudée ; formaliser ce qui arrivera de toute façon). Le parrainage côté figurant est inutile — les appels à casting eux-mêmes sont le moteur de recommandation — et payer pour des parrainages côté offre attire les faux profils.
+- **Influenceurs :** micro, pas macro — 3–5 créateurs TikTok/Instagram BE « vie de figurant » **[HYPOTHÈSE : ils existent à 5–50 K abonnés ; à vérifier]** faisant du contenu « comment je trouve des castings », payés en accès anticipé + petits cachets ; plus un régisseur respecté comme design partner public (son endossement fait bouger le marché B2B plus que n'importe quelle pub).
+- **Partenariats (phase de lancement) :** film offices (Bruxelles, Liège, clusters wallons) pour la recommandation des tournages entrants ; mediarte pour du co-marketing de contenus de formation ; SBK/agences de paie (Amplo) plus tard — elles touchent chaque figurant payé légalement et pourraient devenir un partenaire de distribution *et* de produit en Phase 3.
+
+---
+
+# Phase 9 — Améliorations produit (Impact × Effort)
+
+## À construire d'abord (fort impact / effort faible–moyen)
+1. **Alertes de nouveaux castings pour les figurants** (digest email par correspondance ville/âge) — la clé de voûte de la rétention ; l'infra existe (Resend, les schémas ont ville/âge) ; sans elle, les figurants visitent une fois et oublient. *Impact 5/5, Effort M.*
+2. **Tests du Sprint 7 (#49–#53)** — trois specs Playwright sont déjà cadrées avec les scénarios de régression de chaque bug corrigé ; vous êtes à un refactor de re-casser « les productions ne peuvent pas publier ». *Impact 4/5 (assurance vélocité), Effort M.*
+3. **Formulaire de liste d'attente/contact remplaçant `mailto:contact@onset.app`** (présent sur le hero B2B, les tarifs, le footer) — le mailto perd chaque visiteur mobile sans client mail et ne capture aucune analytics. *Impact 3/5, Effort S.*
+4. **Confirmation de convocation « Je serai présent » + historique des convocations** — ferme la boucle no-show, rend la fonctionnalité phare auditable (l'historique est déjà un backlog acté). *Impact 4/5, Effort M.*
+5. **Export CSV des candidats confirmés** — les productions vivent dans Excel ; les rejoindre à mi-chemin ; aussi la barrière gratuit/payant naturelle. *Impact 4/5, Effort S.*
+6. **Vérification des comptes production (approbation manuelle à l'inscription) + restriction de `profiles_select_figurants_by_staff` aux productions avec ≥1 casting publié ou aux seuls candidats** — ferme l'exposition RGPD actée et le vecteur faux-casting d'un seul mouvement. *Impact 4/5 (neutralisation de risque), Effort S–M.*
+7. **Jauge de complétude de profil + checklist d'onboarding post-inscription pour les figurants** — les profils incomplets ne valent rien pour les productions ; rien ne pousse actuellement à la complétion. *Impact 3/5, Effort S.*
+
+## À reporter (gros effort ou prématuré)
+- **i18n/NL** — 3–4 semaines d'extraction de chaînes ; à faire uniquement sur la décision explicite d'aller en Flandre (M6+). Le faire « pour le lancement » retarderait d'un mois l'apprentissage revenu pour un marché que vous ne pouvez pas encore servir avec de l'attention commerciale.
+- **Facturation Stripe** — jusqu'au déclencheur métrique (Phase 5) ; construire la facturation avant un signal de disposition à payer est du gaspillage classique.
+- **Notifications push** — les alertes email d'abord (plus simples, mesurables) ; le push est un multiplicateur de Phase 2 une fois le contenu des alertes prouvé.
+- **Contrats/signature électronique, feuilles de service** — à construire comme fonctionnalités de *lancement du palier payant* (M6–9), avec un design partner engagé à payer.
+- **Back-office admin** — le fondateur peut utiliser Supabase Studio pendant des mois ; à construire quand le volume de support l'exige.
+- **Pagination + recherche avancée** — la décision actée « échelle lancement OK » est correcte ; à planifier quand figurants >2 000.
+
+## À retirer / dé-prioriser
+- **Rien de significatif.** Le codebase est inhabituellement exempt de fonctionnalités spéculatives (le scaffold blog déjà supprimé au Sprint 6). Garder la discipline. Candidat à la rétrogradation si les données le contredisent : les types de rôle `acteur`/`doublure` dans `roleTypes` — si 95 % des castings sont `figurant`, masquer le sélecteur simplifie le formulaire (mesurer via PostHog d'abord).
+
+## Dette technique à traiter
+- Vérification du domaine Resend (M1, bloquant — pas d'emails sinon) ; rôle dans les claims JWT (backlog acté — à faire quand le trafic rend visible la requête de rôle par requête dans la latence) ; le piège `db:push`-supprime-la-RLS (mitigé par le script, mais passer à un flux basé migrations (`drizzle-kit generate`) avant qu'il y ait des données de production non re-provisionnables) ; un second fournisseur d'email en fallback pour les convocations (critiques pour le tournage) — plus tard.
+
+## Opportunités de revenu & rétention au-delà des paliers
+- **« Boost » de casting** (la tactique Meta-ads-as-a-service, Phase 6) — 50–150 € one-shot par casting, sans abonnement : monétise ICP-3 sans casser le palier gratuit.
+- **Cross-sell dans l'email de refus** (« 3 autres castings près de chez vous ») — transforme l'email au plus fort volume (les refus) en canal de rétention. L'infra existe intégralement.
+
+---
+
+# Phase 10 — Risques & mitigations
+
+| Risque | Sévérité | Preuve / Mitigation |
 |---|---|---|
-| **Cold-start: empty catalog kills figurant retention** | High | The product's own reviews showed seed data masking emptiness. Mitigate: never market to figurants ahead of castings; pilots-first sequencing (Phase 7); per-shoot piggyback posts. |
-| **GDPR incident or complaint** (open profile access, public avatar bucket, minors 16+) | High | Both exposures are *recorded in the sprint reviews as accepted-for-later* — make them "now": production verification + policy hardening (Phase 9 #6), privacy policy (checklist), DPA template for ICP-2. Cost is days; a CPD/APD complaint would be existential. |
-| **Zero automated tests while iterating post-launch** | Medium-High | Every past regression was caught by manual review passes that won't happen weekly post-launch. Ship Sprint 7 in M1. |
-| **Email deliverability failure at a shoot-critical moment** | Medium-High | `RESEND_FROM` currently unset ⇒ silent no-send (loud only in Sentry). Verify domain M1; add delivery-status surfacing to convocation UI; consider SMS fallback for convocations later (BE SMS is cheap, shoot-critical justifies it). |
-| **Facebook inertia: productions post to groups anyway** | Medium | Don't fight it — the piggyback play makes Facebook the top of ONSET's funnel. The wedge is what Facebook can't do: pipeline, bulk emails, GDPR. |
-| **A competitor (becasting, figurants.com) adds production tooling** | Medium | Their business model (charging/serving talent) conflicts with free-supply positioning; ONSET's moat = production workflow depth + BE-local trust + SEO pages per casting. Speed is the real defense: own the ~150 FR-BE production relationships before anyone reacts. |
-| **Two-language trap: NL competitor consolidates Flanders first** (figuratie.be/In The Picture is already NL-native) | Medium | Accept the FR-first bet explicitly; keep NL retrofit scoped (3–4 wks) and trigger it on evidence (inbound NL demand, VAF conversations) rather than fear. |
-| **Régisseurs are freelance & seasonal → subscription churn between shoots** | Medium | Price per organization (production company), not per shoot; annual discount; "pause mode" instead of cancel; usage-based Boost as churn-proof revenue. |
-| **Legal gray zone of figurant pay drifts onto the platform** (users treat ONSET as employer/intermediary) | Low-Medium | Stay out of money flows; T&Cs state ONSET is a connection tool; FAQ points to SBK/payroll partners (also a partnership channel). |
-| **Solo-founder bus factor & support load** **[ASSUMPTION: solo, given single-committer git history style]** | Medium | White-glove only during beta; ship self-serve onboarding before public launch; admin tooling deferred but document runbooks. |
+| **Cold-start : un catalogue vide tue la rétention des figurants** | Élevée | Les propres revues du produit ont montré que le seed masquait le vide. Mitiger : ne jamais faire de marketing figurants avant d'avoir des castings ; séquencement pilotes-d'abord (Phase 7) ; posts de rebond par tournage. |
+| **Incident ou plainte RGPD** (accès ouvert aux profils, bucket avatars public, mineurs 16+) | Élevée | Les deux expositions sont *actées dans les revues de sprint comme acceptées-pour-plus-tard* — les rendre « maintenant » : vérification production + durcissement des policies (Phase 9 n°6), politique de confidentialité (checklist), modèle de DPA pour ICP-2. Le coût se compte en jours ; une plainte APD serait existentielle. |
+| **Zéro test automatisé en pleine itération post-lancement** | Moyenne-élevée | Chaque régression passée a été attrapée par des passes de revue manuelle qui n'auront pas lieu chaque semaine après le lancement. Livrer le Sprint 7 en M1. |
+| **Défaillance de délivrabilité email à un moment critique pour le tournage** | Moyenne-élevée | `RESEND_FROM` actuellement non défini ⇒ non-envoi silencieux (bruyant seulement dans Sentry). Vérifier le domaine en M1 ; remonter le statut de délivrance dans l'UI de convocation ; envisager un fallback SMS pour les convocations plus tard (le SMS BE est bon marché, le critique-tournage le justifie). |
+| **Inertie Facebook : les productions postent quand même dans les groupes** | Moyenne | Ne pas lutter — la tactique de rebond fait de Facebook le haut du funnel d'ONSET. Le levier, c'est ce que Facebook ne peut pas faire : pipeline, emails en masse, RGPD. |
+| **Un concurrent (becasting, figurants.com) ajoute de l'outillage production** | Moyenne | Leur modèle économique (facturer/servir les talents) entre en conflit avec un positionnement offre-gratuite ; la douve d'ONSET = profondeur du workflow production + confiance locale BE + pages SEO par casting. La vitesse est la vraie défense : posséder les ~150 relations de production FR-BE avant que quiconque ne réagisse. |
+| **Piège bilingue : un concurrent NL consolide la Flandre d'abord** (figuratie.be/In The Picture est déjà nativement NL) | Moyenne | Assumer explicitement le pari FR-d'abord ; garder le rétrofit NL cadré (3–4 sem.) et le déclencher sur des preuves (demande NL entrante, conversations VAF) plutôt que sur la peur. |
+| **Les régisseurs sont freelances & saisonniers → churn d'abonnement entre les tournages** | Moyenne | Facturer par organisation (société de production), pas par tournage ; remise annuelle ; « mode pause » au lieu d'annuler ; le Boost à l'usage comme revenu anti-churn. |
+| **La zone grise légale de la paie des figurants dérive sur la plateforme** (les utilisateurs traitent ONSET comme employeur/intermédiaire) | Faible-moyenne | Rester hors des flux d'argent ; les CGU stipulent qu'ONSET est un outil de mise en relation ; la FAQ pointe vers les partenaires SBK/paie (aussi un canal de partenariat). |
+| **Facteur bus du fondateur solo & charge de support** **[HYPOTHÈSE : solo, vu le style mono-committer de l'historique git]** | Moyenne | Gants blancs uniquement pendant la beta ; livrer un onboarding self-service avant le lancement public ; outillage admin différé mais runbooks documentés. |
 
 ---
 
-# Phase 11 — Action Plan (ROI-ordered)
+# Phase 11 — Plan d'action (ordonné par ROI)
 
-| # | Task | Priority | Impact | Effort | Depends on | Success metric | Deliverable |
+| # | Tâche | Priorité | Impact | Effort | Dépend de | Métrique de succès | Livrable |
 |---|---|---|---|---|---|---|---|
-| 1 | Clear pre-launch checklist: Resend domain + `RESEND_FROM`, `NEXT_PUBLIC_APP_URL`, auth allowlist, legal notice, privacy policy | P0 | Unblocks everything | S (days + lawyer) | — | Checklist 100%; real email delivered to non-owner address | Live compliant site |
-| 2 | GDPR hardening: production verification + tighten `profiles_select_figurants_by_staff`; revisit public avatar bucket | P0 | Kills top legal risk | S–M | — | verify-rls assertions extended; unverified production sees no contact data | Migration + policy + signup flow |
-| 3 | Founder outreach wave (30 FR-BE production companies) → 3 design partners | P0 | Revenue path starts | M (2 wks) | 1 | 3 pilots committed, 1 casting live | Pilot agreements, target-list CRM |
-| 4 | Replace mailto CTAs with tracked contact/waitlist form | P1 | Funnel capture | S | — | 100% of B2B interest captured w/ source | Form + PostHog events |
-| 5 | Sprint 7: Vitest + 3 Playwright e2e specs (#49–#53) | P1 | Velocity insurance | M (1–2 wks) | — | CI green incl. e2e; regression scenarios from reviews encoded | `tests/` suite in CI |
-| 6 | Figurant new-casting email alerts (city/age match) | P1 | #1 retention lever | M (1–2 wks) | 1 | ≥35% open rate; W4 figurant retention +50% vs. baseline | Alert job + preference toggle |
-| 7 | Beta shoot cycles ×3–5 with piggyback Facebook posts per casting | P1 | Proof + supply flywheel | M (continuous M2–3) | 3 | 5 completed cycles; 1,000 figurants; 3 consented testimonials | Case study w/ hours-saved numbers |
-| 8 | SEO expansion: 6–10 FR guides + per-city pages on the existing stack | P1 | Compounding free acquisition | M (writing) | 1 | Top-10 "casting figurant belgique" by M6; 500 organic visits/mo | Published pages, GSC tracking |
-| 9 | CSV export + convocation confirmation & history | P2 | Beta-retention + paid-gate prep | M | 3 (feedback) | Used by ≥3 pilots; no-show rate measured | Features shipped |
-| 10 | Public launch: testimonials on landing, press kit, flagship case story, film-ecosystem partnerships | P2 | Category visibility | M (M4–6) | 7 | 15 active productions; 20 castings/mo; 2 press pieces | Launch campaign |
-| 11 | Stripe + tier gates (Studio €79 / Production €199), grandfather betas | P2 | Revenue | M–L (2–3 wks) | 7, 9, metric trigger | €2K MRR by M9; ≥25% free→paid among active productions | Billing live |
-| 12 | Paid-tier features: call-sheets PDF, advanced search (already promised on pricing page) | P3 | Expansion revenue | L | 11 + design partner | ≥50% of paying on Production tier | Phase-2 features |
-| 13 | Expansion decision: NL retrofit (next-intl, 3–4 wks) vs. Nord-France | P3 | Next market | L | 11 + 12-month data | Decision memo with pipeline evidence | i18n build or FR-FR GTM plan |
+| 1 | Apurer la checklist pré-lancement : domaine Resend + `RESEND_FROM`, `NEXT_PUBLIC_APP_URL`, allowlist auth, mentions légales, politique de confidentialité | P0 | Débloque tout | S (jours + avocat) | — | Checklist à 100 % ; vrai email délivré à une adresse non-propriétaire | Site conforme en ligne |
+| 2 | Durcissement RGPD : vérification production + resserrement de `profiles_select_figurants_by_staff` ; revisiter le bucket avatars public | P0 | Neutralise le premier risque légal | S–M | — | Assertions verify-rls étendues ; une production non vérifiée ne voit aucune coordonnée | Migration + policy + flux d'inscription |
+| 3 | Vague de démarchage du fondateur (30 sociétés de production FR-BE) → 3 design partners | P0 | Le chemin vers le revenu démarre | M (2 sem.) | 1 | 3 pilotes engagés, 1 casting en ligne | Accords pilotes, CRM de liste cible |
+| 4 | Remplacer les CTA mailto par un formulaire de contact/liste d'attente tracké | P1 | Capture du funnel | S | — | 100 % de l'intérêt B2B capturé avec source | Formulaire + événements PostHog |
+| 5 | Sprint 7 : Vitest + 3 specs e2e Playwright (#49–#53) | P1 | Assurance vélocité | M (1–2 sem.) | — | CI verte incl. e2e ; scénarios de régression des revues encodés | Suite `tests/` en CI |
+| 6 | Alertes email de nouveaux castings pour figurants (correspondance ville/âge) | P1 | Levier de rétention n°1 | M (1–2 sem.) | 1 | Taux d'ouverture ≥35 % ; rétention figurants S4 +50 % vs baseline | Job d'alertes + toggle de préférence |
+| 7 | Cycles de tournage beta ×3–5 avec posts Facebook de rebond par casting | P1 | Preuve + roue d'inertie de l'offre | M (continu M2–3) | 3 | 5 cycles bouclés ; 1 000 figurants ; 3 témoignages consentis | Étude de cas avec chiffres d'heures gagnées |
+| 8 | Expansion SEO : 6–10 guides FR + pages par ville sur la stack existante | P1 | Acquisition gratuite qui se compose | M (rédaction) | 1 | Top-10 « casting figurant belgique » d'ici M6 ; 500 visites organiques/mois | Pages publiées, suivi GSC |
+| 9 | Export CSV + confirmation & historique de convocation | P2 | Rétention beta + préparation des barrières payantes | M | 3 (retours) | Utilisé par ≥3 pilotes ; taux de no-show mesuré | Fonctionnalités livrées |
+| 10 | Lancement public : témoignages sur la landing, dossier de presse, histoire de tournage phare, partenariats écosystème cinéma | P2 | Visibilité de catégorie | M (M4–6) | 7 | 15 productions actives ; 20 castings/mois ; 2 retombées presse | Campagne de lancement |
+| 11 | Stripe + barrières de paliers (Studio 79 € / Production 199 €), droits acquis pour les betas | P2 | Revenu | M–L (2–3 sem.) | 7, 9, déclencheur métrique | 2 K€ MRR d'ici M9 ; ≥25 % gratuit→payant parmi les productions actives | Facturation en ligne |
+| 12 | Fonctionnalités de palier payant : feuilles de service PDF, recherche avancée (déjà promises sur la page tarifs) | P3 | Revenu d'expansion | L | 11 + design partner | ≥50 % des payants sur le palier Production | Fonctionnalités Phase 2 |
+| 13 | Décision d'expansion : rétrofit NL (next-intl, 3–4 sem.) vs Nord de la France | P3 | Marché suivant | L | 11 + 12 mois de données | Mémo de décision avec preuves de pipeline | Build i18n ou plan GTM FR-FR |
 
-**Decision points:** after #7 (M3): if <3 productions complete a cycle or figurant show-up quality is poor, pivot positioning toward ICP-2 recurring-format casting before spending on public launch. After #11 (M9): if free→paid <10%, revisit monetization (Boost-only model) before expansion.
+**Points de décision :** après le n°7 (M3) : si <3 productions bouclent un cycle ou si la qualité de présence des figurants est mauvaise, pivoter le positionnement vers le casting de formats récurrents ICP-2 avant de dépenser sur le lancement public. Après le n°11 (M9) : si gratuit→payant <10 %, revisiter la monétisation (modèle Boost-only) avant l'expansion.
 
 ---
 
-## Final assessment
+## Évaluation finale
 
-The codebase tells a rare story: the product is *more* ready than the business around it. The engineering discipline (RLS assertion suite, honest copy, review culture) is itself a marketable asset for a GDPR-sensitive, trust-poor market. The three moves that matter most in the next 90 days are not features: **(1)** clear the legal/email launch blockers already listed in PROGRESS.md, **(2)** close the recorded GDPR exposure before real figurant data accumulates, and **(3)** get three real productions through a full shoot cycle and turn their numbers into the launch story. Everything else — pricing tiers, Flanders, France, call-sheets — is downstream of those three.
+Le codebase raconte une histoire rare : le produit est *plus* prêt que le business qui l'entoure. La discipline d'ingénierie (suite d'assertions RLS, textes honnêtes, culture de revue) est en soi un actif commercialisable pour un marché sensible au RGPD et pauvre en confiance. Les trois mouvements qui comptent le plus dans les 90 prochains jours ne sont pas des fonctionnalités : **(1)** apurer les bloqueurs légaux/email déjà listés dans PROGRESS.md, **(2)** fermer l'exposition RGPD actée avant que de vraies données de figurants ne s'accumulent, et **(3)** faire passer trois vraies productions par un cycle de tournage complet et transformer leurs chiffres en histoire de lancement. Tout le reste — paliers de prix, Flandre, France, feuilles de service — est en aval de ces trois-là.
 
-**Sources:** [FPS Finance — Tax Shelter](https://finance.belgium.be/en/enterprises/corporation-tax/tax-benefits/tax-shelter-audiovisual-production) · [Cineuropa — Belgian tax shelter](https://cineuropa.org/en/newsdetail/219784) · [Lexgo — Tax Shelter reform](https://www.lexgo.be/en/news-and-articles/2458-the-tax-shelter-for-audiovisual-productions-in-belgium-a-successful-tool-under-reform) · [Screen Flanders — Tax Shelter](https://www.screenflanders.be/en/financing/other-funds-incentives/tax-shelter) · [Mbrella Films — Belgium incentives](https://mbrellafilms.com/incentives/belgium/) · [becasting.be](https://www.becasting.be/) · [figurants.com — Belgique](https://figurants.com/region/belgique/) · [castprod.com](https://castprod.com/) · [figuratie.be](https://figuratie.be/) · [figuranten-gezocht.be](https://www.figuranten-gezocht.be/) · [NK Casting](https://nkcasting.be/) · [Smiling Agency](https://smiling.agency/casting-belgique/) · [Sortlist — casting agencies BE](https://www.sortlist.be/fr/s/casting/belgique-be) · [VRT figuratie](https://www.vrt.be/heb-je-een-vraag/s/article/Ik-wil-graag-figureren-in-een-programma-van-VRT) · [Everyset](https://everyset.com/) · [Hollywood Reporter — Everyset](https://www.hollywoodreporter.com/business/business-news/extras-work-jobs-everyset-data-payroll-1236393829/)
+**Sources :** [SPF Finances — Tax Shelter](https://finance.belgium.be/en/enterprises/corporation-tax/tax-benefits/tax-shelter-audiovisual-production) · [Cineuropa — Tax shelter belge](https://cineuropa.org/en/newsdetail/219784) · [Lexgo — Réforme du Tax Shelter](https://www.lexgo.be/en/news-and-articles/2458-the-tax-shelter-for-audiovisual-productions-in-belgium-a-successful-tool-under-reform) · [Screen Flanders — Tax Shelter](https://www.screenflanders.be/en/financing/other-funds-incentives/tax-shelter) · [Mbrella Films — Incitants Belgique](https://mbrellafilms.com/incentives/belgium/) · [becasting.be](https://www.becasting.be/) · [figurants.com — Belgique](https://figurants.com/region/belgique/) · [castprod.com](https://castprod.com/) · [figuratie.be](https://figuratie.be/) · [figuranten-gezocht.be](https://www.figuranten-gezocht.be/) · [NK Casting](https://nkcasting.be/) · [Smiling Agency](https://smiling.agency/casting-belgique/) · [Sortlist — agences de casting BE](https://www.sortlist.be/fr/s/casting/belgique-be) · [VRT figuratie](https://www.vrt.be/heb-je-een-vraag/s/article/Ik-wil-graag-figureren-in-een-programma-van-VRT) · [Everyset](https://everyset.com/) · [Hollywood Reporter — Everyset](https://www.hollywoodreporter.com/business/business-news/extras-work-jobs-everyset-data-payroll-1236393829/)
